@@ -11,7 +11,9 @@ export class JobOffreController {
   async create(@Body() createJobOffreDto: CreateJobOffreDto,@Res() res) {
     try {
       const newJobOffre = await this.jobOffreService.create(createJobOffreDto);
-      return res.status(HttpStatus.CREATED).json({message: 'JobOffre created successfully',
+
+      return res.status(HttpStatus.CREATED).json({
+        message: 'JobOffre created successfully',
          status: HttpStatus.CREATED,
          data: newJobOffre});
 

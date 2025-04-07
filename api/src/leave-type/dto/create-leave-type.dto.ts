@@ -4,6 +4,6 @@ import { IsNotEmpty, IsString } from "class-validator";
 export class CreateLeaveTypeDto {
        @ApiProperty()
        @IsString()
-            @IsNotEmpty()
-            name: string;
+       @IsNotEmpty()
+       name: string;
 }

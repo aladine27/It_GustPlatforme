@@ -14,7 +14,7 @@ export class Leave {
          @Prop({required: true})
         reason: String;
           @Prop({required: true})
-        reasonFile: String;
+        reasonFile: string;
                
     
     

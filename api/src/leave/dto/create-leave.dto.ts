@@ -19,17 +19,18 @@ export class CreateLeaveDto {
            @ApiProperty()
         @IsNotEmpty()
         startDate: Date;
-         @Prop({required: true})
+        
           @ApiProperty()
            @IsDate() 
         @IsNotEmpty()
         endDate: Date;
           @ApiProperty()
-         @Prop({required: true})
+        
            @IsString() 
         @IsNotEmpty()
           @ApiProperty()
         reason: String;
+        
           @ApiProperty()
            @IsString() 
         @IsOptional()

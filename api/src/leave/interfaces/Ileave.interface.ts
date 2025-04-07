@@ -8,8 +8,8 @@ export interface Ileave extends Document {
                 
               readonly startDate: Date;
                 readonly endDate: Date;
-                readonly reason: String;
-                readonly reasonFile: String;
+                readonly reason: string;
+                readonly reasonFile: string;
               
        
        

@@ -47,7 +47,7 @@ export class LeaveController {
       });
       
     }
-  }
+  } 
 
   @Get(':id')
   async findOne(@Param('id') id: string, @Res() res) {

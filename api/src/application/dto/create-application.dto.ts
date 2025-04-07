@@ -5,5 +5,5 @@ export class CreateApplicationDto {
       @IsString() 
       @IsNotEmpty()
       @ApiProperty()
-      fullName: string;
+      cvFile: string;
 }

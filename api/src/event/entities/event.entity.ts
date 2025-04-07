@@ -11,7 +11,10 @@ export class Event {
              @Prop({required: true})
             startDate: Date;
              @Prop({required: true})
-            localisation: String;
+            location: String;
+             @Prop({required: true})
+            status: String;
+
             
 }
 export const eventSchema = SchemaFactory.createForClass(Event);

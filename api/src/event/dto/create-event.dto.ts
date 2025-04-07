@@ -22,6 +22,10 @@ export class CreateEventDto {
             @IsString() 
             @IsNotEmpty()
             location: string;
+            @ApiProperty()
+            @IsString() 
+            @IsNotEmpty()
+                        duration: string;
         
         }
 

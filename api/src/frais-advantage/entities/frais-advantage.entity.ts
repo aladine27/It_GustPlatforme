@@ -3,11 +3,11 @@ import { timestamp } from "rxjs";
 
 @Schema({timestamps:true})
 export class FraisAdvantage {
-     @Prop({required: true})
+    @Prop({required: true})
     raison: string;
-     @Prop({required: true, unique: true})
+    @Prop({required: true})
     file: string;
-     @Prop({required: true})
+    @Prop({required: true})
     status: string;
 }
 export const FraisAdvantageSchema = SchemaFactory.createForClass(FraisAdvantage);
