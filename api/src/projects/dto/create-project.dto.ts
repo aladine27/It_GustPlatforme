@@ -32,4 +32,13 @@ export class CreateProjectDto {
               @IsString() 
             @IsNotEmpty()
             status: string;
+             @ApiProperty(
+              {type:String,
+              description:'The category of the project'
+            }
+             )
+              @IsString() 
+            @IsNotEmpty()
+            category: string;
+
 }

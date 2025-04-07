@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { SchemaTypes, Types } from "mongoose";
 
 @Schema({timestamps:true})
 export class JobOffre {
@@ -24,6 +25,8 @@ export class JobOffre {
     process: string;
     @Prop({required: true})
     type: string;
+    @Prop({type:SchemaTypes.ObjectId, ref: 'jobCategories',required: true})
+    jobCategory: Types.ObjectId;  
    
 }
 export const JobOffreSchema = SchemaFactory.createForClass(JobOffre);

@@ -1,9 +1,10 @@
 
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+@Schema({timestamps:true})
 export class Leave { 
         @Prop({required: true})
         title: string;
-         @Prop({required: true})
+        @Prop({required: true})
         duration: string;
          @Prop({required: true,})
         status: string;
@@ -13,7 +14,7 @@ export class Leave {
         endDate: Date;
          @Prop({required: true})
         reason: String;
-          @Prop({required: true})
+        @Prop({required: true})
         reasonFile: string;
                
     

@@ -1,15 +1,18 @@
 export interface ITask extends Document { 
     
-    title: string;
+    readonly title: string;
        
-        description: string;
+    readonly description: string;
          
-        duration: string;
+    readonly duration: string;
          
-        startDate: Date;
+    readonly startDate: Date;
         
-        endDate: Date;
+    readonly endDate: Date;
          
-        status: String;
+    readonly status: String;
+
+    readonly project: string;
+
     
     }

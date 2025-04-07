@@ -5,4 +5,13 @@ export class CreateJobCategoryDto {
         @ApiProperty()
         @IsString() 
         @IsNotEmpty()
-        name: string;}
+        name: string;
+        @ApiProperty(
+        {type:String,
+        description:'The jobcategory of the joboffre'})
+        @IsString() 
+        @IsNotEmpty()
+        joboffre: string;
+
+
+}

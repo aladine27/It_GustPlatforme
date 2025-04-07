@@ -25,7 +25,7 @@ export class CreateEventDto {
             @ApiProperty()
             @IsString() 
             @IsNotEmpty()
-                        duration: string;
+            duration: string;
         
         }
 

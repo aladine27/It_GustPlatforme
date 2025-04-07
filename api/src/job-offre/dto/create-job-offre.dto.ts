@@ -57,4 +57,9 @@ export class CreateJobOffreDto {
             @IsNotEmpty()
         
         type: string;
+
+          @IsString() 
+            @IsNotEmpty()
+             @ApiProperty()
+            jobCategory: string;
 }

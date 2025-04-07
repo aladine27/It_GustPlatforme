@@ -1,6 +1,7 @@
 
 
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { SchemaTypes, Types } from "mongoose";
 
 @Schema({timestamps:true})
 export class Task {  
@@ -16,5 +17,8 @@ export class Task {
         endDate: Date;
          @Prop({required: true})
         status: String;
+        @Prop({type:SchemaTypes.ObjectId, ref: 'projects',required: true})
+        project: Types.ObjectId;      
+
 }
 export const taskSchema = SchemaFactory.createForClass(Task);

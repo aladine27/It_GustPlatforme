@@ -1,12 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsString } from "class-validator";
 export class CreateFraiTypeDto {
-      @ApiProperty()
+    @ApiProperty()
     @IsString() 
-        @IsNotEmpty()
-        name: string;
-        @ApiProperty()
+    @IsNotEmpty()
+    name: string;
+    @ApiProperty()
     @IsString() 
-        @IsNotEmpty()
-        amount: number;
+    @IsNotEmpty()
+    amount: number;
 }
