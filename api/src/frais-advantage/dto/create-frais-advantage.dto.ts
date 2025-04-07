@@ -13,6 +13,10 @@ export class CreateFraisAdvantageDto {
      @IsString()
      @IsNotEmpty()
      status: string;
+      @ApiProperty()
+     @IsString() 
+     @IsNotEmpty()
+     fraiType: string;
             
             
 }

@@ -8,4 +8,6 @@ export interface IFraisAdvantage extends Document {
              
        readonly status: string;
 
+       readonly fraiType: string;
+
 }

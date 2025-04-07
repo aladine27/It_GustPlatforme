@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { timestamp } from "rxjs";
+import { SchemaTypes, Types } from "mongoose";
+
 
 @Schema({timestamps:true})
 export class FraisAdvantage {
@@ -9,5 +10,7 @@ export class FraisAdvantage {
     file: string;
     @Prop({required: true})
     status: string;
+    @Prop({type:[SchemaTypes.ObjectId], ref: 'fraiTypes',required: true})
+    fraiType:Types.ObjectId;
 }
 export const FraisAdvantageSchema = SchemaFactory.createForClass(FraisAdvantage);

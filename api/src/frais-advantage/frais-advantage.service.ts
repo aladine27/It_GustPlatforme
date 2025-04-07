@@ -5,13 +5,16 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { IFraisAdvantage } from './interfaces/fraisAdvantage.interface';
 import { FraisAdvantage } from './entities/frais-advantage.entity';
+import { IfraiType } from 'src/frai-type/interfaces/fraiType.interface';
 
 @Injectable()
 export class FraisAdvantageService {
-  constructor(@InjectModel('fraisAdvantages') private fraisAdvantageModel: Model<IFraisAdvantage>) {}
+  constructor(@InjectModel('fraisAdvantages') private fraisAdvantageModel: Model<IFraisAdvantage>,
+              @InjectModel('fraiTypes') private fraiTypeModel: Model<IfraiType>) {}
   
   async create(createFraisAdvantageDto: CreateFraisAdvantageDto):Promise<IFraisAdvantage> {
     const newFraisAdvantage = new  this.fraisAdvantageModel(createFraisAdvantageDto);
+    await this.fraiTypeModel.updateOne({ _id: createFraisAdvantageDto.fraiType }, { $push: { fraisAdvantages: newFraisAdvantage._id } });
     return newFraisAdvantage.save();
   }
 
