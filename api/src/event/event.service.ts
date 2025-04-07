@@ -1,0 +1,49 @@
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { IEvent } from './interfaces/event.interface';
+
+
+@Injectable()
+export class EventService {
+  constructor (@InjectModel('events') private eventModel: Model<IEvent>) {}
+  async create(createEventDto: CreateEventDto):Promise<IEvent> {
+    const newEvent = new this.eventModel(createEventDto);
+    return newEvent.save();
+    
+  }
+
+  async findAll():Promise<IEvent[]> {
+    const events = await  this.eventModel.find();
+    if (!events || events.length === 0) {
+      throw new NotFoundException('No events found');
+    } 
+    return events;
+  }
+
+  async findOne(id: string):Promise<IEvent> {
+    const event = await this.eventModel.findById(id);
+    if (!event) {
+      throw new NotFoundException('No event found');
+    }
+    return event;
+  }
+
+  async update(id: string, updateEventDto: UpdateEventDto):Promise<IEvent> {
+    const event = await this.eventModel.findByIdAndUpdate(id, updateEventDto, { new: true });
+    if (!event) {
+      throw new NotFoundException('No event found');
+    }
+    return event;
+  }
+
+  async remove(id: string):Promise<IEvent> {
+    const event = await this.eventModel.findByIdAndDelete(id);
+    if (!event) {
+      throw new NotFoundException('No event found');
+    }
+    return event;
+  }
+}
