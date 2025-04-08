@@ -47,6 +47,7 @@ export class EventService {
     if (!event) {
       throw new NotFoundException('No event found');
     }
+     await this.eventTypeModel.updateOne({_id:event.eventType},{$pull:{events:event._id  }})
     return event;
   }
 }

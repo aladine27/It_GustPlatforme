@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { SchemaTypes, Types } from "mongoose";
 import { timestamp } from "rxjs";
 
 @Schema({timestamps:true})
@@ -17,6 +18,18 @@ export class User {
     image: string; 
     @Prop({required: true})
     role: string;
+    @Prop([{type:SchemaTypes.ObjectId, ref: 'leaves'}])
+    leaves: Types.ObjectId[];
+    @Prop([{type:SchemaTypes.ObjectId, ref: 'documents'}])
+    documents: Types.ObjectId[];
+    @Prop([{type:SchemaTypes.ObjectId, ref: 'fraisAdvantages'}])
+    fraisAdvantages: Types.ObjectId[];
+    @Prop([{type:SchemaTypes.ObjectId, ref: 'projects'}])
+    projects: Types.ObjectId[];
+    @Prop([{type:SchemaTypes.ObjectId, ref: 'jobOffres'}])
+    joboffres: Types.ObjectId[];
+  
+  
   
 
 

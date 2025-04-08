@@ -46,6 +46,8 @@ export class ApplicationService {
    if (!application) {
     throw new NotFoundException('No application found');
   }
+  await this.joboffreModel.updateOne({ _id: application.jobOffre }, 
+    { $pull: { applications: application._id } });
   return application;
   
   }

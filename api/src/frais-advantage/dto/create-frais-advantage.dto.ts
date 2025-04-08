@@ -29,6 +29,16 @@ export class CreateFraisAdvantageDto {
      @IsString() 
      @IsNotEmpty()
      fraiType: string;
+
+         
+    @ApiProperty({
+        type: String,
+        description: 'The user associated to advantage'
+    })
+    @IsString() 
+    @IsNotEmpty()
+    user: string;
+
             
             
 }

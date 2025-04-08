@@ -4,13 +4,18 @@ import { UpdateJobOffreDto } from './dto/update-job-offre.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { IJobOffre } from './interfaces/jobOffre.interface';
-import { ifError } from 'node:assert';
+
+import { IjobCategory } from 'src/job-category/interfaces/jobCategory.interface';
+import { IUser } from 'src/users/interfaces/user.interface';
 
 @Injectable()
 export class JobOffreService {
-    constructor(@InjectModel('jobOffres') private joboffreModel: Model<IJobOffre>) {}
+    constructor(@InjectModel('jobOffres') private joboffreModel: Model<IJobOffre>
+    ,@InjectModel('jobCategories') private jobCategoryModel: Model<IjobCategory>, @InjectModel('users') private userModel: Model<IUser>) {}
   async create(createJobOffreDto: CreateJobOffreDto):Promise<IJobOffre> {
     const newJobOffre = new  this.joboffreModel(createJobOffreDto);
+    await this.userModel.updateOne({_id:createJobOffreDto.user},{$push:{documents:newJobOffre._id}})
+    await this.jobCategoryModel.updateOne({_id:createJobOffreDto.user},{$push:{documents:newJobOffre._id}})
     return newJobOffre.save();
   }
 

@@ -65,4 +65,12 @@ export class CreateProjectDto {
     @IsString() 
     @IsNotEmpty()
     category: string;
+     @ApiProperty({
+        type: String,
+        description: 'The user associated to project'
+    })
+    @IsString() 
+    @IsNotEmpty()
+    user: string;
+
 }

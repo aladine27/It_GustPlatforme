@@ -22,5 +22,6 @@ export interface IJobOffre extends Document {
           readonly type :string;
 
           readonly salaryRange:number;
+          readonly user: string;
 
 }

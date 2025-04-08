@@ -8,6 +8,7 @@ export interface Ileave extends Document {
  readonly reason: string;
  readonly reasonFile: string;
  readonly leaveType: string;
+ readonly user: string;
               
        
        

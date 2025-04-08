@@ -1,7 +1,7 @@
 export interface IApplication extends Document {
   
        readonly cvFile: string;
-       readonly joboffre: string;
+       readonly jobOffre: string;
        
       
        

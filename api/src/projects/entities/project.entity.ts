@@ -23,6 +23,8 @@ export class Project {
        category: Types.ObjectId;
        @Prop([{type:SchemaTypes.ObjectId, ref: 'tasks'}])
        tasks: Types.ObjectId[];
+      @Prop({ type: SchemaTypes.ObjectId, ref: 'users', required: true })
+      user: Types.ObjectId;
         
       
 

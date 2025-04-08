@@ -66,4 +66,11 @@ export class CreateLeaveDto {
     @IsString() 
     @IsNotEmpty()
     leaveType: string;
+     @ApiProperty({
+        type: String,
+        description: 'The user of the leave'
+    })
+    @IsString() 
+    @IsNotEmpty()
+    user: string;
 }

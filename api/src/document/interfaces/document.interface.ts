@@ -5,6 +5,7 @@ export interface IDocument extends Document {
     readonly traitementDateLimite: Date;
     readonly status: string;
     readonly reason: string;
+    readonly user: string;
        
       
 

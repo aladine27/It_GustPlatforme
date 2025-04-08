@@ -103,4 +103,12 @@ export class CreateJobOffreDto {
         description: 'The job category of the job offer'
     })
     jobCategory: string;
+     @ApiProperty({
+        type: String,
+        description: 'The RH associated to job offer'
+    })
+    @IsString() 
+    @IsNotEmpty()
+    user: string;
+
 }

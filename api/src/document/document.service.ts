@@ -4,13 +4,17 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { IDocument } from './interfaces/document.interface';
 import { Model } from 'mongoose';
+import { IUser } from 'src/users/interfaces/user.interface';
 
 @Injectable()
 export class DocumentService {
-  constructor(@InjectModel('documents')private documentModel: Model<IDocument>) {}
+  constructor(@InjectModel('documents')private documentModel: Model<IDocument>,
+             @InjectModel('users') private userModel: Model<IUser>
+) {}
   
   async create(createDocumentDto: CreateDocumentDto):Promise<IDocument> {
     const newDocument = new this.documentModel(createDocumentDto);
+    await this.userModel.updateOne({_id:createDocumentDto.user},{$push:{documents:newDocument._id}})
     return newDocument.save();
   }
 
@@ -45,6 +49,7 @@ export class DocumentService {
     if (!document) {
       throw new NotFoundException('No document found');
     }
+    await this.userModel.updateOne({_id:document.user},{$pull:{documents:document._id}})
     return document;
   
   }

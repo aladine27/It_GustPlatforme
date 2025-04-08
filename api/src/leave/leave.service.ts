@@ -5,15 +5,20 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Ileave } from './interfaces/Ileave.interface';
 import { IleaveType } from 'src/leave-type/interfaces/leaveType.interface';
+import { IUser } from 'src/users/interfaces/user.interface';
 
 @Injectable()
 export class LeaveService {
   constructor(@InjectModel('leaves') private leaveModel: Model<Ileave>
-,  @InjectModel('leaveTypes') private leaveTypeModel: Model<IleaveType>
+,  @InjectModel('leaveTypes') private leaveTypeModel: Model<IleaveType>,
+   @InjectModel('users') private userModel: Model<IUser>
+
 ) {}
   async create(createLeaveDto: CreateLeaveDto): Promise<Ileave> {
     const newLeave = new this.leaveModel(createLeaveDto);
+    await this.userModel.updateOne({_id:createLeaveDto.user},{$push:{leaves:newLeave._id}})
     await this.leaveTypeModel.updateOne({ _id: createLeaveDto.leaveType }, { $push: { leaves: newLeave._id } });
+    
   return newLeave.save();
   }
    

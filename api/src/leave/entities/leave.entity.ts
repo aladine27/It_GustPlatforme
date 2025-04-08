@@ -17,8 +17,8 @@ export class Leave {
         reason: String;
         @Prop({required: true})
         reasonFile: string;
-        @Prop({type:[SchemaTypes.ObjectId], ref: 'leaveTypes',required: true})
-        leaveType:Types.ObjectId;
+        @Prop({ type: SchemaTypes.ObjectId, ref: 'users', required: true })
+       user: Types.ObjectId;
                
     
     

@@ -8,7 +8,8 @@ import { IProject } from 'src/projects/interfaces/project.interface';
 
 @Injectable()
 export class TasksService {
-  constructor(@InjectModel('projects') private projectModel: Model<IProject>,@InjectModel('tasks') private taskModel: Model<ITask>) {}
+  constructor(@InjectModel('projects') private projectModel: Model<IProject>,
+  @InjectModel('tasks') private taskModel: Model<ITask>) {}
 
 
  async create(createTaskDto: CreateTaskDto):Promise<ITask> {

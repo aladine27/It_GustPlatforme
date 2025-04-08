@@ -19,6 +19,8 @@ export interface IProject extends Document {
               
               readonly tasks:string;
 
+              readonly user: string;
+
 
 
 }

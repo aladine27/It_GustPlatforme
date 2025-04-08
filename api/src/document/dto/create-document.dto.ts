@@ -37,6 +37,14 @@ export class CreateDocumentDto {
     @IsString() 
     @IsNotEmpty()
     reason: string;
+    
+    @ApiProperty({
+        type: String,
+        description: 'The user associated to leave'
+    })
+    @IsString() 
+    @IsNotEmpty()
+    user: string;
 
 
 

@@ -6,15 +6,19 @@ import { Model } from 'mongoose';
 import { IFraisAdvantage } from './interfaces/fraisAdvantage.interface';
 import { FraisAdvantage } from './entities/frais-advantage.entity';
 import { IfraiType } from 'src/frai-type/interfaces/fraiType.interface';
+import { IUser } from 'src/users/interfaces/user.interface';
 
 @Injectable()
 export class FraisAdvantageService {
   constructor(@InjectModel('fraisAdvantages') private fraisAdvantageModel: Model<IFraisAdvantage>,
-              @InjectModel('fraiTypes') private fraiTypeModel: Model<IfraiType>) {}
+              @InjectModel('fraiTypes') private fraiTypeModel: Model<IfraiType>,
+            @InjectModel('users') private userModel: Model<IUser>
+            ) {}
   
   async create(createFraisAdvantageDto: CreateFraisAdvantageDto):Promise<IFraisAdvantage> {
     const newFraisAdvantage = new  this.fraisAdvantageModel(createFraisAdvantageDto);
     await this.fraiTypeModel.updateOne({ _id: createFraisAdvantageDto.fraiType }, { $push: { fraisAdvantages: newFraisAdvantage._id } });
+    await this.userModel.updateOne({ _id: createFraisAdvantageDto.user }, { $push: { fraisAdvantages: newFraisAdvantage._id } });
     return newFraisAdvantage.save();
   }
 
@@ -50,6 +54,8 @@ export class FraisAdvantageService {
     if(!fraisAdvantage){
       throw new NotFoundException('No fraisAdvantage found')
     }
+    await this.fraiTypeModel.updateOne({ _id: fraisAdvantage.fraiType }, { $pull: { fraisAdvantages: fraisAdvantage._id } });
+    await this.userModel.updateOne({ _id: fraisAdvantage.user }, { $pull: { fraisAdvantages: fraisAdvantage._id } });
     return fraisAdvantage;  
     }
   

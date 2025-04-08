@@ -4,12 +4,14 @@ import { ProjectsController } from './projects.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { projectSchema } from './entities/project.entity';
 import { categorySchema } from 'src/categories/entities/category.entity';
+import { userSchema } from 'src/users/entities/user.entity';
 
 @Module({
    imports: [MongooseModule.forFeature([{ name: 'projects', schema: projectSchema }]), 
+   MongooseModule.forFeature([{ name: 'users', schema: userSchema }])
 
    
-   MongooseModule.forFeature([{ name: 'categories', schema: categorySchema }])
+   ,MongooseModule.forFeature([{ name: 'categories', schema: categorySchema }])
   
   ],
   controllers: [ProjectsController],
