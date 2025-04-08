@@ -4,12 +4,15 @@ import { UpdateApplicationDto } from './dto/update-application.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { IApplication } from './interfaces/application.interface';
 import { Model } from 'mongoose';
+import { IJobOffre } from 'src/job-offre/interfaces/jobOffre.interface';
 
 @Injectable()
 export class ApplicationService {
-  constructor(@InjectModel('applications') private applicationModel: Model<IApplication>){}
+  constructor(@InjectModel('applications') private applicationModel: Model<IApplication>,
+    @InjectModel('jobOffres') private joboffreModel: Model<IJobOffre>){}
   async create(createApplicationDto: CreateApplicationDto):Promise<IApplication> {
     const newApplication = new this.applicationModel(createApplicationDto);
+   await this.joboffreModel.updateOne({ _id: createApplicationDto.jobOffre }, { $push: { applications: newApplication._id } });
     return newApplication.save();
   }
 

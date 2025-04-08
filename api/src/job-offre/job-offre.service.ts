@@ -8,14 +8,14 @@ import { ifError } from 'node:assert';
 
 @Injectable()
 export class JobOffreService {
-    constructor(@InjectModel('jobOffres') private userModel: Model<IJobOffre>) {}
+    constructor(@InjectModel('jobOffres') private joboffreModel: Model<IJobOffre>) {}
   async create(createJobOffreDto: CreateJobOffreDto):Promise<IJobOffre> {
-    const newJobOffre = new  this.userModel(createJobOffreDto);
+    const newJobOffre = new  this.joboffreModel(createJobOffreDto);
     return newJobOffre.save();
   }
 
   async findAll():Promise<IJobOffre[]> {
-    const jobOffres = await this.userModel.find()
+    const jobOffres = await this.joboffreModel.find()
     if(!jobOffres || jobOffres.length === 0){ 
       throw new NotFoundException('No jobOffre found')
     }
@@ -25,7 +25,7 @@ export class JobOffreService {
     
 
   async findOne(id: string):Promise<IJobOffre> {
-   const jobOffre = await this.userModel.findById(id)
+   const jobOffre = await this.joboffreModel.findById(id)
     if(!jobOffre){ 
         throw new NotFoundException('No jobOffre found')
       }
@@ -34,7 +34,7 @@ export class JobOffreService {
   }
 
   async update(id: string, updateJobOffreDto: UpdateJobOffreDto):Promise<IJobOffre> {
-    const jobOffre = await this.userModel.findByIdAndUpdate(id, updateJobOffreDto, {new: true})
+    const jobOffre = await this.joboffreModel.findByIdAndUpdate(id, updateJobOffreDto, {new: true})
     if(!jobOffre){ 
         throw new NotFoundException('No jobOffre found')
       }
@@ -42,7 +42,7 @@ export class JobOffreService {
   }
 
   async remove(id: string):Promise<IJobOffre> {
-    const jobOffre = await this.userModel.findByIdAndDelete(id);
+    const jobOffre = await this.joboffreModel.findByIdAndDelete(id);
    if (!jobOffre) {
     throw new NotFoundException('No jobOffre found')
   }

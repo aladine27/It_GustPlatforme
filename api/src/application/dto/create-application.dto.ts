@@ -9,4 +9,13 @@ export class CreateApplicationDto {
             description: 'The cv file of the application'
       })
       cvFile: string;
+
+        @ApiProperty({
+        type: String,
+        description: 'The jobOffre of the application',
+    })
+    @IsString() 
+    @IsNotEmpty()
+    jobOffre: string;
+      
 }

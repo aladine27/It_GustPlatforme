@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { SchemaTypes, Types } from "mongoose";
 
 @Schema({timestamps:true})
 export class Event {
@@ -14,6 +15,8 @@ startDate: Date;
 location: String;
 @Prop({required: true})
 status: String;
+@Prop({ type: SchemaTypes.ObjectId, ref: 'eventTypes', required: true })
+eventType: Types.ObjectId;
 
             
 }

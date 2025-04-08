@@ -44,7 +44,15 @@ export class CreateEventDto {
             @IsString() 
             @IsNotEmpty()
             duration: string;
+
+     @ApiProperty({
+        type: String,
+        description: 'The category of the project'
+    })
+    @IsString() 
+    @IsNotEmpty()
+    eventType: string;
         
-        }
+}
 
 

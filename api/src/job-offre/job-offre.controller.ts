@@ -14,8 +14,8 @@ export class JobOffreController {
 
       return res.status(HttpStatus.CREATED).json({
         message: 'JobOffre created successfully',
-         status: HttpStatus.CREATED,
-         data: newJobOffre});
+        status: HttpStatus.CREATED,
+        data: newJobOffre});
 
       
     } catch (error) {

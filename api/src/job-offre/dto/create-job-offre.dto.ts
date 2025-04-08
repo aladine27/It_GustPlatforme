@@ -102,5 +102,5 @@ export class CreateJobOffreDto {
         type: String,
         description: 'The job category of the job offer'
     })
-            jobCategory: string;
+    jobCategory: string;
 }

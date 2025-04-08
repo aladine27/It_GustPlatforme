@@ -4,13 +4,16 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { IEvent } from './interfaces/event.interface';
+import { IEventType } from 'src/event-type/interfaces/eventType.interface';
 
 
 @Injectable()
 export class EventService {
-  constructor (@InjectModel('events') private eventModel: Model<IEvent>) {}
+  constructor (@InjectModel('events') private eventModel: Model<IEvent>,
+              @InjectModel('eventTypes') private eventTypeModel: Model<IEventType>) {}
   async create(createEventDto: CreateEventDto):Promise<IEvent> {
     const newEvent = new this.eventModel(createEventDto);
+    await this.eventTypeModel.updateOne({_id:createEventDto.eventType},{$push:{events:newEvent._id  }})
     return newEvent.save();
     
   }

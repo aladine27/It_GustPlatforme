@@ -27,6 +27,8 @@ export class JobOffre {
     type: string;
     @Prop({type:SchemaTypes.ObjectId, ref: 'jobCategories',required: true})
     jobCategory: Types.ObjectId;  
+    @Prop([{type:SchemaTypes.ObjectId, ref: 'applications'}])
+    applications: Types.ObjectId[];
    
 }
 export const JobOffreSchema = SchemaFactory.createForClass(JobOffre);
