@@ -1,5 +1,6 @@
 
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { SchemaTypes, Types } from "mongoose";
 @Schema({timestamps:true})
 export class Leave { 
         @Prop({required: true})
@@ -16,6 +17,8 @@ export class Leave {
         reason: String;
         @Prop({required: true})
         reasonFile: string;
+        @Prop({type:[SchemaTypes.ObjectId], ref: 'leaveTypes',required: true})
+        leaveType:Types.ObjectId;
                
     
     

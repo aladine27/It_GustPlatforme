@@ -4,13 +4,17 @@ import { UpdateLeaveDto } from './dto/update-leave.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Ileave } from './interfaces/Ileave.interface';
+import { IleaveType } from 'src/leave-type/interfaces/leaveType.interface';
 
 @Injectable()
 export class LeaveService {
-  constructor(@InjectModel('leaves') private leaveModel: Model<Ileave>) {}
+  constructor(@InjectModel('leaves') private leaveModel: Model<Ileave>
+,  @InjectModel('leaveTypes') private leaveTypeModel: Model<IleaveType>
+) {}
   async create(createLeaveDto: CreateLeaveDto): Promise<Ileave> {
     const newLeave = new this.leaveModel(createLeaveDto);
-    return newLeave.save();
+    await this.leaveTypeModel.updateOne({ _id: createLeaveDto.leaveType }, { $push: { leaves: newLeave._id } });
+  return newLeave.save();
   }
    
   async findAll(): Promise<Ileave[]> {

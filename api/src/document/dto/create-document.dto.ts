@@ -2,26 +2,41 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsDate, IsEmail, IsNotEmpty, IsString } from "class-validator";
 
 export class CreateDocumentDto {
-     @ApiProperty()
+       @ApiProperty({
+        type: String,
+        description: 'The title of the document'
+    })
      @IsString() 
      @IsNotEmpty()
      title: string;
-     @ApiProperty()
+     @ApiProperty({
+        type: Date,
+        description: 'The delivery date of the document'
+    })
      @IsDate() 
      @IsNotEmpty()
      delevryDate: Date;
-     @ApiProperty()
+     @ApiProperty({
+        type: Date,
+        description: 'The traitement deadline of the document'
+    })
      @IsDate() 
      @IsNotEmpty()
      traitementDateLimite: Date;
-     @ApiProperty()
-     @IsDate() 
-     @IsNotEmpty()
-     status: string;
-     @ApiProperty()
-     @IsString() 
-     @IsNotEmpty()
-     reason: string;
+       @ApiProperty({
+        type: String,
+        description: 'The status of the document'
+    })
+    @IsString() 
+    @IsNotEmpty()
+    status: string;
+     @ApiProperty({
+        type: String,
+        description: 'The reason of the document'
+    })
+    @IsString() 
+    @IsNotEmpty()
+    reason: string;
 
 
 
