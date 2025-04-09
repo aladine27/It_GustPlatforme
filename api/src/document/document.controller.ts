@@ -6,6 +6,7 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 @Controller('document')
 export class DocumentController {
   constructor(private readonly documentService: DocumentService) {}
+  
 
   @Post()
   async create(@Body() createDocumentDto: CreateDocumentDto, @Res() res) {

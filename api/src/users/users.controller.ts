@@ -1,16 +1,44 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-  
-
+  //config swager for file
+  @ApiBody({
+    schema: { 
+      type: 'object',
+      properties: {
+      fullName:{ type: 'string'},
+      email:{ type: 'string'},
+      address:{type: 'string'},
+      phone:{type: 'string'},
+      password:{type: 'string'},
+      role:{type: 'string'},
+      image:{type: 'string', format: 'binary'},
+      }
+    }
+  })
+  @ApiConsumes('multipart/form-data')
+  //filConfig
+  @UseInterceptors(
+    FileInterceptor('image', {
+        storage: diskStorage({
+        destination: './uploads/users',
+        filename: (_request,image, callback) => 
+        callback(null, `${new Date().getTime()}-${image.originalname}`)
+        })
+    })
+  )
   @Post('')
-  async create(@Body() createUserDto: CreateUserDto, @Res() res) {
+  async create(@Body() createUserDto: CreateUserDto, @Res() res,@UploadedFile()image: Express.Multer.File) {
     try {
+      createUserDto.image = image?.filename
       const newUser = await this.usersService.create(createUserDto);
       return res.status(HttpStatus.CREATED).json({message: 'User created successfully',
          status: HttpStatus.CREATED,
@@ -55,10 +83,40 @@ async findAll( @Res() res) {
       
     }
   }
+    //config swager for file
+  @ApiBody({
+    schema: { 
+      type: 'object',
+      properties: {
+      fullName:{ type: 'string'},
+      email:{ type: 'string'},
+      address:{type: 'string'},
+      phone:{type: 'string'},
+      password:{type: 'string'},
+      role:{type: 'string'},
+      image:{type: 'string', format: 'binary'},
+      }
+    }
+  })
+
+  @ApiConsumes('multipart/form-data')
+  //filConfig
+  @UseInterceptors(
+    FileInterceptor('image', {
+        storage: diskStorage({
+        destination: './uploads/users',
+        filename: (_request,image, callback) => 
+        callback(null, `${new Date().getTime()}-${image.originalname}`)
+        })
+    }),
+    
+
+  )
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Res() res) {
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Res() res,@UploadedFile()image: Express.Multer.File) {
     try {
+      updateUserDto.image = image?.filename
       const user = await this.usersService.update(id, updateUserDto);
       return res.status(HttpStatus.OK).json({message: 'Users updated successfully',data:user, status: HttpStatus.OK
       

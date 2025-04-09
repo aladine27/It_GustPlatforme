@@ -1,15 +1,46 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Res, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { LeaveService } from './leave.service';
 import { CreateLeaveDto } from './dto/create-leave.dto';
 import { UpdateLeaveDto } from './dto/update-leave.dto';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 @Controller('leave')
 export class LeaveController {
   constructor(private readonly leaveService: LeaveService) {}
+      //config swager for file
+      @ApiBody({
+        schema: { 
+          type: 'object',
+          properties: {
+          title:{ type: 'string'},
+          duration:{type: 'string'},
+          status:{type: 'string'},
+          startDate:{type: 'Date'},
+          endDate:{type: 'Date'},
+          user:{type: 'string'},
+          reason:{type: 'string'},
+          reasonFile:{type: 'string', format: 'binary'},
+          }
+        }
+      })
+      @ApiConsumes('multipart/form-data')
+      //filConfig
+      @UseInterceptors(
+        FileInterceptor('reasonFile', {
+            storage: diskStorage({
+            destination: './uploads/leaves',
+            filename: (_request,reasonFile, callback) => 
+            callback(null, `${new Date().getTime()}-${reasonFile.originalname}`)
+            })
+        })
+      )
 
   @Post()
-  async create(@Body() createLeaveDto: CreateLeaveDto, @Res() res) {
+  async create(@Body() createLeaveDto: CreateLeaveDto, @Res() res,@UploadedFile()reasonFile: Express.Multer.File) {
    try {
+      createLeaveDto.reasonFile = reasonFile?.filename
       const newLeave = await this.leaveService.create(createLeaveDto);
       return res.status(HttpStatus.CREATED).json({
         message: 'Leave created successfully',
@@ -68,11 +99,39 @@ export class LeaveController {
     }
     
    }
+         //config swager for file
+      @ApiBody({
+        schema: { 
+          type: 'object',
+          properties: {
+          title:{ type: 'string'},
+          duration:{type: 'string'},
+          status:{type: 'string'},
+          startDate:{type: 'Date'},
+          endDate:{type: 'Date'},
+          user:{type: 'string'},
+          reason:{type: 'string'},
+          reasonFile:{type: 'string', format: 'binary'},
+          }
+        }
+      })
+      @ApiConsumes('multipart/form-data')
+      //filConfig
+      @UseInterceptors(
+        FileInterceptor('reasonFile', {
+            storage: diskStorage({
+            destination: './uploads/leaves',
+            filename: (_request,reasonFile, callback) => 
+            callback(null, `${new Date().getTime()}-${reasonFile.originalname}`)
+            })
+        })
+      )
   
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateLeaveDto: UpdateLeaveDto , @Res() res) {
+  async update(@Param('id') id: string, @Body() updateLeaveDto: UpdateLeaveDto , @Res() res,@UploadedFile()reasonFile: Express.Multer.File) {
     try {
+      updateLeaveDto.reasonFile = reasonFile?.filename
       const leave = await this.leaveService.update(id, updateLeaveDto);
       return res.status(HttpStatus.OK).json({
         message: 'Leave updated successfully',

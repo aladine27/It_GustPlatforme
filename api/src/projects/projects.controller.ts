@@ -1,15 +1,48 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
+    //config swager for file
+    @ApiBody({
+      schema: { 
+        type: 'object',
+        properties: {
+        title:{ type: 'string'},
+        description:{ type: 'string'},
+        duration:{type: 'string'},
+        startDate:{type: 'Date'},
+        endDate:{type: 'Date'},
+        status:{type: 'string'},
+        category:{type: 'string'},
+        user:{type: 'string'},
+        file:{type: 'string', format: 'binary'},
+        }
+      }
+    })
+    @ApiConsumes('multipart/form-data')
+    //filConfig
+    @UseInterceptors(
+      FileInterceptor('file', {
+          storage: diskStorage({
+          destination: './uploads/projects',
+          filename: (_request,file, callback) => 
+          callback(null, `${new Date().getTime()}-${file.originalname}`)
+          })
+      })
+    )
+
   @Post('')
-  async create(@Body() createProjectDto: CreateProjectDto, @Res() res) {
+  async create(@Body() createProjectDto: CreateProjectDto, @Res() res,@UploadedFile()file: Express.Multer.File) {
     try {
+      createProjectDto.file = file?.filename
       const newProject = await this.projectsService.create(createProjectDto);
       return res.status(HttpStatus.CREATED).json({message: 'Project created successfully',
          status: HttpStatus.CREATED,

@@ -35,7 +35,7 @@ export class CreateProjectDto {
     file: string;
 
     @ApiProperty({
-        type: Date,
+        type: String,
         description: 'The start date of the project'
     })
     @IsDate()
@@ -51,7 +51,7 @@ export class CreateProjectDto {
     endDate: Date;
 
     @ApiProperty({
-        type: String,
+        type: Date,
         description: 'The status of the project'
     })
     @IsString() 

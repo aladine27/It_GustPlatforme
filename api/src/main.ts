@@ -8,9 +8,7 @@ async function bootstrap() {
     .setTitle('Pfe project')
     .setDescription('Pfe project API description')
     .setVersion('1.0')
-    .addTag('users')
-    .addTag('projects')
-    .addTag('tasks')
+   
    
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);

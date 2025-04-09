@@ -56,7 +56,7 @@ export class TasksService {
       if(!task){ 
         throw new NotFoundException('No task found')  
       }
-        await this.projectModel.updateOne({_id:task.project},{$push:{tasks:task._id}})
+        await this.projectModel.updateOne({_id:task.project},{$pull:{tasks:task._id}})
     return task;
   }
 }
