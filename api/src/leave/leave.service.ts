@@ -52,6 +52,8 @@ export class LeaveService {
     if (!leave) {
       throw new NotFoundException('No leave found');
     }
+     await this.userModel.updateOne({_id:leave.user},{$push:{leaves:leave._id}})
+    await this.leaveTypeModel.updateOne({ _id: leave.leaveType }, { $push: { leaves: leave._id } });
     return leave;
   }
 }

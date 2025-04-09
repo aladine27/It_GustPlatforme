@@ -51,6 +51,8 @@ export class JobOffreService {
    if (!jobOffre) {
     throw new NotFoundException('No jobOffre found')
   }
+    await this.userModel.updateOne({_id:jobOffre.user},{$pull:{documents:jobOffre._id}})
+    await this.jobCategoryModel.updateOne({_id:jobOffre.user},{$pull:{documents:jobOffre._id}})
     return jobOffre;
   }
 }
