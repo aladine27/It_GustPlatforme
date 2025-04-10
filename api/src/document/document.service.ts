@@ -17,7 +17,15 @@ export class DocumentService {
     await this.userModel.updateOne({_id:createDocumentDto.user},{$push:{documents:newDocument._id}})
     return newDocument.save();
   }
+  
+  async findDocumentByuserId(user: string):Promise<IDocument[]> {
+    const documentUser = await this.documentModel.find({user}).populate('user');
+    if (!documentUser) {
+      throw new NotFoundException('No document found for this user');
+    }
+    return documentUser;
 
+  }
   async findAll():Promise<IDocument[]> {
     const documents = await this.documentModel.find();
     if(!documents || documents.length === 0){ 

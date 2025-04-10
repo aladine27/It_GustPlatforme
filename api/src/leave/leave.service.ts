@@ -21,6 +21,13 @@ export class LeaveService {
     
   return newLeave.save();
   }
+  async findLeaveByUserId(user: string):Promise<Ileave[]> {
+    const leaveUser = await this.leaveModel.find({user}).populate('user')
+    if(!leaveUser){ 
+        throw new NotFoundException('No leave found')
+      }
+      return leaveUser;
+    }
    
   async findAll(): Promise<Ileave[]> {
     const leaves = await this.leaveModel.find();

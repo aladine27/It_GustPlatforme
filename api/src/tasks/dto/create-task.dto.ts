@@ -57,4 +57,11 @@ export class CreateTaskDto {
     @IsString() 
     @IsNotEmpty()
     project: string;
+     @ApiProperty({
+        type: String,
+        description: 'The user associated with the task'
+    })
+    @IsString() 
+    @IsNotEmpty()
+    user: string;
 }

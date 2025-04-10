@@ -28,6 +28,9 @@ export class User {
     projects: Types.ObjectId[];
     @Prop([{type:SchemaTypes.ObjectId, ref: 'jobOffres'}])
     joboffres: Types.ObjectId[];
+    
+    @Prop([{type:SchemaTypes.ObjectId, ref: 'tasks'}])
+    tasks: Types.ObjectId[];
   
   
   

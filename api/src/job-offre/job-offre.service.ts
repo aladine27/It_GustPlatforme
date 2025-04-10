@@ -18,6 +18,15 @@ export class JobOffreService {
     await this.jobCategoryModel.updateOne({_id:createJobOffreDto.user},{$push:{documents:newJobOffre._id}})
     return newJobOffre.save();
   }
+  async findJobOffreByuserId(user: string):Promise<IJobOffre[]> {
+    const jobOffreUser = await this.joboffreModel.find({user}).populate('user');
+    if (!jobOffreUser) {
+      throw new NotFoundException('No jobOffre found for this user');
+    }
+    return jobOffreUser;
+
+  }
+
 
   async findAll():Promise<IJobOffre[]> {
     const jobOffres = await this.joboffreModel.find()

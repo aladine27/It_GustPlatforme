@@ -8,6 +8,7 @@ import { projectSchema } from 'src/projects/entities/project.entity';
 @Module({
   imports: [MongooseModule.forFeature([{ name: 'tasks', schema: taskSchema }])
     ,MongooseModule.forFeature([{ name: 'projects', schema: projectSchema }])
+    ,MongooseModule.forFeature([{ name: 'users', schema: projectSchema }])
 ],
   controllers: [TasksController],
   providers: [TasksService],

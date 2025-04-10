@@ -25,6 +25,25 @@ export class DocumentController {
       
     }
   }
+  @Get('/findDocumentByUserId/:user')
+  async findDocumentbyUserId(@Param('user') user: string, @Res() res) {
+  try {
+    const userDocument = await this.documentService.findDocumentByuserId(user);
+    return res.status(HttpStatus.OK).json({
+      message:'Document Associated to user retreived successfully',
+      data:userDocument,
+      status: HttpStatus.OK
+    });
+    
+    
+  } catch (error) {
+    return res.status(HttpStatus.BAD_REQUEST).json({
+      message:error.message,
+      data:null, 
+      status: HttpStatus.OK
+    });
+  }
+  }
 
   @Get()
   async findAll( @Res() res) {

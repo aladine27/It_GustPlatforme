@@ -57,6 +57,27 @@ export class LeaveController {
     }
     
    }
+   @Get('/findLeaveByUserId/:user')
+   async findLeaveByUserId(@Param('user') user: string, @Res() res) {
+  try {
+    const userLeave = await this.leaveService.findLeaveByUserId(user);
+    return res.status(HttpStatus.OK).json({
+      message: 'Leave Associated to user retrieved successfully',
+      data: userLeave,
+      status: HttpStatus.OK,
+    });
+
+    
+  } catch (error) {
+     return res.status(HttpStatus.BAD_REQUEST).json({
+        data: null,
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
+
+    
+  } 
+  }
   
 
   @Get()

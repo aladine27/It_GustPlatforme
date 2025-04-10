@@ -19,6 +19,8 @@ export class Task {
         status: String;
         @Prop({type:SchemaTypes.ObjectId, ref: 'projects',required: true})
         project: Types.ObjectId;      
+        @Prop({type:SchemaTypes.ObjectId, ref: 'users',required: true})
+        user: Types.ObjectId;
 
 }
 export const taskSchema = SchemaFactory.createForClass(Task);

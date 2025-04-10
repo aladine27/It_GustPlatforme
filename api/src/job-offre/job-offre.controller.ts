@@ -27,6 +27,28 @@ export class JobOffreController {
       
     }
   }
+  @Get('/findJobOffreByUserId/:user')
+  async findJobOffrebyUserId(@Param('user') user: string, @Res() res) {
+  try {
+    const userJobOffre = await this.jobOffreService.findJobOffreByuserId(user);
+    return res.status(HttpStatus.OK).json({
+      message:'JobOffre Associated to user retreived successfully',
+      data:userJobOffre,
+      status: HttpStatus.OK
+    });
+    
+    
+  }
+  catch (error) {
+    return res.status(HttpStatus.BAD_REQUEST).json({
+      message:error.message,
+      data:null, 
+      status: HttpStatus.OK
+    });
+  }
+  }
+
+
 
   @Get()
   async findAll(@Res() res) {

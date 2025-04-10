@@ -51,6 +51,25 @@ export class UsersController {
       
     }
   }
+    @Get('/getbyEmail/:email')
+  async findByEmail(@Param('email') email: string, @Res() res) {
+    try {
+      const userEmail = await this.usersService.findbyEmail(email);
+      return res.status(HttpStatus.OK).json(
+        {message: 'UsersByEmail retrieved successfully',
+          data:userEmail,
+          status: HttpStatus.OK
+        });
+    
+      
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        data:null, 
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message} );
+      
+    }
+  }
  @Get() 
 async findAll( @Res() res) {
     try {
@@ -67,6 +86,7 @@ async findAll( @Res() res) {
       );
     }
   }
+  
 
   @Get(':id')
   async findOne(@Param('id') id: string, @Res() res) {
@@ -83,6 +103,8 @@ async findAll( @Res() res) {
       
     }
   }
+
+  
     //config swager for file
   @ApiBody({
     schema: { 

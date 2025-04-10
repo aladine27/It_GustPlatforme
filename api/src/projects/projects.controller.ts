@@ -55,6 +55,25 @@ export class ProjectsController {
       
     }
   }
+   @Get('/findProjectByUserId/:user')
+  async findProjectbyUserId(@Param('user') user: string, @Res() res) {
+    try {
+       const userProject = await this.projectsService.findProjectByuserId(user);
+      return res.status(HttpStatus.OK).json({message: 'Project Associated to user retrieved successfully',
+        data:userProject, 
+        status: HttpStatus.OK
+    });
+      
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        data:null, 
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message} );
+      
+    }
+  }
+
+
  @Get() 
 async findAll( @Res() res) {
     try {
@@ -87,10 +106,40 @@ async findAll( @Res() res) {
       
     }
   }
+  //config swager for file  
+    //config swager for file
+      @ApiBody({
+        schema: { 
+          type: 'object',
+          properties: {
+          title:{ type: 'string'},
+          description:{ type: 'string'},
+          duration:{type: 'string'},
+          file:{ type: 'string',format: 'binary'},
+          startDate:{type: 'Date'},
+          endDate:{type: 'Date'},
+          status:{type: 'string'},
+          category:{type: 'string'},
+          user:{type: 'string'},
+          }
+        }
+      })
+      @ApiConsumes('multipart/form-data')
+      //filConfig
+      @UseInterceptors(
+        FileInterceptor('file', {
+            storage: diskStorage({
+            destination: './uploads/applications',
+            filename: (_request,file, callback) => 
+            callback(null, `${new Date().getTime()}-${file.originalname}`)
+            })
+        })
+      )
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto, @Res() res) {
+  async update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto, @Res() res,@UploadedFile()file: Express.Multer.File) {
     try {
+      updateProjectDto.file = file?.filename
       const Project = await this.projectsService.update(id, updateProjectDto);
       return res.status(HttpStatus.OK).json({message: 'Projects updated successfully',data:Project, status: HttpStatus.OK
       

@@ -23,6 +23,13 @@ constructor(@InjectModel('projects') private projectModel: Model<IProject>,
   
       return newProject.save();
     }
+    async findProjectByuserId(user: string):Promise<IProject[]> {
+    const projectUser = await this.projectModel.find({user}).populate('user')
+    if(!projectUser){ 
+        throw new NotFoundException('No project found for this user')
+      }
+      return projectUser;
+    }
   
     async findAll():Promise<IProject[]> {
       const projects = await this.projectModel.find()

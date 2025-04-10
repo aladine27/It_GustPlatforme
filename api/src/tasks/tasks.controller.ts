@@ -22,6 +22,24 @@ export class TasksController {
     }
     
   }
+  @Get('/gettaskbyUserID/:user')
+  async findTaskByUser(@Param('user') user: string, @Res() res) {
+    try {
+      const userTasks= await this.tasksService.getTaskByUserID(user);
+      return res.status(HttpStatus.OK).json(
+        {message: 'TasksByUser retrieved successfully',
+        data:userTasks,
+        status: HttpStatus.OK
+        });
+      
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        data:null, 
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message} );
+      
+    }
+  }
 
   @Get()
   async findAll(@Res() res) {
