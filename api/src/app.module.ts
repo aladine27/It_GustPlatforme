@@ -21,9 +21,21 @@ import { AdminModule } from './admin/admin.module';
 import { RhModule } from './rh/rh.module';
 import { EmployeModule } from './employe/employe.module';
 import { ManagerModule } from './manager/manager.module';
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [MongooseModule.forRoot('mongodb://localhost:27017',{dbName: 'pfeala'}), UsersModule, CategoriesModule, ProjectsModule, TasksModule, JobOffreModule, JobCategoryModule, LeaveModule, EventModule, ApplicationModule, DocumentModule, FraisAdvantageModule, LeaveTypeModule, FraiTypeModule, EventTypeModule, AdminModule, RhModule, EmployeModule, ManagerModule],
+  imports: 
+  [
+     ConfigModule.forRoot({
+      isGlobal: true, // Permet d'utiliser les variables d'environnement dans toute l'application
+      envFilePath: '/src/.env', // Définit où se trouve ton fichier .env
+    }),
+    MongooseModule.forRoot('mongodb://localhost:27017',{dbName: 'pfeala'}),
+     UsersModule, 
+     CategoriesModule,
+      ProjectsModule, TasksModule, JobOffreModule, JobCategoryModule, LeaveModule, EventModule, ApplicationModule, DocumentModule, FraisAdvantageModule, LeaveTypeModule, FraiTypeModule, EventTypeModule, AdminModule, RhModule, EmployeModule, ManagerModule, AuthModule
+    ],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -38,6 +38,13 @@ export class UsersService {
     }
     return userEmail
   }
+   async findbyName(fullName:string):Promise<IUser>  {
+    const userEmail = await this.userModel.findOne({fullName})
+    if(!userEmail){ 
+      throw new NotFoundException('No userEmail found')
+    }
+    return userEmail
+  }
   async findUserByRole(role:string):Promise<IUser[]> {
     const users = await this.userModel.find({role})
     if(!users || users.length === 0){ 
@@ -64,5 +71,37 @@ export class UsersService {
   
     return user;
   
+  }
+   // Stocke le token de réinitialisation dans l'utilisateur
+  async storePwdToken(token: string, userId: string): Promise<void> {
+    const result = await this.userModel.findByIdAndUpdate(userId, { resetToken: token });
+    if (!result) {
+      throw new NotFoundException('Unable to store reset token');
+    }
+  }
+
+  // Retrouve un utilisateur grâce à son token de réinitialisation
+  async findByResetToken(token: string): Promise<IUser> {
+    const user = await this.userModel.findOne({ resetToken: token });
+    if (!user) {
+      throw new NotFoundException('No user found for this reset token');
+    }
+    return user;
+  }
+
+  // Met à jour le mot de passe de l'utilisateur
+  async updatePassword(id: string, newPassword: string): Promise<void> {
+    const result = await this.userModel.findByIdAndUpdate(id, { password: newPassword });
+    if (!result) {
+      throw new NotFoundException('Unable to update password');
+    }
+  }
+
+  // Efface le token de réinitialisation
+  async clearResetToken(id: string): Promise<void> {
+    const result = await this.userModel.findByIdAndUpdate(id, { resetToken: null });
+    if (!result) {
+      throw new NotFoundException('Unable to clear reset token');
+    }
   }
 }
