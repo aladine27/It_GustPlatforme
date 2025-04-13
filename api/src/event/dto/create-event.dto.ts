@@ -52,6 +52,9 @@ export class CreateEventDto {
     @IsString() 
     @IsNotEmpty()
     eventType: string;
+      @IsString() 
+    @IsNotEmpty()
+    user: string;
         
 }
 

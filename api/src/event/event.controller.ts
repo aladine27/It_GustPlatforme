@@ -27,6 +27,24 @@ export class EventController {
   }
     
   }
+  @Get('/geteventbyUserID/:user')
+  async findEventByUser(@Param('user') user: string, @Res() res) {
+    try {
+      const userEvents = await this.eventService.getEventByUserID(user);
+      return res.status(HttpStatus.OK).json({
+        message: 'EventsByUser retrieved successfully',
+        data: userEvents,
+        status: HttpStatus.OK
+      });      
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        data: null,
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message
+      });
+      
+    }
+  }
 
   @Get()
   async findAll(@Res() res) {

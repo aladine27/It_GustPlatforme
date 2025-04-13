@@ -21,6 +21,13 @@ export class FraisAdvantageService {
     await this.userModel.updateOne({ _id: createFraisAdvantageDto.user }, { $push: { fraisAdvantages: newFraisAdvantage._id } });
     return newFraisAdvantage.save();
   }
+  async getFraisAdvantageByfraitype(fraiType: string):Promise<IFraisAdvantage[]> {
+    const fraisAdvantage = await this.fraisAdvantageModel.find({fraiType}).populate('fraiType') 
+    if(!fraisAdvantage){ 
+      throw new NotFoundException('No fraisAdvantage for this fraiType found')
+    }
+    return fraisAdvantage;
+  }
 
   async findAll():Promise<IFraisAdvantage[]> {
     const fraisAdvantages = await this.fraisAdvantageModel.find()

@@ -51,7 +51,7 @@ export class UsersController {
       
     }
   }
-    @Get('/getbyEmail/:email')
+  @Get('/getbyEmail/:email')
   async findByEmail(@Param('email') email: string, @Res() res) {
     try {
       const userEmail = await this.usersService.findbyEmail(email);
@@ -70,6 +70,27 @@ export class UsersController {
       
     }
   }
+  
+  @Get('/getbyRole/:role')
+  async finduserByRole(@Param('role') role: string, @Res() res) {
+    try {
+      const usersrole = await this.usersService.findUserByRole(role);
+      return res.status(HttpStatus.OK).json(
+        { message: 'UsersByRole retrieved successfully',
+          data:usersrole,
+          status: HttpStatus.OK
+        });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        data:null, 
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message
+      
+      } );
+      
+    }
+  }
+
  @Get() 
 async findAll( @Res() res) {
     try {

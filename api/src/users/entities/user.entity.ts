@@ -1,8 +1,12 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { SchemaTypes, Types } from "mongoose";
 import { timestamp } from "rxjs";
+import { Admin } from "src/admin/entities/admin.entity";
+import { Employe } from "src/employe/entities/employe.entity";
+import { Manager } from "src/manager/entities/manager.entity";
+import { Rh } from "src/rh/entities/rh.entity";
 
-@Schema({timestamps:true})
+@Schema({timestamps:true, discriminatorKey: 'role'})
 export class User {
   @Prop({required: true})
     fullName: string;
@@ -16,8 +20,9 @@ export class User {
     password: string;
    @Prop({required: true})
     image: string; 
-    @Prop({required: true})
+    @Prop({required: true,type: String, enum: [Admin.name,Manager.name,Employe.name,Rh.name]}) 
     role: string;
+
     @Prop([{type:SchemaTypes.ObjectId, ref: 'leaves'}])
     leaves: Types.ObjectId[];
     @Prop([{type:SchemaTypes.ObjectId, ref: 'documents'}])
@@ -31,6 +36,8 @@ export class User {
     
     @Prop([{type:SchemaTypes.ObjectId, ref: 'tasks'}])
     tasks: Types.ObjectId[];
+    @Prop([{type:SchemaTypes.ObjectId, ref: 'events'}])
+    events: Types.ObjectId[];
   
   
   

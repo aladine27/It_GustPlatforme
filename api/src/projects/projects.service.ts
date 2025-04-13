@@ -30,6 +30,13 @@ constructor(@InjectModel('projects') private projectModel: Model<IProject>,
       }
       return projectUser;
     }
+     async findProjectBycategory(category: string):Promise<IProject[]> {
+    const projectCategory = await this.projectModel.find({category}).populate('category')
+    if(!projectCategory){ 
+        throw new NotFoundException('No project found for this category')
+      }
+      return projectCategory;
+    }
   
     async findAll():Promise<IProject[]> {
       const projects = await this.projectModel.find()

@@ -17,6 +17,8 @@ location: String;
 status: String;
 @Prop({ type: SchemaTypes.ObjectId, ref: 'eventTypes', required: true })
 eventType: Types.ObjectId;
+@Prop({ type: SchemaTypes.ObjectId, ref: 'users', required: true })
+user: Types.ObjectId;
 
             
 }

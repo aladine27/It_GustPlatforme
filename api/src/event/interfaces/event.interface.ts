@@ -7,6 +7,7 @@ export interface IEvent extends Document {
     readonly localisation: String;
     readonly status: String;
     readonly eventType: string;
+    readonly user: string;
            
                    
        

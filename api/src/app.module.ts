@@ -17,9 +17,13 @@ import { LeaveTypeModule } from './leave-type/leave-type.module';
 import { FraiTypeModule } from './frai-type/frai-type.module';
 
 import { EventTypeModule } from './event-type/event-type.module';
+import { AdminModule } from './admin/admin.module';
+import { RhModule } from './rh/rh.module';
+import { EmployeModule } from './employe/employe.module';
+import { ManagerModule } from './manager/manager.module';
 
 @Module({
-  imports: [MongooseModule.forRoot('mongodb://localhost:27017',{dbName: 'pfeala'}), UsersModule, CategoriesModule, ProjectsModule, TasksModule, JobOffreModule, JobCategoryModule, LeaveModule, EventModule, ApplicationModule, DocumentModule, FraisAdvantageModule, LeaveTypeModule, FraiTypeModule, EventTypeModule],
+  imports: [MongooseModule.forRoot('mongodb://localhost:27017',{dbName: 'pfeala'}), UsersModule, CategoriesModule, ProjectsModule, TasksModule, JobOffreModule, JobCategoryModule, LeaveModule, EventModule, ApplicationModule, DocumentModule, FraisAdvantageModule, LeaveTypeModule, FraiTypeModule, EventTypeModule, AdminModule, RhModule, EmployeModule, ManagerModule],
   controllers: [AppController],
   providers: [AppService],
 })

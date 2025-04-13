@@ -47,6 +47,28 @@ export class JobOffreController {
     });
   }
   }
+  @Get('/getJobOffreByjobCategory/:jobCategory')
+  async findJobOffreByJobCategory(@Param('jobCategory') jobCategory: string, @Res() res) {
+    try {
+      const jobOffre = await this.jobOffreService.getJobOffreByjobCategory(jobCategory);
+      return res.status(HttpStatus.OK).json({
+        message:'JobOffre Associated to jobCategory retreived successfully',
+        data:jobOffre,
+        status: HttpStatus.OK
+      });
+    }
+    catch(error){
+      return res.status(HttpStatus.BAD_REQUEST).json(
+        {
+          data: null,
+          status: HttpStatus.BAD_REQUEST,
+          message: error.message
+        }
+      )
+
+    }
+
+  }
 
 
 

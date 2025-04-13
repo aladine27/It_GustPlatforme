@@ -38,6 +38,13 @@ export class UsersService {
     }
     return userEmail
   }
+  async findUserByRole(role:string):Promise<IUser[]> {
+    const users = await this.userModel.find({role})
+    if(!users || users.length === 0){ 
+      throw new NotFoundException('No users for this role found')
+    }
+    return users;
+  }
 
  async update(id: string, updateUserDto: UpdateUserDto):Promise<IUser> {
   

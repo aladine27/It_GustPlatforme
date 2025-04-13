@@ -55,6 +55,25 @@ export class FraisAdvantageController {
           
         }
   }
+  @Get('/getfraiAdvantagebyFraiType/:fraiType')
+  async getfraiAdvantagebyFraiType(@Param('fraiType') fraiType: string, @Res() res) {
+    try {
+      const typefraiAdvantage = await this.fraisAdvantageService.getFraisAdvantageByfraitype(fraiType);
+      return res.status(HttpStatus.OK).json({message: 'FraisAdvantageFor this Type retrieved successfully',
+        data:typefraiAdvantage,
+        status: HttpStatus.OK });
+      
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).json(
+        {
+          data: null,
+          status: HttpStatus.BAD_REQUEST,
+          message: error.message
+        }
+      );
+      
+    }
+  }
 
   @Get()
   async findAll(@Res() res) {

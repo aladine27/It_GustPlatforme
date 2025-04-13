@@ -72,6 +72,24 @@ export class ProjectsController {
       
     }
   }
+  @Get('/findProjectByCategory/:category')
+  async findProjectbyCategory(@Param('category') category: string, @Res() res) {
+    try {
+       const projectCategory = await this.projectsService.findProjectBycategory(category);
+      return res.status(HttpStatus.OK).json({message: 'Project Associated to Category retrieved successfully',
+        data:projectCategory, 
+        status: HttpStatus.OK
+    });
+      
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        data:null, 
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message} );
+      
+    }
+  } 
+
 
 
  @Get() 

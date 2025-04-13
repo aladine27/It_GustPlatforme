@@ -26,6 +26,14 @@ export class JobOffreService {
     return jobOffreUser;
 
   }
+  async getJobOffreByjobCategory(jobCategory: string):Promise<IJobOffre[]> {
+    const jobOffre = await this.joboffreModel.find({jobCategory}).populate('jobCategory')
+    if(!jobOffre){ 
+      throw new NotFoundException('No jobOffre for this jobCategory found')
+    }
+    return jobOffre;
+  }
+
 
 
   async findAll():Promise<IJobOffre[]> {
