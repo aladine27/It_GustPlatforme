@@ -30,5 +30,6 @@ import { Rh, RhSchema } from 'src/rh/entities/rh.entity';
    
   controllers: [UsersController],
   providers: [UsersService],
+  exports: [UsersService],
 })
 export class UsersModule {}

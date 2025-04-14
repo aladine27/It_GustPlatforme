@@ -1,4 +1,6 @@
 export interface IUser extends Document {
+
+       readonly _id:string;
   
        readonly fullName: string;
        
