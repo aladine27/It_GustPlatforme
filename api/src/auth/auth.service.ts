@@ -1,15 +1,19 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import {createLoginDto} from './dto/creat-login.dto'
 import * as   argon2  from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { IUser } from 'src/users/interfaces/user.interface';
+import { UpdateUserDto } from 'src/users/dto/update-user.dto';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import { NotFoundError } from 'rxjs';
 @Injectable()
 export class AuthService {
     constructor(private userService:UsersService,
         private jwtService:JwtService,
-        private configService:ConfigService
+        private configService:ConfigService,
     ){}
 
     async signIn(CreateLoginDto:createLoginDto){
@@ -69,4 +73,30 @@ export class AuthService {
     await this.userService.update(userId, {refreshToken:null}) 
   }
 
-}
+  async updateprofile(userId: string, updateUserDto: UpdateUserDto) {
+    const profile = await this.userService.update(userId, updateUserDto)
+    if(!profile){ 
+        throw new BadRequestException('No user found')
+      }
+    return profile;
+  }
+  
+async updatePassword(id: string, updateUserDto: UpdateUserDto) {
+    const user = await this.userService.findOne(id);
+    if (!user) {
+        throw new NotFoundException('User not found');
+    }
+    if (!updateUserDto.password) {
+        throw new BadRequestException('Password is required');
+    }
+    const newPassword = await argon2.hash(updateUserDto.password);
+    await this.userService.update(id, {...UpdateUserDto,password: newPassword})
+    const token= await this.generateToken(user._id,user.email)
+    await this.updateRefreshToken(user._id,token.refreshToken)
+    return {user , token}
+    }
+
+
+
+  }
+

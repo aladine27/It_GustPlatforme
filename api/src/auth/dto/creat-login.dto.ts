@@ -4,18 +4,18 @@ import { IsNotEmpty, IsString } from "class-validator";
 export class createLoginDto {
     @ApiProperty({
         type:String,
-        description:"this field is required"
+        description:"this Email is required"
     }
     )
     @IsString()
     @IsNotEmpty()
-  email: string;
+    email: string;
     @ApiProperty({
         type:String,
-        description:"this field is required"
+        description:"this Password is required"
     }
     )
     @IsString()
     @IsNotEmpty()
-  password: string;
+    password: string;
 }

@@ -15,7 +15,6 @@ import { DocumentModule } from './document/document.module';
 import { FraisAdvantageModule } from './frais-advantage/frais-advantage.module';
 import { LeaveTypeModule } from './leave-type/leave-type.module';
 import { FraiTypeModule } from './frai-type/frai-type.module';
-
 import { EventTypeModule } from './event-type/event-type.module';
 import { AdminModule } from './admin/admin.module';
 import { RhModule } from './rh/rh.module';
