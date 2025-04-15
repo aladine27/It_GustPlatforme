@@ -89,12 +89,16 @@ async updatePassword(id: string, updateUserDto: UpdateUserDto) {
     if (!updateUserDto.password) {
         throw new BadRequestException('Password is required');
     }
+    const isSamePassword = await argon2.verify(user.password, updateUserDto.password);
+    if (isSamePassword) {
+        throw new BadRequestException('New password cannot be the same as the old password');
+    }
     const newPassword = await argon2.hash(updateUserDto.password);
     await this.userService.update(id, {...UpdateUserDto,password: newPassword})
     const token= await this.generateToken(user._id,user.email)
     await this.updateRefreshToken(user._id,token.refreshToken)
     return {user , token}
-    }
+}
 
 
 
