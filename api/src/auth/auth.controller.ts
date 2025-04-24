@@ -2,11 +2,13 @@ import { Body, Controller, Get, HttpStatus, Param, Patch, Post, Req, Res, Upload
 import { AuthService } from './auth.service';
 import { createLoginDto } from './dto/creat-login.dto';
 import { AccessTokenGuard } from 'src/guards/accessToken.guard';
-import { Request } from 'express';
+import { Request,Response } from 'express';
 import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { UpdateUserDto } from 'src/users/dto/update-user.dto';
+import { AuthGuard } from '@nestjs/passport';
+
 @Controller('auth')
 @ApiBearerAuth("access-token")
 export class AuthController {
@@ -86,4 +88,24 @@ export class AuthController {
         
       }
     }
-}
+    @Get('github')
+    @UseGuards(AuthGuard('github'))
+  githubLogin(){
+
+  }
+@Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  async githubCallback(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as any; // Cast to any to access properties
+    const token = await this.authService.generateToken(user._id, user.email);
+    return res.status(HttpStatus.OK).json({
+      message: 'GitHub login successful',
+      data: user,
+      status: HttpStatus.OK,
+      token,
+    });
+  }
+
+
+
+  }

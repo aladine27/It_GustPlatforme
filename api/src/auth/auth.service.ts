@@ -96,6 +96,13 @@ async updatePassword(id: string, updateUserDto: UpdateUserDto) {
     await this.updateRefreshToken(user._id,token.refreshToken)
     return {user , token}
 }
+//Vérifie qu’un utilisateur avec cet email existe déjà dans la base de données.
+  async validateExistingUserByEmail(email: string) {
+    const user = await this.userService.findbyEmail(email);
+    return user; // ou null si pas trouvé
+  }
+
+
 
 
 
