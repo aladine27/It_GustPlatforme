@@ -36,6 +36,7 @@ export class UsersController {
     })
   )
   @Post('')
+  
   async create(@Body() createUserDto: CreateUserDto, @Res() res,@UploadedFile()image: Express.Multer.File) {
     try {
       createUserDto.image = image?.filename

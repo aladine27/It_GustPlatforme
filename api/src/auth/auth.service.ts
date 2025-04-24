@@ -4,11 +4,8 @@ import {createLoginDto} from './dto/creat-login.dto'
 import * as   argon2  from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { IUser } from 'src/users/interfaces/user.interface';
 import { UpdateUserDto } from 'src/users/dto/update-user.dto';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-import { NotFoundError } from 'rxjs';
+
 @Injectable()
 export class AuthService {
     constructor(private userService:UsersService,
@@ -17,7 +14,7 @@ export class AuthService {
     ){}
 
     async signIn(CreateLoginDto:createLoginDto){
-        //test user
+        //test existantce user
         const user = await this.userService.findbyEmail(CreateLoginDto.email)
         if (!user){
             throw new BadRequestException("user not exist")

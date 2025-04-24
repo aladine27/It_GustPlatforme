@@ -24,7 +24,7 @@ export class AuthController {
     return this.authService.logout(user.sub);
 
     }
-     //config swager for file
+  
     @ApiBody({
       schema: { 
         type: 'object',
