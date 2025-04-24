@@ -5,6 +5,7 @@ import { Admin } from "src/admin/entities/admin.entity";
 import { Employe } from "src/employe/entities/employe.entity";
 import { Manager } from "src/manager/entities/manager.entity";
 import { Rh } from "src/rh/entities/rh.entity";
+import * as argon2 from 'argon2';
 
 @Schema({timestamps:true, discriminatorKey: 'role'})
 export class User {
@@ -22,6 +23,10 @@ export class User {
     image: string; 
     @Prop({required: true,type: String, enum: [Admin.name,Manager.name,Employe.name,Rh.name]}) 
     role: string;
+    @Prop() 
+    refreshToken: string;
+    
+
 
     @Prop([{type:SchemaTypes.ObjectId, ref: 'leaves'}])
     leaves: Types.ObjectId[];
@@ -45,4 +50,9 @@ export class User {
 
 
 }
-export const userSchema = SchemaFactory.createForClass(User);
+export const userSchema = SchemaFactory.createForClass(User)
+.pre('save', 
+  async function () {
+ this.password = await argon2.hash(this.password)
+ }
+)
