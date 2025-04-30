@@ -7,12 +7,17 @@ import { AccessTokenStrategy } from './strategies/accessToken.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { GithubStrategy } from './strategies/github.strategy';
 import { HttpModule } from '@nestjs/axios';
+import { GoogleStrategy } from './strategies/google.strategy';
 @Module({
   imports:[UsersModule,
     HttpModule,
     PassportModule.register({session:false}),
     JwtModule.register({})],
   controllers: [AuthController],
-  providers: [AuthService,AccessTokenStrategy,GithubStrategy],
+  providers: [
+    AuthService,
+    AccessTokenStrategy,
+    GithubStrategy,
+    GoogleStrategy],
 })
 export class AuthModule {}

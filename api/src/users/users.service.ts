@@ -4,15 +4,46 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { IUser } from './interfaces/user.interface';
+import { randomBytes } from 'crypto';
 
+import * as argon2 from 'argon2';
 @Injectable()
 export class UsersService {
   constructor(@InjectModel('users') private userModel: Model<IUser>) {}
 
-  async create(createUserDto: CreateUserDto):Promise<IUser> {
-    const newUser = new  this.userModel(createUserDto);
+  
 
-    return newUser.save();
+  async generateRandomPassword():Promise<string> {
+    const randomBytesPromise = new Promise<string>((resolve, reject) => {
+      randomBytes(8, (err, buffer) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(buffer.toString('hex'));
+        }
+      });
+    });
+    return randomBytesPromise;
+  }
+
+  async create(createUserDto: CreateUserDto): Promise<IUser>  {
+  
+    const plainPassword =  await this.generateRandomPassword();
+    console.log('Generated password:', plainPassword);  
+    const newUser = new this.userModel({
+      ...createUserDto,
+      password: plainPassword,
+    });
+
+    const user = await newUser.save();
+    return user;
+
+    /*// 4) On renvoie l’utilisateur avec le mot de passe en clair
+    //    (utile si tu veux l’envoyer par mail)
+    return {
+      ...saved.toObject(),
+      plainPassword,
+    };*/
   }
 
   async findAll():Promise<IUser[]> {
@@ -65,5 +96,6 @@ export class UsersService {
     return user;
   
   }
+  
     
 }

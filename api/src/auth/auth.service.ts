@@ -22,6 +22,7 @@ export class AuthService {
         }
         //test Password
         const passwordMatches= await argon2.verify(user.password,CreateLoginDto.password)
+        console.log(passwordMatches)
         if (!passwordMatches){
             throw new BadRequestException("password incorrect")
 

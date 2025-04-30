@@ -24,8 +24,7 @@ export class AuthController {
   logout(@Req() req: Request) {
     const user = req.user as {sub: string};
     return this.authService.logout(user.sub);
-
-    }
+  }
   
     @ApiBody({
       schema: { 
@@ -105,6 +104,27 @@ export class AuthController {
       token,
     });
   }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  googleLogin() {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async  googleCallback(@Req() req: Request, @Res() res: Response) {
+    const user =req.user as any; // Cast to any to access properties
+    const token = await this.authService.generateToken(user._id,user.email);
+    return res.status(HttpStatus.OK).json({
+      message: 'Google login successful',
+      data: user,
+      status: HttpStatus.OK,
+      token,
+    });
+
+  }
+
+
+  
 
 
 

@@ -9,6 +9,7 @@ export class createLoginDto {
     )
     @IsString()
     @IsNotEmpty()
+    
     email: string;
     @ApiProperty({
         type:String,
