@@ -21,11 +21,29 @@ import { RhModule } from './rh/rh.module';
 import { EmployeModule } from './employe/employe.module';
 import { ManagerModule } from './manager/manager.module';
 import { AuthModule } from './auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
+const connection="process.env.MONGO_URI"
 
 @Module({
-  imports: [MongooseModule.forRoot('mongodb://localhost:27017',{dbName: 'pfeala'}), UsersModule, CategoriesModule, ProjectsModule, TasksModule, JobOffreModule, JobCategoryModule, LeaveModule, EventModule, ApplicationModule, DocumentModule, FraisAdvantageModule, LeaveTypeModule, FraiTypeModule, EventTypeModule, AdminModule, RhModule, EmployeModule, ManagerModule, AuthModule,ConfigModule.forRoot({isGlobal:true})],
+  imports: [
+    UsersModule, CategoriesModule, ProjectsModule, TasksModule, JobOffreModule, JobCategoryModule, LeaveModule, EventModule, ApplicationModule, DocumentModule, FraisAdvantageModule, LeaveTypeModule, FraiTypeModule, EventTypeModule, AdminModule, RhModule, EmployeModule, ManagerModule, AuthModule
+  ,  ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env', // Spécifier explicitement le fichier .env
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGO_URI'),
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      }),
+      inject: [ConfigService],
+    }),
+    
+  
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

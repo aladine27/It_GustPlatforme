@@ -1,12 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { Roles } from 'src/decorators/roles.decorators';
+import { AccessTokenGuard } from 'src/guards/accessToken.guard';
+import { RolesGuard } from 'src/guards/roles.guard';
+
+
 
 @Controller('users')
+@ApiBearerAuth("access-token")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
   //config swager for file
@@ -35,8 +41,11 @@ export class UsersController {
         })
     })
   )
-  @Post('')
-  
+  @Post('') 
+  @Roles('Admin')
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @ApiBearerAuth('access-token') 
+
   async create(@Body() createUserDto: CreateUserDto, @Res() res,@UploadedFile()image: Express.Multer.File) {
     try {
       createUserDto.image = image?.filename

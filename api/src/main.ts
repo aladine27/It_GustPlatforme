@@ -1,7 +1,8 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './guards/roles.guard';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
    const config = new DocumentBuilder()
@@ -21,6 +22,9 @@ async function bootstrap() {
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
+    // Enregistre RolesGuard pour toutes les routes
+  app.useGlobalGuards(app.get(Reflector), new RolesGuard(app.get(Reflector)));
+
   await app.listen(process.env.PORT ?? 3000);
   
 }

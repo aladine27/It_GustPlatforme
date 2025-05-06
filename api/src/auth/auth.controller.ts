@@ -96,7 +96,7 @@ export class AuthController {
   @UseGuards(AuthGuard('github'))
   async githubCallback(@Req() req: Request, @Res() res: Response) {
     const user = req.user as any; // Cast to any to access properties
-    const token = await this.authService.generateToken(user._id, user.email);
+    const token = await this.authService.generateToken(user._id, user.email,user.Role);
     return res.status(HttpStatus.OK).json({
       message: 'GitHub login successful',
       data: user,
@@ -113,7 +113,7 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async  googleCallback(@Req() req: Request, @Res() res: Response) {
     const user =req.user as any; // Cast to any to access properties
-    const token = await this.authService.generateToken(user._id,user.email);
+    const token = await this.authService.generateToken(user._id,user.email,user.Role);
     return res.status(HttpStatus.OK).json({
       message: 'Google login successful',
       data: user,

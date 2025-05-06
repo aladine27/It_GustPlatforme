@@ -12,7 +12,7 @@ export interface IUser extends Document {
        
        readonly phone: string;
        
-       readonly Role: string;
+       readonly role: string;
         
        readonly address: string;
        

@@ -28,18 +28,19 @@ export class AuthService {
 
         }
         //generate Token
-        const token= await this.generateToken(user._id,user.email)
+       const token = await this.generateToken(user._id, user.email, user.role);
         await this.updateRefreshToken(user._id,token.refreshToken)
         return {user , token}
         
 
     }
-    async generateToken(userId:string,email:string){
+    async generateToken(userId:string,email:string, role:string){
         const [accessToken, refreshToken]=await Promise.all([
             this.jwtService.signAsync(
                 {
                     sub:userId,
-                    email
+                    email,
+                    role
                 },
                 {
                     secret:this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
@@ -49,7 +50,8 @@ export class AuthService {
             this.jwtService.signAsync(
                 {
                     sub:userId,
-                    email
+                    email,
+                    role
                 },
                 {
                     secret:this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
@@ -93,7 +95,7 @@ async updatePassword(id: string, updateUserDto: UpdateUserDto) {
     }
     const newPassword = await argon2.hash(updateUserDto.password);
     await this.userService.update(id, {...UpdateUserDto,password: newPassword})
-    const token= await this.generateToken(user._id,user.email)
+    const token= await this.generateToken(user._id,user.email,user.role)
     await this.updateRefreshToken(user._id,token.refreshToken)
     return {user , token}
 }
