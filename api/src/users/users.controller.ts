@@ -9,12 +9,14 @@ import { Roles } from 'src/decorators/roles.decorators';
 import { AccessTokenGuard } from 'src/guards/accessToken.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 
-
-
-@Controller('users')
 @ApiBearerAuth("access-token")
+@UseGuards(AccessTokenGuard) 
+@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+  @Post()
+  @UseGuards( RolesGuard)
+  @Roles('Admin')
   //config swager for file
   @ApiBody({
     schema: { 
@@ -41,11 +43,7 @@ export class UsersController {
         })
     })
   )
-  @Post('') 
-  @Roles('Admin')
-  @UseGuards(AccessTokenGuard, RolesGuard)
-  @ApiBearerAuth('access-token') 
-
+ 
   async create(@Body() createUserDto: CreateUserDto, @Res() res,@UploadedFile()image: Express.Multer.File) {
     try {
       createUserDto.image = image?.filename

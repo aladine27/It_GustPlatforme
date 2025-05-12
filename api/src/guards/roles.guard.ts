@@ -13,19 +13,19 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // 1. Récupération des rôles requis
+    
     const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    // Aucun rôle requis = accès autorisé
+   
     if (!requiredRoles) return true;
 
-    // 2. Récupération de la requête
+  
     const request = context.switchToHttp().getRequest();
-
-    // 3. Vérification cruciale de l'authentification
+    
+ 
     if (!request.user) {
       throw new UnauthorizedException(
         'Accès refusé : utilisateur non authentifié', 
