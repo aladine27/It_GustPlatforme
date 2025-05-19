@@ -15,6 +15,7 @@ import { UsersModule }         from 'src/users/users.module';
 
 import { AccessTokenGuard }    from 'src/guards/accessToken.guard';
 import { RolesGuard }          from 'src/guards/roles.guard';
+import { MailModule } from 'src/mail/mail.module';
 
 @Global()
 @Module({
@@ -38,6 +39,7 @@ import { RolesGuard }          from 'src/guards/roles.guard';
     AccessTokenStrategy,
     GithubStrategy,
     GoogleStrategy,
+    MailModule,
 
   
     AccessTokenGuard,

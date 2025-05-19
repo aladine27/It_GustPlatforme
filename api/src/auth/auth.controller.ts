@@ -3,11 +3,12 @@ import { AuthService } from './auth.service';
 import { createLoginDto } from './dto/creat-login.dto';
 import { AccessTokenGuard } from 'src/guards/accessToken.guard';
 import { Request,Response } from 'express';
-import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { UpdateUserDto } from 'src/users/dto/update-user.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { Public } from 'src/decorators/public.decorator';
 
 @Controller('auth')
 @ApiBearerAuth("access-token")
@@ -121,6 +122,36 @@ export class AuthController {
       token,
     });
 
+  }
+  @Post('forgot-password')
+  @Public()    
+  @ApiOperation({ summary: 'Réinitialisation du mot de passe' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', format: 'email', example: 'user@example.com' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Mot de passe réinitialisé avec succès' })
+  @ApiResponse({ status: 404, description: 'Utilisateur introuvable' })
+  async forgotPassword(@Body('email') email: string,@Res() res: Response) {
+    console.log('[Controller] received forgot-password request for:', email);
+    try {
+      const result = await this.authService.forgotPassword(email);
+      console.log('[Controller] service result:', result);
+      return res.status(HttpStatus.OK).json({
+        status: HttpStatus.OK,
+        message: result.message,
+      });
+    } catch (err) {
+      console.error('[Controller] error in forgot-password:', err);
+      return res.status(err.getStatus?.() || 400).json({
+        status: err.getStatus?.() || 400,
+        message: err.message,
+      });
+    }
   }
 
 
