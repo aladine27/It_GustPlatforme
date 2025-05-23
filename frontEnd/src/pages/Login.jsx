@@ -13,12 +13,13 @@ import {
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import GitHubIcon from '@mui/icons-material/GitHub';
+import { NavLink } from "react-router-dom";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const handleSubmit = (event) => {
     event.preventDefault();
-    // Traitement de la connexion ici
+    
     console.log({ email, password });
   };
   return (
@@ -67,6 +68,7 @@ export default function Login() {
             control={<Checkbox value="remember" color="primary" />}
             label="Se souvenir de moi"
           />
+          <NavLink to="/dashboard">
           <Button
             type="submit"
             fullWidth
@@ -75,21 +77,16 @@ export default function Login() {
           >
             Se connecter
           </Button>
+          </NavLink>
+
           <Button
-            type="submit"
             fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
+            variant="outlined"
+            startIcon={<GitHubIcon />}
+          
+            sx={{ mb: 2 }}
           >
-            Se connecter
-          </Button>
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-          >
-            Se connecter
+            Se connecter avec GitHub
           </Button>
           <Grid container>
             <Grid item xs>
