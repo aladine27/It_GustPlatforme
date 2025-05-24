@@ -4,6 +4,16 @@ import Login from './pages/Login'
 import Home from './pages/Home'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
+import Employe from './pages/Employe'
+import Evenement from './pages/Evenement'
+import Projet from './pages/Projet'
+import Tache from './pages/Tache'
+import Document from './pages/Document'
+import Conge from './pages/Conge'
+import Recrutement from './pages/Recrutement'
+import Frais from './pages/Frais'
+import Profile from './pages/Profile'
+
 function App() {
  
 
@@ -11,9 +21,29 @@ function App() {
     <>
      <BrowserRouter>
       <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
+        
         <Route path="/login" element={<Login />} /> 
-        <Route path="/" element={<Home />} />
+        <Route path="/Home" element={<Home />} />
+        <Route path="/" element={<Dashboard />} >
+            <Route path="/Employe" element={<Employe />} />
+            <Route path="/Evenement" element={<Evenement />} />
+            <Route path="/Projet" element={<Projet />} />
+            <Route path="/Tache" element={<Tache />} />
+            <Route path="/Document" element={<Document />} />
+            <Route path="/Conge" element={<Conge />} />
+            <Route path="/Recrutement" element={<Recrutement />} />
+            <Route path="/Frais" element={<Frais />} />
+            <Route path="/Profile" element={<Profile />} />
+        </Route> 
+        
+        <Route/>
+
+        
+
+
+
+    
+
         </Routes>
       </BrowserRouter>
         
