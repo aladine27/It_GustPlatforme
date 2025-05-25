@@ -25,15 +25,9 @@ function SideBar() {
     ]
     //const VisibleMenuItems = MenuItems.filter((item) => 
 
-    
-        
-    
-
-
   return (
     <>
-    
-    <Box padding={1}  sx={{ width: 300, backgroundColor: '#f0f0f0', height: '100vh',position: 'fixed' }}>
+    <Box padding={1}  style={{ width: 300, backgroundColor: 'red', height: '100vh',position: 'fixed' }}>
     <List>
         {MenuItems.map((Item) => (
             <ListItem key = {Item.text}  >
@@ -41,7 +35,7 @@ function SideBar() {
                     <ListItemIcon >
                         {Item.icon}
                     </ListItemIcon>
-                    <ListItemText primary={Item.text} />
+                <ListItemText primary={Item.text} />
                 </ListItemButton>
             </ListItem>        
         ),)} 
