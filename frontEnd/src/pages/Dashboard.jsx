@@ -1,21 +1,49 @@
-import React from 'react'
-
-import Navbar from '../components/Navbar'
-import { Box } from '@mui/material'
-import { Outlet } from 'react-router-dom'
-import SideBar from '../components/SideBar'
-
+import React from 'react';
+import { Box } from '@mui/material';
+import Navbar from '../components/Navbar';
+import SideBar from '../components/SideBar';
+import { Outlet } from 'react-router-dom';
+const SIDEBAR_WIDTH = 300;
+const NAVBAR_HEIGHT = 64;
 function Dashboard() {
   return (
-    <>
-    <Navbar/>
-    <Box style={{display:'flex', justifyContent:'space-between', width:'100%' ,backgroundColor:'red'}}>
-    <SideBar />
-    <Outlet/>
+    <Box sx={{ height: '100vh', overflow: 'hidden' }}>
+      {/* Navbar */}
+      <Box sx={{ height: `${NAVBAR_HEIGHT}px`, width: '100%', position: 'fixed', top: 0, left: 0, zIndex: 1100 }}>
+        <Navbar />
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          pt: `${NAVBAR_HEIGHT}px`, 
+          height: '100%',
+        }}
+      >
+        <Box
+          sx={{
+            width: `${SIDEBAR_WIDTH}px`,
+            minWidth: `${SIDEBAR_WIDTH}px`,
+            height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+            bgcolor: '#f0f0f0',
+            overflowY: 'auto',
+          }}
+        >
+          <SideBar />
+        </Box>
+ <Box
+  sx={{
+    width: `calc(100vw - ${SIDEBAR_WIDTH}px)`,
+    height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+    overflowY: 'auto',
+    bgcolor: '#fff',
+    p: 2,
+  }}
+>
+  <Outlet />
+</Box>
+      </Box>
     </Box>
-    </>
- 
-  )
+  );
 }
-
-export default Dashboard
+export default Dashboard;

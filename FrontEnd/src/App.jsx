@@ -23,17 +23,17 @@ function App() {
       <Routes>
         
         <Route path="/login" element={<Login />} /> 
-        <Route path="/Home" element={<Home />} />
-        <Route path="/" element={<Dashboard />} >
-            <Route path="/Employe" element={<Employe />} />
-            <Route path="/Evenement" element={<Evenement />} />
-            <Route path="/Projet" element={<Projet />} />
-            <Route path="/Tache" element={<Tache />} />
-            <Route path="/Document" element={<Document />} />
-            <Route path="/Conge" element={<Conge />} />
-            <Route path="/Recrutement" element={<Recrutement />} />
-            <Route path="/Frais" element={<Frais />} />
-            <Route path="/Profile" element={<Profile />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/Dashboard" element={<Dashboard />} >
+            <Route path="Employe" element={<Employe />} />
+            <Route path="Evenement" element={<Evenement />} />
+            <Route path="Projet" element={<Projet />} />
+            <Route path="Tache" element={<Tache />} />
+            <Route path="Document" element={<Document />} />
+            <Route path="Conge" element={<Conge />} />
+            <Route path="Recrutement" element={<Recrutement />} />
+            <Route path="Frais" element={<Frais />} />
+            <Route path="Profile" element={<Profile />} />
         </Route> 
         
         <Route/>
