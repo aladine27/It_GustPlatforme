@@ -58,7 +58,8 @@ const feedbackData = [
 ]
 
 // Composant FeedbackCard amélioré
-const FeedbackCard = ({ image, name, email, role, feedback, rating, experience }) => {
+const FeedbackCard = ({ image, name, email, role, feedback, rating, experience }) => 
+  {
   const theme = useTheme()
 
   return (
@@ -101,7 +102,7 @@ const FeedbackCard = ({ image, name, email, role, feedback, rating, experience }
           top: 16,
           right: 16,
           fontSize: "3rem",
-          color: alpha(theme.palette.primary.main, 0.1),
+          color: "green",
           fontFamily: "serif",
           lineHeight: 1,
         }}
