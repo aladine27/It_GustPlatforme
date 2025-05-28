@@ -8,6 +8,10 @@ import { randomBytes } from 'crypto';
 import * as SibApiV3Sdk from 'sib-api-v3-sdk';
 import * as argon2 from 'argon2';
 import { ConfigService } from '@nestjs/config';
+import * as ExcelJS from 'exceljs';
+import * as PDFDocument from 'pdfkit';
+
+
 @Injectable()
 export class UsersService {
   constructor(@InjectModel('users') private userModel: Model<IUser>,private readonly configService: ConfigService) {}
@@ -131,6 +135,105 @@ export class UsersService {
     return user;
   
   }
+  
+  async fetchUsersByDateRange(startDate?: Date, endDate?: Date): Promise<IUser[]> {
+    const filter: any = {};
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = startDate;
+      if (endDate)   filter.createdAt.$lte = endDate;
+    }
+    const users = await this.userModel.find(filter);
+    if (!users || users.length === 0) {
+      throw new NotFoundException('Aucun utilisateur trouvé pour ce filtre');
+    }
+    return users;
+  }
+  async exportUsersToPdf(startDate?: Date, endDate?: Date): Promise<Buffer> {
+    const users = await this.fetchUsersByDateRange(startDate, endDate);
+
+    const doc = new PDFDocument({ size: 'A4', margin: 40 });
+    const buffers: Buffer[] = [];
+    doc.on('data', chunk => buffers.push(chunk));
+    const endPromise = new Promise<Buffer>(resolve =>
+      doc.on('end', () => resolve(Buffer.concat(buffers))),
+    );
+
+    // Titre et période
+    doc
+      .fontSize(18)
+      .text('Liste des utilisateurs', { align: 'center' })
+      .moveDown(0.5)
+      .fontSize(12)
+      .text(
+        `Période : ${startDate?.toISOString().split('T')[0] || '∞'} → ${endDate?.toISOString().split('T')[0] || '∞'}`,
+        { align: 'center' },
+      )
+      .moveDown(1);
+
+    // En-têtes de colonne
+    const headers = ['Nom complet', 'Email', 'Téléphone', 'Rôle', 'Date de création'];
+    const colWidths = [120, 160, 80, 60, 80];
+    let x = doc.page.margins.left;
+    headers.forEach((h, i) => {
+      doc
+        .font('Helvetica-Bold')
+        .text(h, x, doc.y, { width: colWidths[i], underline: true });
+      x += colWidths[i];
+    });
+    doc.moveDown(0.5);
+
+    // Lignes des utilisateurs
+    users.forEach(u => {
+      let xRow = doc.page.margins.left;
+      const cells = [
+        u.fullName,
+        u.email,
+        u.phone,
+        u.role,
+        u.createdAt.toISOString().split('T')[0],
+      ];
+      cells.forEach((text, i) => {
+        doc.font('Helvetica').text(text, xRow, doc.y, { width: colWidths[i] });
+        xRow += colWidths[i];
+      });
+      doc.moveDown(0.5);
+    });
+
+    doc.end();
+    return endPromise;
+  }
+    async exportUsersToExcel(startDate?: Date,endDate?: Date,): Promise<Buffer> {
+      const users = await this.fetchUsersByDateRange(startDate, endDate);
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet('Users');
+  
+      sheet.columns = [
+        { header: 'ID', key: '_id', width: 24 },
+        { header: 'Nom complet', key: 'fullName', width: 30 },
+        { header: 'Email', key: 'email', width: 30 },
+        { header: 'Téléphone', key: 'phone', width: 20 },
+        { header: 'Rôle', key: 'role', width: 15 },
+        { header: 'Créé le', key: 'createdAt', width: 20 },
+      ];
+  
+      users.forEach(user => {
+        sheet.addRow({
+          _id: user._id.toString(),
+          fullName: user.fullName,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          createdAt: user.createdAt.toISOString().split('T')[0],
+        });
+      });
+  
+      const arrayBuffer = await workbook.xlsx.writeBuffer();
+      return Buffer.from(arrayBuffer);
+
+
+    }
+  
   
     
 }

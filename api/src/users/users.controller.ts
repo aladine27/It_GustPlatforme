@@ -8,7 +8,7 @@ import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorators';
 import { AccessTokenGuard } from 'src/guards/accessToken.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
-
+import { Response } from 'express'; // Ensure explicit import
 @ApiBearerAuth("access-token")
 @UseGuards(AccessTokenGuard) 
 @Controller('users')
@@ -196,4 +196,92 @@ async findAll( @Res() res) {
     }
    
   }
+
+/** Export Excel with URL parameters */
+@Get('export/excel/:start/:end')
+@UseGuards(RolesGuard) // Ensure RolesGuard is applied
+@Roles('Admin')
+async exportExcel(
+  @Param('start') start: string,
+  @Param('end') end: string,
+  @Res() res: Response, // Explicitly type Response
+) {
+  let startDate: Date;
+  let endDate: Date;
+
+  try {
+    startDate = new Date(start);
+    endDate = new Date(end);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'Invalid date format (expected YYYY-MM-DD)',
+        data: null,
+      });
+    }
+
+    const buffer = await this.usersService.exportUsersToExcel(startDate, endDate);
+
+    // Set response headers for Excel file
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="users_${startDate.toISOString().split('T')[0]}_${endDate.toISOString().split('T')[0]}.xlsx`,
+    });
+
+    return res.status(HttpStatus.OK).send(buffer);
+  } catch (error) {
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      message: `Failed to export Excel: ${error.message}`,
+      data: null,
+    });
+  }
+}
+
+/** Export PDF with URL parameters */
+@Get('export/pdf/:start/:end')
+@UseGuards(RolesGuard) // Ensure RolesGuard is applied
+@Roles('Admin')
+async exportPdf(
+  @Param('start') start: string,
+  @Param('end') end: string,
+  @Res() res: Response, // Explicitly type Response
+) {
+  let startDate: Date;
+  let endDate: Date;
+
+  try {
+    startDate = new Date(start);
+    endDate = new Date(end);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'Invalid date format (expected YYYY-MM-DD)',
+        data: null,
+      });
+    }
+
+    const buffer = await this.usersService.exportUsersToPdf(startDate, endDate);
+
+    // Set response headers for PDF file
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="users_${startDate.toISOString().split('T')[0]}_${endDate.toISOString().split('T')[0]}.pdf`,
+    });
+
+    return res.status(HttpStatus.OK).send(buffer);
+  } catch (error) {
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      message: `Failed to export PDF: ${error.message}`,
+      data: null,
+    });
+  }
+}
+
+
+
+
 }

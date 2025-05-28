@@ -16,5 +16,7 @@ export interface IUser extends Document {
         
        readonly address: string;
        
+       readonly createdAt: Date;
+       
 
 }

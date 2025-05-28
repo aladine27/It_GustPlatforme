@@ -9,6 +9,7 @@ import { diskStorage } from 'multer';
 import { UpdateUserDto } from 'src/users/dto/update-user.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Public } from 'src/decorators/public.decorator';
+import { RolesGuard } from 'src/guards/roles.guard';
 
 @Controller('auth')
 @ApiBearerAuth("access-token")
@@ -16,6 +17,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('SignIn')
+   @UseGuards( RolesGuard)
+   @Public()
   signIn(@Body() createLoginDto: createLoginDto){
     return this.authService.signIn(createLoginDto)
 
