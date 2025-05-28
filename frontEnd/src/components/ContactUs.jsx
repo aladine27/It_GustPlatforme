@@ -19,10 +19,8 @@ import BusinessIcon from '@mui/icons-material/Business';
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
-
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleSubmit = (e) => { e.preventDefault(); console.log('Form submitted:', formData); };
-
   return (
     <Box
       sx={{
@@ -44,12 +42,12 @@ const ContactUs = () => {
         </Fade>
 
         <Grid container spacing={4} justifyContent="center" alignItems="flex-start" wrap="nowrap">
-          <Grid item sx={{ flex: '0 0 350px' }}>
+          <Grid item sx={{ flex: '1 1 auto', maxWidth: '600px' }}>
             <Zoom in timeout={800}>
               <Paper
                 sx={{
                   width: '100%',
-                  maxWidth: '350px',
+
                   backgroundColor: '#fff',
                   border: '1px solid #e0e0e0',
                   borderRadius: '8px',
@@ -67,7 +65,7 @@ const ContactUs = () => {
                 </Box>
                 <Box component="form" onSubmit={handleSubmit}>
                   <Grid container spacing={2}>
-                    <Grid item xs={12}>
+                    <Grid item xs={12} columns={12}>
                       <TextField name="name" label="Name" value={formData.name} onChange={handleChange} variant="outlined" required fullWidth size="small" />
                     </Grid>
                     <Grid item xs={12}>
@@ -87,12 +85,12 @@ const ContactUs = () => {
             </Zoom>
           </Grid>
 
-          <Grid item sx={{ flex: '0 0 350px', ml: 4 }}>
+          <Grid item sx={{ flex: '1 1 auto', maxWidth: '600px' }}>
             <Zoom in timeout={1000}>
               <Paper
                 sx={{
                   width: '100%',
-                  maxWidth: '350px',
+           
                   backgroundColor: '#f5f5f5',
                   border: '1px solid #e0e0e0',
                   borderRadius: '8px',

@@ -14,6 +14,7 @@ const Home = () => {
         minHeight: '100vh',
         overflowX: 'hidden',
         backgroundColor: '#fff',
+      
       }}
     >
       {/* Navbar */}

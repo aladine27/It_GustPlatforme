@@ -26,6 +26,7 @@ function Dashboard() {
             minWidth: `${SIDEBAR_WIDTH}px`,
             height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
             bgcolor: '#f0f0f0',
+            color: 'blue',
             overflowY: 'auto',
           }}
         >

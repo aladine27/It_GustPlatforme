@@ -57,7 +57,7 @@ const feedbackData = [
   },
 ]
 
-// Composant FeedbackCard amélioré
+// Composant FeedbackCard 
 const FeedbackCard = ({ image, name, email, role, feedback, rating, experience }) => 
   {
   const theme = useTheme()
@@ -204,7 +204,7 @@ const AboutUs = () => {
     slidesToShow: 3,
     slidesToScroll: 1,
     autoplay: true,
-    autoplaySpeed: 4000,
+    autoplaySpeed: 2000,
     rtl: false,
     pauseOnHover: true,
     dotsClass: "slick-dots custom-dots",

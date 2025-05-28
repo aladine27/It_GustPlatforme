@@ -32,6 +32,7 @@ import {
 } from '@mui/icons-material';
 import ButtonComponent from '../components/Global/ButtonComponent';
 import ModelComponent from '../components/Global/ModelComponent';
+import AddEmploye from '../components/Employe/AddEmploye';
 
 // Map to hold assigned colors for each domain
 const domainColorMap = {};
@@ -60,9 +61,10 @@ const Employe = () => {
 
   const getStatusColor = (status) => (status === 'Actif' ? 'success' : 'error');
 
-  const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const [openAddEmploye, setOpenAddEmploye] = React.useState(false);
+
+  const handleOpenAddEmploye = () => setOpenAddEmploye(true);
+  const handleCloseAddEmploye = () => setOpenAddEmploye(false);
 
   return (
     <>
@@ -73,13 +75,13 @@ const Employe = () => {
             <Typography variant="h4" fontWeight="bold" color="#1976d2">Gestion des Employés</Typography>
             <Grid container spacing={2} alignItems="center" justifyContent="flex-end">
               <Grid item>
-                <ButtonComponent onClick={handleOpen} text="Ajouter" icon={<AddCircleOutline />} />
+                <ButtonComponent onClick={handleOpenAddEmploye} text="Ajouter" icon={<AddCircleOutline />} />
               </Grid>
               <Grid item>
-                <ButtonComponent onClick={handleOpen} text="Export" icon={<CloudDownload />} />
+                <ButtonComponent  text="Export" icon={<CloudDownload />} />
               </Grid>
               <Grid item>
-                <ButtonComponent onClick={handleOpen} text="Import" icon={<FileUpload />} />
+                <ButtonComponent text="Import" icon={<FileUpload />} />
               </Grid>
             </Grid>
           </Box>
@@ -89,14 +91,14 @@ const Employe = () => {
           <TextField
             label="Rechercher"
             variant="outlined"
-            fullWidth
-            sx={{ mb: 3, borderRadius: '20px' }}
+            sx={{ mb: 3, borderRadius: '50px', width: '50%' }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <IconButton size="small"><SearchIcon /></IconButton>
                 </InputAdornment>
               ),
+              sx: {borderRadius:'20px',width:"100%" }
             }}
           />
 
@@ -161,7 +163,11 @@ const Employe = () => {
 
         </Card>
       </Box>
-      <ModelComponent open={open} handleClose={handleClose} title="Ajouter un Employé" icon={<AddCircleOutline />} />
+    <ModelComponent open={openAddEmploye} handleClose={handleCloseAddEmploye} title="Ajouter un Employé" icon={<AddCircleOutline />} >
+      <Box >
+      <AddEmploye />
+      </Box>
+      </ModelComponent>
     </>
   );
 };
