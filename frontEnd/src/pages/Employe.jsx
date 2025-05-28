@@ -33,6 +33,7 @@ import {
 import ButtonComponent from '../components/Global/ButtonComponent';
 import ModelComponent from '../components/Global/ModelComponent';
 import AddEmploye from '../components/Employe/AddEmploye';
+import DeleteEmploye from '../components/Employe/DeleteEmploye';
 
 // Map to hold assigned colors for each domain
 const domainColorMap = {};
@@ -51,20 +52,39 @@ const getDomainColor = (domain) => {
 };
 
 const Employe = () => {
-  const rows = [
+  // État pour la liste des employés
+  const [rows, setRows] = React.useState([
     { id: 1, name: 'Ahmed Bennani', email: 'ahmed.bennani@gmail.com', phone: '+212 6 12 34 56 78', domain: 'Développement Web', status: 'Actif', avatar: 'AB' },
     { id: 2, name: 'Fatima Alaoui', email: 'fatima.alaoui@gmail.com', phone: '+212 6 87 65 43 21', domain: 'Design UI/UX', status: 'Actif', avatar: 'FA' },
     { id: 3, name: 'Youssef Tazi', email: 'youssef.tazi@gmail.com', phone: '+212 6 55 44 33 22', domain: 'DevOps', status: 'Inactif', avatar: 'YT' },
     { id: 4, name: 'Youssef ', email: 'youssef.tazi@hotmail.com', phone: '+212 6 55 44 33 22', domain: 'Développement mobile', status: 'Inactif', avatar: 'YT' },
     { id: 5, name: 'Youssef ', email: 'youssef.tazi@hotmail.com', phone: '+212 6 55 44 33 22', domain: 'DevOps', status: 'Inactif', avatar: 'YT' }
-  ];
+  ]);
 
-  const getStatusColor = (status) => (status === 'Actif' ? 'success' : 'error');
-
+  // États pour les modales
   const [openAddEmploye, setOpenAddEmploye] = React.useState(false);
+  const [openDelete, setOpenDelete] = React.useState(false);
+  const [selectedEmploye, setSelectedEmploye] = React.useState(null);
 
   const handleOpenAddEmploye = () => setOpenAddEmploye(true);
   const handleCloseAddEmploye = () => setOpenAddEmploye(false);
+
+  const handleOpenDelete = (employe) => {
+    setSelectedEmploye(employe);
+    setOpenDelete(true);
+  };
+
+  const handleCloseDelete = () => {
+    setSelectedEmploye(null);
+    setOpenDelete(false);
+  };
+
+  const handleConfirmDelete = () => {
+    setRows((prev) => prev.filter((emp) => emp.id !== selectedEmploye.id));
+    handleCloseDelete();
+  };
+
+  const getStatusColor = (status) => (status === 'Actif' ? 'success' : 'error');
 
   return (
     <>
@@ -78,7 +98,7 @@ const Employe = () => {
                 <ButtonComponent onClick={handleOpenAddEmploye} text="Ajouter" icon={<AddCircleOutline />} />
               </Grid>
               <Grid item>
-                <ButtonComponent  text="Export" icon={<CloudDownload />} />
+                <ButtonComponent text="Export" icon={<CloudDownload />} />
               </Grid>
               <Grid item>
                 <ButtonComponent text="Import" icon={<FileUpload />} />
@@ -98,7 +118,7 @@ const Employe = () => {
                   <IconButton size="small"><SearchIcon /></IconButton>
                 </InputAdornment>
               ),
-              sx: {borderRadius:'20px',width:"100%" }
+              sx: { borderRadius: '20px', width: "100%" }
             }}
           />
 
@@ -150,7 +170,11 @@ const Employe = () => {
                     </TableCell>
                     <TableCell align="center">
                       <Tooltip title="Supprimer">
-                        <IconButton size="small" sx={{ color: '#d32f2f' }}>
+                        <IconButton
+                          size="small"
+                          sx={{ color: '#d32f2f' }}
+                          onClick={() => handleOpenDelete(row)}
+                        >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -163,11 +187,19 @@ const Employe = () => {
 
         </Card>
       </Box>
-    <ModelComponent open={openAddEmploye} handleClose={handleCloseAddEmploye} title="Ajouter un Employé" icon={<AddCircleOutline />} >
-      <Box >
-      <AddEmploye />
-      </Box>
+
+      <ModelComponent open={openAddEmploye} handleClose={handleCloseAddEmploye} title="Ajouter un Employé" icon={<AddCircleOutline />}>
+        <Box>
+          <AddEmploye />
+        </Box>
       </ModelComponent>
+
+      <DeleteEmploye
+        open={openDelete}
+        handleClose={handleCloseDelete}
+        handleConfirm={handleConfirmDelete}
+        employeName={selectedEmploye?.name}
+      />
     </>
   );
 };
