@@ -13,6 +13,8 @@ import Conge from './pages/Conge'
 import Recrutement from './pages/Recrutement'
 import Frais from './pages/Frais'
 import Profile from './pages/Profile'
+import ResetPassword from './pages/ResetPassword'
+import ExportPage from './components/ExportModal'
 
 function App() {
  
@@ -23,6 +25,7 @@ function App() {
       <Routes>
         
         <Route path="/login" element={<Login />} /> 
+        <Route path="/resetPassword" element={<ResetPassword/>}/>
         <Route path="/" element={<Home />} />
         <Route path="/Dashboard" element={<Dashboard />} >
             <Route path="Employe" element={<Employe />} />
@@ -34,6 +37,7 @@ function App() {
             <Route path="Recrutement" element={<Recrutement />} />
             <Route path="Frais" element={<Frais />} />
             <Route path="Profile" element={<Profile />} />
+            <Route path="export/:entity" element={<ExportPage />} />
         </Route> 
         
         <Route/>

@@ -1,43 +1,16 @@
 import * as React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Card,
-  Typography,
-  Box,
-  Avatar,
-  Chip,
-  IconButton,
-  Tooltip,
-  Stack,
-  Divider,
-  TextField,
-  InputAdornment,
-  Grid
-} from '@mui/material';
-import {
-  Delete as DeleteIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon,
-  Work as WorkIcon,
-  Search as SearchIcon,
-  AddCircleOutline,
-  CloudDownload,
-  FileUpload
-} from '@mui/icons-material';
+import { useState } from 'react'; // Add this import
+import {Table,TableBody,TableCell,TableContainer,TableHead,TableRow,Paper,Card,Typography,Box,Avatar,Chip,IconButton,Tooltip,Stack,Divider,TextField,InputAdornment,Grid} from '@mui/material';
+import {Delete as DeleteIcon,Email as EmailIcon,Phone as PhoneIcon,Work as WorkIcon,Search as SearchIcon,AddCircleOutline,CloudDownload,FileUpload} from '@mui/icons-material';
 import ButtonComponent from '../components/Global/ButtonComponent';
 import ModelComponent from '../components/Global/ModelComponent';
 import AddEmploye from '../components/Employe/AddEmploye';
 import DeleteEmploye from '../components/Employe/DeleteEmploye';
+import ExportModal from '../components/ExportModal'; 
 
-// Map to hold assigned colors for each domain
+
 const domainColorMap = {};
-// Array of available color names
+
 const availableColors = ['primary', 'secondary', 'success', 'warning', 'info', 'error'];
 let colorIndex = 0;
 
@@ -53,7 +26,7 @@ const getDomainColor = (domain) => {
 
 const Employe = () => {
   // État pour la liste des employés
-  const [rows, setRows] = React.useState([
+  const [rows, setRows] = useState([
     { id: 1, name: 'Ahmed Bennani', email: 'ahmed.bennani@gmail.com', phone: '+212 6 12 34 56 78', domain: 'Développement Web', status: 'Actif', avatar: 'AB' },
     { id: 2, name: 'Fatima Alaoui', email: 'fatima.alaoui@gmail.com', phone: '+212 6 87 65 43 21', domain: 'Design UI/UX', status: 'Actif', avatar: 'FA' },
     { id: 3, name: 'Youssef Tazi', email: 'youssef.tazi@gmail.com', phone: '+212 6 55 44 33 22', domain: 'DevOps', status: 'Inactif', avatar: 'YT' },
@@ -61,19 +34,20 @@ const Employe = () => {
     { id: 5, name: 'Youssef ', email: 'youssef.tazi@hotmail.com', phone: '+212 6 55 44 33 22', domain: 'DevOps', status: 'Inactif', avatar: 'YT' }
   ]);
 
-  // États pour les modales
-  const [openAddEmploye, setOpenAddEmploye] = React.useState(false);
-  const [openDelete, setOpenDelete] = React.useState(false);
-  const [selectedEmploye, setSelectedEmploye] = React.useState(null);
-
+  
+  const [openAddEmploye, setOpenAddEmploye] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [selectedEmploye, setSelectedEmploye] = useState(null);
+  const [openExport, setOpenExport] = useState(false); 
+ 
   const handleOpenAddEmploye = () => setOpenAddEmploye(true);
   const handleCloseAddEmploye = () => setOpenAddEmploye(false);
-
+  
   const handleOpenDelete = (employe) => {
     setSelectedEmploye(employe);
     setOpenDelete(true);
   };
-
+  
   const handleCloseDelete = () => {
     setSelectedEmploye(null);
     setOpenDelete(false);
@@ -84,6 +58,9 @@ const Employe = () => {
     handleCloseDelete();
   };
 
+  const handleOpenExport = () => setOpenExport(true);
+  const handleCloseExport = () => setOpenExport(false);
+
   const getStatusColor = (status) => (status === 'Actif' ? 'success' : 'error');
 
   return (
@@ -92,15 +69,15 @@ const Employe = () => {
         <Card sx={{ p: 4, borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.1)', bgcolor: 'white' }}>
           {/* Header Section */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h4" fontWeight="bold" color="#1976d2">Gestion des Employés</Typography>
+            <Typography variant="h4" fontWeight="bold" color="#1976d2">Gestion des Comptes Utilisateurs </Typography>
             <Grid container spacing={2} alignItems="center" justifyContent="flex-end">
-              <Grid item>
+              <Grid>
                 <ButtonComponent onClick={handleOpenAddEmploye} text="Ajouter" icon={<AddCircleOutline />} />
               </Grid>
-              <Grid item>
-                <ButtonComponent text="Export" icon={<CloudDownload />} />
+              <Grid>
+                <ButtonComponent onClick={handleOpenExport} text="Export" icon={<CloudDownload />} />
               </Grid>
-              <Grid item>
+              <Grid>
                 <ButtonComponent text="Import" icon={<FileUpload />} />
               </Grid>
             </Grid>
@@ -199,6 +176,12 @@ const Employe = () => {
         handleClose={handleCloseDelete}
         handleConfirm={handleConfirmDelete}
         employeName={selectedEmploye?.name}
+      />
+
+      <ExportModal
+        open={openExport}
+        onClose={handleCloseExport}
+        entity="employes"
       />
     </>
   );

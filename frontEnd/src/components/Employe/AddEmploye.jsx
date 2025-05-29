@@ -1,48 +1,96 @@
-import { Box, Button, FormControl, Grid, TextField } from '@mui/material'
-import React, { use, useState } from 'react'
+import React, { useState } from 'react';
+import {
+  Grid,
+  TextField,
+  Button,
+  Stack,
+  Box
+} from '@mui/material';
 
-const AddEmploye = () => {
-    const [nom, setNom] = useState('');
-    const [email, setEmail] = useState('');
-    const [adresse, setAdresse] = useState('');
-    const [telephone, setTelephone] = useState('');
-    const [domaine, setDomaine] = useState('');
-    const [role, setRole] = useState('');
+export default function AddEmployeForm({ onSubmit }) {
+  const [form, setForm] = useState({
+    nom: '',
+    email: '',
+    adresse: '',
+    telephone: '',
+    domaine: '',
+    role: ''
+  });
+
+  const handleChange = (field) => (e) => {
+    setForm(prev => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(form);
+  };
+
   return (
-    <>
-    <Grid style={{width:'500px',height:'500px'}}>
-    <form>
-    
-        <Grid container spacing={2}/>
-        
-            <Grid item xs={6}>
-                
-                <FormControl>  <TextField fullWidth label="nom" variant="outlined">nom</TextField> </FormControl> </Grid>
-                <Grid item xs={6}>
-                <FormControl>  <TextField fullWidth label="Email" variant="outlined">Email</TextField> </FormControl>
-                </Grid>
-                <Grid item xs={6}>
-                <FormControl>  <TextField fullWidth label="Adresse" variant="outlined">Adresse</TextField></FormControl>
-                </Grid>
-                <Grid item xs={6}>
-                <FormControl>  <TextField fullWidth label="telephone" variant="outlined">numero telephone</TextField></FormControl>
-                </Grid>
-                <Grid item xs={6}>
-                <FormControl>  <TextField fullWidth label="Domaine" variant="outlined">Domaine</TextField></FormControl>
-                </Grid>
-                <Grid item xs={6}>
-                <FormControl>  <TextField fullWidth label="Role" variant="outlined">Role</TextField></FormControl>
-                </Grid>
-              
-            
-      <Box marginTop="40px">
-    <Button>valider</Button>
-    </Box> 
-    </form>
-    </Grid>
-      
-    </>
-  )
+    <Box component="form" onSubmit={handleSubmit} sx={{ width: 500, px: 3, py: 2 }}>
+      <Stack spacing={2}>
+        <Grid container spacing={2}>
+          <Grid item xs={6}>
+            <TextField
+              label="Nom"
+              fullWidth
+              variant="outlined"
+              value={form.nom}
+              onChange={handleChange('nom')}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Email"
+              fullWidth
+              variant="outlined"
+              value={form.email}
+              onChange={handleChange('email')}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Adresse"
+              fullWidth
+              variant="outlined"
+              value={form.adresse}
+              onChange={handleChange('adresse')}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Téléphone"
+              fullWidth
+              variant="outlined"
+              value={form.telephone}
+              onChange={handleChange('telephone')}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Domaine"
+              fullWidth
+              variant="outlined"
+              value={form.domaine}
+              onChange={handleChange('domaine')}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Rôle"
+              fullWidth
+              variant="outlined"
+              value={form.role}
+              onChange={handleChange('role')}
+            />
+          </Grid>
+        </Grid>
+        <Box display="flex" justifyContent="center" mt={3}>
+          <Button type="submit" variant="contained" sx={{ px: 4, py: 1.5, borderRadius: 2 }}>
+            Valider
+          </Button>
+        </Box>
+      </Stack>
+    </Box>
+  );
 }
-
-export default AddEmploye

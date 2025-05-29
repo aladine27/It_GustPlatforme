@@ -138,8 +138,7 @@ export class UsersService {
   
   async fetchUsersByDateRange(startDate?: Date, endDate?: Date): Promise<IUser[]> {
     const filter: any = {};
-    if (startDate || endDate) {
-      filter.createdAt = {};
+    if (startDate || endDate) {filter.createdAt = {};
       if (startDate) filter.createdAt.$gte = startDate;
       if (endDate)   filter.createdAt.$lte = endDate;
     }

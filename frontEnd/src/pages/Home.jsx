@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ContactUs from '../components/ContactUs';
 import AboutUs from '../components/AboutUs';
+import OurService from '../components/OurService';
 
 const Home = () => {
   return (
@@ -32,12 +33,12 @@ const Home = () => {
             <p style={{ fontSize: '1.1rem', color: '#555' }}>Contenu principal ici.</p>
           </Box>
         </Container>
-
-      
-    
       </Box>
       <Divider sx={{ backgroundColor: '#f5f5f5', height: '1px', opacity: 0.5 }} />
       <AboutUs/>
+      <Divider sx={{ backgroundColor: '#f5f5f5', height: '1px', opacity: 0.5 }} />
+      <OurService/>
+      
       <Divider sx={{ backgroundColor: '#f5f5f5', height: '1px', opacity: 0.5 }} />
       <ContactUs />
       <Divider sx={{ backgroundColor: '#f5f5f5', height: '1px', opacity: 0.5 }} />
