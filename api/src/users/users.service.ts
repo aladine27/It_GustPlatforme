@@ -202,7 +202,7 @@ export class UsersService {
     doc.end();
     return endPromise;
   }
-    async exportUsersToExcel(startDate?: Date,endDate?: Date,): Promise<Buffer> {
+    async exportUsersToExcel(startDate?: Date,endDate?: Date): Promise<Buffer> {
       const users = await this.fetchUsersByDateRange(startDate, endDate);
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('Users');
@@ -231,6 +231,24 @@ export class UsersService {
       return Buffer.from(arrayBuffer);
 
 
+    }
+    async searchUsers(query: string): Promise<IUser[]> {
+      const regex = new RegExp(query, 'i'); // i = insensitive
+      const users = await this.userModel.find({
+        $or: [
+          { fullName: regex },
+          { email: regex },
+          { address: regex },
+          { phone: regex },
+          { role: regex },
+        ],
+      });
+  
+      if (!users || users.length === 0) {
+        throw new NotFoundException('Aucun utilisateur correspondant trouvé');
+      }
+  
+      return users;
     }
   
   

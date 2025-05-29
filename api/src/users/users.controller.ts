@@ -1,10 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus, UseInterceptors, UploadedFile, UseGuards, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorators';
 import { AccessTokenGuard } from 'src/guards/accessToken.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
@@ -79,6 +79,31 @@ export class UsersController {
     }
   }
   
+  @Get('search')
+@UseGuards(RolesGuard) // Ensure RolesGuard is applied
+@Roles('Admin')
+  @ApiOperation({ summary: 'Search users by query (name, email, etc)' })
+  @ApiQuery({
+    name: 'q',
+    required: true,
+    description: 'Search term for user (name, email, address, phone or role)',
+  })
+  async searchUsers(@Query('q') query: string, @Res() res: Response) {
+    try {
+      const users = await this.usersService.searchUsers(query);
+      return res.status(HttpStatus.OK).json({
+        message: 'Users found',
+        status: HttpStatus.OK,
+        data: users,
+      });
+    } catch (error) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        message: error.message,
+        status: HttpStatus.NOT_FOUND,
+        data: null,
+      });
+    }
+  }
   @Get('/getbyRole/:role')
   async finduserByRole(@Param('role') role: string, @Res() res) {
     try {
@@ -280,6 +305,7 @@ async exportPdf(
     });
   }
 }
+
 
 
 
