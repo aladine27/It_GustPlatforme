@@ -48,7 +48,7 @@ export default function Navbar() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('FR');
-  const [t, i18n] = useTranslation();
+  const {t, i18n }= useTranslation();
   const navItems = ['Home', 'About', 'Contact'];
 
   const handleDrawerToggle = () => setMobileOpen((o) => !o);
@@ -112,7 +112,7 @@ export default function Navbar() {
                 },
               }}
             >
-              Se connecter
+              {t("login")}
             </Button>
           </NavLink>
 
@@ -134,13 +134,13 @@ export default function Navbar() {
           >
             <MenuItem
               value="FR"
-              onClick={() => handleLanguageChange({ target: { value: 'FR' } })}
+              onClick={() => handleLanguageChange({ target: { value: 'fr' } })}
             >
               🇫🇷 Français
             </MenuItem>
             <MenuItem
               value="EN"
-              onClick={() => handleLanguageChange({ target: { value: 'En' } })}
+              onClick={() => handleLanguageChange({ target: { value: 'en' } })}
             >
               🇬🇧 English
             </MenuItem>

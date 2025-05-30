@@ -1,30 +1,33 @@
 import * as React from 'react';
 import { useState } from 'react'; // Add this import
-import {Table,TableBody,TableCell,TableContainer,TableHead,TableRow,Paper,Card,Typography,Box,Avatar,Chip,IconButton,Tooltip,Stack,Divider,TextField,InputAdornment,Grid} from '@mui/material';
+import {Table,TableBody,TableCell,TableContainer,TableHead,TableRow,Paper,Card,Typography,Box,Avatar,Chip,IconButton,Divider,TextField,InputAdornment,Grid} from '@mui/material';
 import {Delete as DeleteIcon,Email as EmailIcon,Phone as PhoneIcon,Work as WorkIcon,Search as SearchIcon,AddCircleOutline,CloudDownload,FileUpload} from '@mui/icons-material';
 import ButtonComponent from '../components/Global/ButtonComponent';
 import ModelComponent from '../components/Global/ModelComponent';
 import AddEmploye from '../components/Employe/AddEmploye';
 import DeleteEmploye from '../components/Employe/DeleteEmploye';
 import ExportModal from '../components/ExportModal'; 
+import PaginationComponent from '../components/Global/PaginationComponent';
+import { useTranslation } from 'react-i18next';
+import TableComponent from '../components/Global/TableComponent';
 
 
-const domainColorMap = {};
 
-const availableColors = ['primary', 'secondary', 'success', 'warning', 'info', 'error'];
-let colorIndex = 0;
-
-// Function to get or assign color for a domain
-const getDomainColor = (domain) => {
-  if (!domainColorMap[domain]) {
-    // Assign next color in round-robin
-    domainColorMap[domain] = availableColors[colorIndex % availableColors.length];
-    colorIndex += 1;
-  }
-  return domainColorMap[domain];
-};
 
 const Employe = () => {
+  const domainColorMap = {};
+  const availableColors = ['primary', 'secondary', 'success', 'warning', 'info', 'error'];
+  let colorIndex = 0;
+// Function to get or assign color for a domain
+  const getDomainColor = (domain) => {
+       if (!domainColorMap[domain]) {
+        // Assign next color in round-robin
+        domainColorMap[domain] = availableColors[colorIndex % availableColors.length];
+        colorIndex += 1;
+      }
+      return domainColorMap[domain];
+  };
+  
   // État pour la liste des employés
   const [rows, setRows] = useState([
     { id: 1, name: 'Ahmed Bennani', email: 'ahmed.bennani@gmail.com', phone: '+212 6 12 34 56 78', domain: 'Développement Web', status: 'Actif', avatar: 'AB' },
@@ -33,16 +36,36 @@ const Employe = () => {
     { id: 4, name: 'Youssef ', email: 'youssef.tazi@hotmail.com', phone: '+212 6 55 44 33 22', domain: 'Développement mobile', status: 'Inactif', avatar: 'YT' },
     { id: 5, name: 'Youssef ', email: 'youssef.tazi@hotmail.com', phone: '+212 6 55 44 33 22', domain: 'DevOps', status: 'Inactif', avatar: 'YT' }
   ]);
-
-  
-  const [openAddEmploye, setOpenAddEmploye] = useState(false);
-  const [openDelete, setOpenDelete] = useState(false);
-  const [selectedEmploye, setSelectedEmploye] = useState(null);
-  const [openExport, setOpenExport] = useState(false); 
- 
-  const handleOpenAddEmploye = () => setOpenAddEmploye(true);
-  const handleCloseAddEmploye = () => setOpenAddEmploye(false);
-  
+  const columns = [
+    { id: 'name', label: 'Nom', align: 'left' },
+    { id: 'email', label: 'Email', align: 'left' },
+    {
+      id: 'domain',
+      label: 'Domaine',
+      align: 'center',
+      render: (row) => (
+        <Chip
+          label={row.domain}
+          color={getDomainColor(row.domain)} // appel ici
+          variant="outlined"
+          size="small"
+        />
+      )
+    },
+    {
+      id: 'status',
+      label: 'Statut',
+      align: 'center',
+      render: (row) => (
+        <Chip
+          label={row.status}
+          color={getStatusColor(row.status)} // facultatif si déjà défini
+          variant="outlined"
+          size="small"
+        />
+      )
+    }
+  ];
   const handleOpenDelete = (employe) => {
     setSelectedEmploye(employe);
     setOpenDelete(true);
@@ -51,7 +74,26 @@ const Employe = () => {
   const handleCloseDelete = () => {
     setSelectedEmploye(null);
     setOpenDelete(false);
-  };
+  }; 
+  const actions = [
+    {
+      icon: <DeleteIcon />,
+      tooltip: 'Supprimer',
+      onClick: handleOpenDelete 
+    }
+  ];
+
+  
+  const [openAddEmploye, setOpenAddEmploye] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [selectedEmploye, setSelectedEmploye] = useState(null);
+  const [openExport, setOpenExport] = useState(false); 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
+  const handleOpenAddEmploye = () => setOpenAddEmploye(true);
+  const handleCloseAddEmploye = () => setOpenAddEmploye(false);
+  
+
 
   const handleConfirmDelete = () => {
     setRows((prev) => prev.filter((emp) => emp.id !== selectedEmploye.id));
@@ -60,8 +102,19 @@ const Employe = () => {
 
   const handleOpenExport = () => setOpenExport(true);
   const handleCloseExport = () => setOpenExport(false);
-
+  const {t, i18n }= useTranslation();
   const getStatusColor = (status) => (status === 'Actif' ? 'success' : 'error');
+  const totalPages = Math.ceil(rows.length / itemsPerPage);
+
+// Calcule les lignes à afficher pour la page courante
+const paginatedRows = rows.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+);
+const handlePageChange = (_event, value) => {
+  setCurrentPage(value);
+};
+
 
   return (
     <>
@@ -69,7 +122,7 @@ const Employe = () => {
         <Card sx={{ p: 4, borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.1)', bgcolor: 'white' }}>
           {/* Header Section */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h4" fontWeight="bold" color="#1976d2">Gestion des Comptes Utilisateurs </Typography>
+            <Typography variant="h4" fontWeight="bold" color="#1976d2">{t("Gestion des Comptes Utilisateurs")} </Typography>
             <Grid container spacing={2} alignItems="center" justifyContent="flex-end">
               <Grid>
                 <ButtonComponent onClick={handleOpenAddEmploye} text="Ajouter" icon={<AddCircleOutline />} />
@@ -100,67 +153,16 @@ const Employe = () => {
           />
 
           {/* Table Section */}
-          <TableContainer component={Paper} sx={{ borderRadius: 2, border: '1px solid #e0e0e0' }}>
-            <Table aria-label="employee table">
-              <TableHead>
-                <TableRow sx={{ bgcolor: '#f8f9fa' }}>
-                  <TableCell sx={{ fontWeight: 'bold', color: '#1976d2' }}>Employé</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', color: '#1976d2' }}>Contact</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', color: '#1976d2' }}>Domaine</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', color: '#1976d2' }}>Statut</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 'bold', color: '#1976d2' }}>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.id} sx={{ '&:hover': { bgcolor: '#f5f5f5' } }}>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ bgcolor: '#1976d2', width: 40, height: 40, fontSize: '0.9rem' }}>{row.avatar}</Avatar>
-                        <Typography variant="body1" fontWeight="medium">{row.name}</Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Stack spacing={1}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <EmailIcon sx={{ fontSize: 16, color: '#666' }} />
-                          <Typography variant="body2" color="text.secondary">{row.email}</Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <PhoneIcon sx={{ fontSize: 16, color: '#666' }} />
-                          <Typography variant="body2" color="text.secondary">{row.phone}</Typography>
-                        </Box>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        icon={<WorkIcon />}
-                        label={row.domain}
-                        color={getDomainColor(row.domain)}
-                        variant="outlined"
-                        size="small"
-                        sx={{ borderRadius: 2, fontWeight: 'medium' }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={row.status} color={getStatusColor(row.status)} size="small" sx={{ borderRadius: 2, fontWeight: 'medium', minWidth: 70 }} />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Tooltip title="Supprimer">
-                        <IconButton
-                          size="small"
-                          sx={{ color: '#d32f2f' }}
-                          onClick={() => handleOpenDelete(row)}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+
+          <TableComponent columns={columns} rows={paginatedRows} actions={actions}/>
+        
+          <Box mt={4} display="flex" justifyContent="center">
+  <PaginationComponent
+    count={totalPages}
+    page={currentPage}
+    onChange={handlePageChange}
+  />
+</Box>
 
         </Card>
       </Box>
