@@ -25,9 +25,9 @@ function Dashboard() {
             width: `${SIDEBAR_WIDTH}px`,
             minWidth: `${SIDEBAR_WIDTH}px`,
             height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
-            bgcolor: '#f0f0f0',
+            bgcolor: '#F3FAFF',
             color: 'blue',
-            overflowY: 'auto',
+           
           }}
         >
           <SideBar />
@@ -37,7 +37,7 @@ function Dashboard() {
     width: `calc(100vw - ${SIDEBAR_WIDTH}px)`,
     height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
     overflowY: 'auto',
-    bgcolor: '#fff',
+    bgcolor: '#F3FAFF',
     p: 2,
   }}
 >

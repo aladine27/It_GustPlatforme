@@ -1,44 +1,69 @@
-import i18n from "i18next";
-import { initReactI18next } from "react-i18next";
-import Backend from 'i18next-http-backend';
-import LanguageDetector from 'i18next-browser-languagedetector';
-// the translations
-// (tip move them in a JSON file and import them,
-// or even better, manage them separated from your code: https://react.i18next.com/guides/multiple-translation-files)
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+
 const resources = {
   en: {
-   translation: {
-      "Title":"Time Attendance Management Software",
-      "List des projets":"project list"
+    translation: {
+      Rechercher:            'Search',
+      Ajouter:               'Add',
+      Export:                'Export',
+      Import:                'Import',
+      'Ajouter un Employé':  'Add Employee',
+      Supprimer:             'Delete',
+      Annuler:               'Cancel',
+      'Gestion des Comptes Utilisateurs': 'User Management',
+      Valider: 'Submit',
+      'Créer utilisateur': 'Create User',
+      'Evenement':'Event',
+      'Projet':'Project',
+      'Tache':'Task',
+      'Document':'Document',
+      'Congé':'Leave',
+      'Recrutement':'Recruitment',
+      'Frais':'Wallet',
+      'Profile':'Profil',
+      'Tout les Projets':'All Projects',
+      'Rechercher ici': 'Search here'
+
+
+
+
+      
     }
   },
   fr: {
     translation: {
-      "Title":"Logiciel de gestion de pointage,",
-      "List des projets":"List des projets"
+      Rechercher:            'Rechercher',
+      Ajouter:               'Ajouter',
+      Export:                'Exporter',
+      Import:                'Importer',
+      'Ajouter un Employé':  'Ajouter un Employé',
+      Supprimer:             'Supprimer',
+      Annuler:               'Annuler',
+      'Gestion des Comptes Utilisateurs': 'Gestion des Comptes Utilisateurs' ,
+      'Créer  utilisateur': 'Créer utilisateur',
+      Valider: 'Valider',
+      'Rechercher ici': 'Rechercher ici',
+      'Evenement':'Evenement',
+      'Projet':'Projet',
+      'Tache':'Tache',
+      'Document':'Document',
+      'Congé':'Congé',
+      'Recrutement':'Recrutement',
+      'Frais':'Frais',
+      'Profile':'Profile',
+      'Tout les Projets':'Tout les Projets'
     }
   }
 };
+
 i18n
-  // load translation using http -> see /public/locales (i.e. https://github.com/i18next/react-i18next/tree/master/example/react/public/locales)
-  // learn more: https://github.com/i18next/i18next-http-backend
-  // want your translations to be loaded from a professional CDN? => https://github.com/locize/react-tutorial#step-2---use-the-locize-cdn
-  .use(Backend)
-  // detect user language
-  // learn more: https://github.com/i18next/i18next-browser-languageDetector
-  .use(LanguageDetector)
-  // pass the i18n instance to react-i18next.
   .use(initReactI18next)
-  // init i18next
-  // for all options read: https://www.i18next.com/overview/configuration-options
   .init({
+    resources,
     fallbackLng: 'fr',
     debug: true,
-    interpolation: {
-      escapeValue: false,
-    },
-    backend: {
-      loadPath: '/local/{{lng}}/translation.json',
-    },
+    interpolation: { escapeValue: false }
   });
-  export default i18n;
+
+export default i18n;

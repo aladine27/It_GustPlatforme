@@ -12,14 +12,15 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Flag from 'react-world-flags';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-
+import logo from '../assets/logo.jpeg';
+import { Buttons } from './Global/ButtonComponent';
 // Styled NavLink with underline animation and active state
 const StyledNavLink = styled(NavLink)(({ theme }) => ({
   position: 'relative',
   textDecoration: 'none',
-  color: '#fff',
+  color: '#227FBF',
   fontWeight: 500,
   margin: theme.spacing(0, 2),
   transition: 'color 0.3s',
@@ -65,7 +66,7 @@ export default function Navbar() {
     <AppBar
       position="fixed"
       sx={{
-        background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)',
+        background: 'linear-gradient(90deg,rgb(244, 245, 246) 0%,rgb(244, 245, 246) 100%)',
         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
         px: 2,
       }}
@@ -78,7 +79,7 @@ export default function Navbar() {
         }}
       >
         {/* Left side: Menu button, Logo and Nav links */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex',flex:1, alignItems: 'center', gap: 2 }}>
           <IconButton
             edge="start"
             onClick={handleDrawerToggle}
@@ -86,35 +87,38 @@ export default function Navbar() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#fff' }}>
-            Gust
-          </Typography>
-          <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center' }}>
+          <Link to="/" style={{ textDecoration: 'none' }}>
+          <img src={logo} alt="Logo"style={{
+              width:"90px",
+              height:"60px"
+
+            }
+            }
+            
+          />
+          </Link>
+            
+          
+        </Box>
+        
+
+
+          <Box sx={{ display: { xs: 'none', sm: 'flex',flex:1 }, alignItems: 'center' }}>
             {navItems.map((item) => (
               <StyledNavLink key={item} to={`/${item.toLowerCase()}`}>
                 {item}
               </StyledNavLink>
             ))}
           </Box>
-        </Box>
-
+        
+    
         {/* Right side: Actions */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
-          <NavLink to="/login" style={{ textDecoration: 'none' }}>
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{
-                borderColor: '#fff',
-                color: '#fff',
-                '&:hover': {
-                  background: 'rgba(255,235,59,0.2)',
-                },
-              }}
-            >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1,flex:1, justifyContent: 'flex-end' }}>
+          
+         <Buttons to="/login" bgColor={"#09759D"}>
               {t("login")}
-            </Button>
-          </NavLink>
+         </Buttons>
+          
 
           <IconButton
             onClick={handleFlagClick}
@@ -145,6 +149,7 @@ export default function Navbar() {
               🇬🇧 English
             </MenuItem>
           </Menu>
+          
         </Box>
       </Toolbar>
     </AppBar>

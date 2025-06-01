@@ -2,8 +2,9 @@
 import React from 'react';
 import { DeleteOutline, CloseOutlined } from '@mui/icons-material';
 import { Grid, Typography } from '@mui/material';
-import ButtonComponent from '../Global/ButtonComponent';
+
 import ModelComponent from '../Global/ModelComponent';
+import { ButtonComponent } from '../Global/ButtonComponent';
 
 const DeleteEmploye = ({ open, handleClose, handleConfirm, employeName }) => {
   return (
