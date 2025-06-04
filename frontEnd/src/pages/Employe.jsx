@@ -18,12 +18,14 @@ import PaginationComponent from '../components/Global/PaginationComponent';
 import { useTranslation } from 'react-i18next';
 import TableComponent from '../components/Global/TableComponent';
 import { ButtonComponent } from '../components/Global/ButtonComponent';
+import AddEmployeModal from '../components/Employe/AddEmploye';
 
 const Employe = () => {
   const { t } = useTranslation();
 
   // pour les chips de domaine
   const domainColorMap = {};
+
   const availableColors = ['primary','secondary','success','warning','info','error'];
   let colorIndex = 0;
   const getDomainColor = (domain) => {
@@ -59,6 +61,41 @@ const Employe = () => {
       image: '/avatars/fa.png',
       role: 'Designer'
     },
+    {
+      id: 3,
+      fullName: 'Fatima Alaoui',
+      Email: 'fatima.alaoui@gmail.com',
+      password: '••••••••',
+      adress: '5 av. B, Rabat',
+      phoneNumbre: '+212687654321',
+      domain: 'UI/UX Design',
+      image: '/avatars/fa.png',
+      role: 'Designer'
+    },
+    {
+      id: 4,
+      fullName: 'Fatima Alaoui',
+      Email: 'fatima.alaoui@gmail.com',
+      password: '••••••••',
+      adress: '5 av. B, Rabat',
+      phoneNumbre: '+212687654321',
+      domain: 'UI/UX Design',
+      image: '/avatars/fa.png',
+      role: 'Designer'
+    },
+    {
+      id: 5,
+      fullName: 'Fatima Alaoui',
+      Email: 'fatima.alaoui@gmail.com',
+      password: '••••••••',
+      adress: '5 av. B, Rabat',
+      phoneNumbre: '+212687654321',
+      domain: 'UI/UX Design',
+      image: '/avatars/fa.png',
+      role: 'Designer'
+    },
+
+
     // …
   ]);
 
@@ -122,6 +159,19 @@ const Employe = () => {
           <Divider sx={{ mb:3 }} />
 
           <Box sx={{ display:'flex', justifyContent:'space-between', alignItems:'center', mb:3 }}>
+           
+
+            <Grid container spacing={2} justifyContent="flex-end" alignItems="center" sx={{ width:'fit-content' }}>
+              <Grid item>
+                <ButtonComponent onClick={()=>setOpenAdd(true)} text={t('Ajouter')} icon={<AddCircleOutline/>}/>
+              </Grid>
+              <Grid item>
+                <ButtonComponent onClick={()=>setOpenExport(true)} text={t('Export')} icon={<CloudDownload/>}/>
+              </Grid>
+              <Grid item>
+                <ButtonComponent text={t('Import')} icon={<FileUpload/>}/>
+              </Grid>
+            </Grid>
             <TextField
               label={t('Rechercher')}
               variant="outlined"
@@ -135,18 +185,6 @@ const Employe = () => {
                 sx:{ borderRadius:'20px', width:'100%' }
               }}
             />
-
-            <Grid container spacing={2} justifyContent="flex-end" alignItems="center" sx={{ width:'fit-content' }}>
-              <Grid item>
-                <ButtonComponent onClick={()=>setOpenAdd(true)} text={t('Ajouter')} icon={<AddCircleOutline/>}/>
-              </Grid>
-              <Grid item>
-                <ButtonComponent onClick={()=>setOpenExport(true)} text={t('Export')} icon={<CloudDownload/>}/>
-              </Grid>
-              <Grid item>
-                <ButtonComponent text={t('Import')} icon={<FileUpload/>}/>
-              </Grid>
-            </Grid>
           </Box>
 
           <TableComponent columns={columns} rows={paginatedRows} actions={actions}/>
@@ -157,14 +195,15 @@ const Employe = () => {
         </Card>
       </Box>
 
-      <ModelComponent
-        open={openAdd}
-        handleClose={()=>setOpenAdd(false)}
-        title={t('Ajouter un Employé')}
-        icon={<AddCircleOutline/>}
-      >
-        <AddEmploye/>
-      </ModelComponent>
+      <AddEmployeModal
+          open={openAdd}
+          handleClose={() => setOpenAdd(false)}
+          onSubmit={(employe) => {
+          console.log("Nouvel employé :", employe);
+    // Ajoute-le à ton backend ou à ta liste ici
+  }}
+/>
+
 
       <DeleteEmploye
         open={openDelete}
