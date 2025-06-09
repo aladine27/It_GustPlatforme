@@ -10,8 +10,7 @@ import {
   AddCircleOutline, CloudDownload, FileUpload
 } from '@mui/icons-material';
 
-import ModelComponent from '../components/Global/ModelComponent';
-import AddEmploye from '../components/Employe/AddEmploye';
+
 import DeleteEmploye from '../components/Employe/DeleteEmploye';
 import ExportModal from '../components/ExportModal';
 import PaginationComponent from '../components/Global/PaginationComponent';
@@ -149,7 +148,7 @@ const Employe = () => {
 
   return (
     <>
-      <Box sx={{ p:3, bgcolor:'#f5f5f5', minHeight:'100vh' }}>
+      <Box sx={{ p:3, bgcolor:'#F3FAFF', minHeight:'100vh' }}>
         <Card sx={{ p:4, borderRadius:3, boxShadow:'0 8px 32px rgba(0,0,0,0.1)', bgcolor:'white' }}>
           <Box sx={{ mb:2 }}>
             <Typography variant="h4" fontWeight="bold" color="#1976d2">

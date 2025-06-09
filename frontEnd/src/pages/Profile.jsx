@@ -7,7 +7,10 @@ import {
   Paper,
   Grid,
   Divider,
-  TextField
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
 import { styled } from '@mui/system';
 import EmailIcon from '@mui/icons-material/Email';
@@ -15,13 +18,11 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import HomeIcon from '@mui/icons-material/Home';
 import WorkIcon from '@mui/icons-material/Work';
 import EditIcon from '@mui/icons-material/Edit';
-import LogoutIcon from '@mui/icons-material/Logout';
 import LockResetIcon from '@mui/icons-material/LockReset';
 
-import { ButtonComponent } from '../components/Global/ButtonComponent'; // Remplace par le bon chemin
-import ModelComponent from '../components/Global/ModelComponent'; // Remplace par le bon chemin
-import EditProfileModal from '../components/profile/EditProfile';
+import { ButtonComponent } from '../components/Global/ButtonComponent';
 import ChangePasswordModal from '../components/profile/ChangePasswordModal';
+import EditProfileModal from '../components/profile/EditProfile';
 
 // Données statiques de l'utilisateur
 const userData = {
@@ -36,11 +37,12 @@ const userData = {
 
 // Styles
 const ProfileContainer = styled(Box)({
-  minHeight: '100vh',
-  backgroundColor: '#f5f5f5', // ou '#fff'
+  
+  backgroundColor: '#F3FAFF',
   padding: '40px 0',
   display: 'flex',
   alignItems: 'center',
+  minHeight: '600px',
 });
 
 const ProfilePaper = styled(Paper)({
@@ -59,30 +61,12 @@ const UserAvatar = styled(Avatar)({
   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
 });
 
-const InfoBox = styled(Box)({
-  display: 'flex',
-  alignItems: 'center',
-  padding: '12px 0',
-  '& svg': {
-    marginRight: '16px',
-    color: '#6b48ff',
-  },
-});
-
-const ActionButton = styled(Box)({
-  display: 'flex',
-  gap: '16px',
-  flexWrap: 'wrap',
-  marginTop: '16px',
-});
-
 export default function Profile() {
   const [openModal, setOpenModal] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [openEditModal, setOpenEditModal] = useState(false);
   const [editableUserData, setEditableUserData] = useState({ ...userData });
-
 
   const handleOpen = () => setOpenModal(true);
   const handleClose = () => {
@@ -94,17 +78,16 @@ export default function Profile() {
   const handleChangePassword = () => {
     console.log('Ancien mot de passe :', oldPassword);
     console.log('Nouveau mot de passe :', newPassword);
-    // 🔐 TODO: Appel à l'API pour changer le mot de passe ici
     handleClose();
   };
+
   const handleEditProfile = () => {
     setEditableUserData({ ...userData });
     setOpenEditModal(true);
   };
-  
+
   const handleSaveProfile = () => {
     console.log('Données mises à jour :', editableUserData);
-    // ✅ TODO: envoyer editableUserData à l'API pour mise à jour réelle
     setOpenEditModal(false);
   };
 
@@ -116,83 +99,88 @@ export default function Profile() {
             {/* Avatar et nom */}
             <Grid item xs={12} md={4}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-                  <UserAvatar src={userData.image} alt="Profile" />
-              <Box>
+                <UserAvatar src={userData.image} alt="Profile" />
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary">Nom complet</Typography>
                   <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#333', mb: 0.5 }}>
-                     {userData.fullName}
+                    {userData.fullName}
                   </Typography>
                   <Typography variant="subtitle1" color="text.secondary">
-                     {userData.role}
+                    {userData.role}
                   </Typography>
-              </Box>
+                </Box>
               </Box>
             </Grid>
+
             {/* Informations et boutons */}
             <Grid item xs={12} md={8}>
               <Box sx={{ pl: { md: 2 } }}>
-                <Divider sx={{ my: 2 }} />
-                  <Typography variant="h6" sx={{ mb: 2, color: '#6b48ff' }}>
-                    Informations
-                  </Typography>
-                  <InfoBox>
-                      <EmailIcon />
-                      <Typography variant="body1">{userData.email}</Typography>
-                  </InfoBox>
-                  <InfoBox>
-                      <PhoneIcon />
-                      <Typography variant="body1">{userData.phone}</Typography>
-                  </InfoBox>
-                  <InfoBox>
-                      <HomeIcon />
-                      <Typography variant="body1">{userData.address}</Typography>
-                  </InfoBox>
-                  <InfoBox>
-                      <WorkIcon />
-                      <Typography variant="body1">{userData.domain}</Typography>
-                  </InfoBox>
+                <Typography variant="h6" sx={{ mb: 2, color: '#6b48ff' }}>
+                  Informations
+                </Typography>
                 <Divider sx={{ my: 3 }} />
-                <ActionButton>
-                <ButtonComponent
-                   text="Modifier Profil"
-                  icon={<EditIcon />}
-                  onClick={handleEditProfile}
-                />
 
-                  <ButtonComponent
-                    text="Déconnexion"
-                    icon={<LogoutIcon />}
-                    onClick={() => alert('Déconnexion')}
-                  />
-                  <ButtonComponent
-                    text="Changer mot de passe"
-                    icon={<LockResetIcon />}
-                    onClick={handleOpen}
-                  />
-                </ActionButton>
+                <List>
+                  <ListItem>
+                    <ListItemIcon><EmailIcon sx={{ color: '#6b48ff' }} /></ListItemIcon>
+                    <ListItemText primary="Email" secondary={userData.email} />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon><PhoneIcon sx={{ color: '#6b48ff' }} /></ListItemIcon>
+                    <ListItemText primary="Téléphone" secondary={userData.phone} />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon><HomeIcon sx={{ color: '#6b48ff' }} /></ListItemIcon>
+                    <ListItemText primary="Adresse" secondary={userData.address} />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon><WorkIcon sx={{ color: '#6b48ff' }} /></ListItemIcon>
+                    <ListItemText primary="Domaine" secondary={userData.domain} />
+                  </ListItem>
+                </List>
+
+                <Divider sx={{ my: 3 }} />
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <ButtonComponent
+                      text="Modifier Profil"
+                      icon={<EditIcon />}
+                      onClick={handleEditProfile}
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <ButtonComponent
+                      text="Changer mot de passe"
+                      icon={<LockResetIcon />}
+                      onClick={handleOpen}
+                      fullWidth
+                    />
+                  </Grid>
+                </Grid>
               </Box>
             </Grid>
           </Grid>
         </ProfilePaper>
-        {/* MODAL DE CHANGEMENT DE MOT DE PASSE */}
+
         <ChangePasswordModal
-            open={openModal}
-            handleClose={handleClose}
-            oldPassword={oldPassword}
-            newPassword={newPassword}
-            setOldPassword={setOldPassword}
-            setNewPassword={setNewPassword}
-            onConfirm={handleChangePassword}
+          open={openModal}
+          handleClose={handleClose}
+          oldPassword={oldPassword}
+          newPassword={newPassword}
+          setOldPassword={setOldPassword}
+          setNewPassword={setNewPassword}
+          onConfirm={handleChangePassword}
         />
 
         <EditProfileModal
-         open={openEditModal}
-         handleClose={() => setOpenEditModal(false)}
-         userData={editableUserData}
-         setUserData={setEditableUserData}
-         onSave={handleSaveProfile}
+          open={openEditModal}
+          handleClose={() => setOpenEditModal(false)}
+          userData={editableUserData}
+          setUserData={setEditableUserData}
+          onSave={handleSaveProfile}
         />
-
-
       </Container>
     </ProfileContainer>
   );

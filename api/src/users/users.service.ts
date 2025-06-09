@@ -15,9 +15,6 @@ import * as PDFDocument from 'pdfkit';
 @Injectable()
 export class UsersService {
   constructor(@InjectModel('users') private userModel: Model<IUser>,private readonly configService: ConfigService) {}
-
-  
-
   async generateRandomPassword():Promise<string> {
     const randomBytesPromise = new Promise<string>((resolve, reject) => {
       randomBytes(8, (err, buffer) => {

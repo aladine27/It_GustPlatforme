@@ -9,6 +9,13 @@ import { AccessTokenGuard } from './guards/accessToken.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  //cors 
+  app.enableCors({
+    origin: 'http://localhost:5173', // ton app React
+    credentials: true,              // utile si tu envoies des cookies ou headers auth
+  });
+
+
 
   // Swagger…
   const config = new DocumentBuilder()

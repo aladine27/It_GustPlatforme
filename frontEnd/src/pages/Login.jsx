@@ -8,37 +8,85 @@ import {
   Grid,
   Box,
   Typography,
-  Container,
-  CssBaseline,
   Stack,
-  Link ,
+  Link,
   Paper,
 } from "@mui/material";
-
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import GitHubIcon from '@mui/icons-material/GitHub';
 import GoogleIcon from '@mui/icons-material/Google';
 
-import { Link as RouterLink } from "react-router-dom";
-
+import * as Yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
+import { LoginAction } from "../redux/actions/userAction";
+import { toast } from "react-toastify";
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const validationSchema = Yup.object().shape({
+    email: Yup.string().email("Email invalide").required("Email requis"),
+    password: Yup.string().required("Le mot de passe est requis"),
+  });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(validationSchema),
+  });
+
+  const onSubmit = async (formData) => {
+    try {
+      const resultAction = await dispatch(LoginAction(formData));
+      if (LoginAction.fulfilled.match(resultAction)) {
+        toast.success("Connexion réussie !");
+        console.log("Login success:", resultAction.payload);
+        navigate("/dashboard"); 
+      } else {
+        toast.error(
+          resultAction.payload?.message || "Email ou mot de passe incorrect"
+        );
+        console.log("Login failed:", resultAction.payload || resultAction.error);
+      }
+    } catch (error) {
+      toast.error("Une erreur inattendue est survenue.");
+      console.log("Unexpected error:", error);
+    }
+  };
 
   return (
-    <Container
-      component="main"
-      maxWidth="xs"
+    <Grid
+      container
       sx={{
-        width: '100%',
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        backgroundColor: "#1A9BC3",
+        display: "flex",
+        justifyContent: "space-between",
+        height: "100vh",
       }}
     >
-      <CssBaseline />
-      <Paper elevation={3} sx={{ p: 5, borderRadius: 4, width: '100%', maxWidth: 400 }}>
+      <Grid >
+        <Typography variant="body2" color="text.secondary" mb={3}>
+          Entrez vos identifiants pour accéder à votre espace
+        </Typography>
+      </Grid>
+
+      <Grid
+        
+        component={Paper}
+        elevation={6}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          width: "50%",
+          padding: 4,
+          justifyContent: "center",
+        }}
+      >
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           <Avatar sx={{ m: 1, bgcolor: "primary.main" }}>
             <LockOutlinedIcon />
@@ -46,35 +94,34 @@ export default function Login() {
           <Typography component="h1" variant="h5" fontWeight={600}>
             Connexion
           </Typography>
-          <Typography variant="body2" color="text.secondary" mb={3}>
-            Entrez vos identifiants pour accéder à votre espace
-          </Typography>
         </Box>
 
-        <Box component="form" noValidate>
-          <Stack spacing={2}>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Stack spacing={2} mt={2}>
             <TextField
-              required fullWidth
-              id="email" label="Adresse e-mail"
-              name="email" autoComplete="email" autoFocus
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              fullWidth
+              label="Adresse e-mail"
+              {...register("email")}
+              error={Boolean(errors.email)}
+              helperText={errors.email?.message}
             />
+
             <TextField
-              required fullWidth
-              name="password" label="Mot de passe"
-              type="password" id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
+              fullWidth
+              label="Mot de passe"
+              type="password"
+              {...register("password")}
+              error={Boolean(errors.password)}
+              helperText={errors.password?.message}
             />
+
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Se souvenir de moi"
             />
+
             <Button
-              component={RouterLink}
-              to="/dashboard"
+              type="submit"
               variant="contained"
               fullWidth
               sx={{ py: 1.5, fontWeight: 600 }}
@@ -97,18 +144,14 @@ export default function Login() {
 
             <Grid container justifyContent="flex-end">
               <Grid item>
-                <Link
-                  component={RouterLink}
-                  to="/resetPassword"
-                  variant="body2"
-                >
+                <Link component={RouterLink} to="/resetPassword" variant="body2">
                   Mot de passe oublié ?
                 </Link>
               </Grid>
             </Grid>
           </Stack>
-        </Box>
-      </Paper>
-    </Container>
+        </form>
+      </Grid>
+    </Grid>
   );
 }

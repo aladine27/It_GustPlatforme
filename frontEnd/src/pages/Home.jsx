@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import ContactUs from '../components/ContactUs';
 import AboutUs from '../components/AboutUs';
 import OurService from '../components/OurService';
+import HeroSection from '../components/HeroSection';
 
 const Home = () => {
   return (
@@ -25,15 +26,9 @@ const Home = () => {
 
       {/* Main Content */}
       <Box sx={{ flex: 1 }}>
-        <Container maxWidth="lg" sx={{ py: 6 }}>
-          <Box sx={{ mb: 6 }}>
-            <h1 style={{ fontSize: '2rem', fontWeight: 600, marginBottom: '1rem' }}>
-              Bienvenue sur la page d'accueil
-            </h1>
-            <p style={{ fontSize: '1.1rem', color: '#555' }}>Contenu principal ici.</p>
-          </Box>
-        </Container>
+      <HeroSection />
       </Box>
+     
       <Divider sx={{ backgroundColor: '#f5f5f5', height: '1px', opacity: 0.5 }} />
       <AboutUs/>
       <Divider sx={{ backgroundColor: '#f5f5f5', height: '1px', opacity: 0.5 }} />

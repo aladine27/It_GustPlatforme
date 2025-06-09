@@ -15,6 +15,7 @@ import Frais from './pages/Frais'
 import Profile from './pages/Profile'
 import ResetPassword from './pages/ResetPassword'
 import ExportPage from './components/ExportModal'
+import { ToastContainer } from 'react-toastify'
 
 function App() {
  
@@ -41,15 +42,9 @@ function App() {
         </Route> 
         
         <Route/>
-
-        
-
-
-
-    
-
         </Routes>
       </BrowserRouter>
+      <ToastContainer position="top-right" autoClose={2000} />
         
     </>
   )

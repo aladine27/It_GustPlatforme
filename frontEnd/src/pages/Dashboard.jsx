@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import Navbar from '../components/Navbar';
-import SideBar from '../components/SideBar';
+import SidebarPro from '../components/SideBar';
 import { Outlet } from 'react-router-dom';
 const SIDEBAR_WIDTH = 300;
 const NAVBAR_HEIGHT = 64;
@@ -30,7 +30,7 @@ function Dashboard() {
            
           }}
         >
-          <SideBar />
+          <SidebarPro />
         </Box>
  <Box
   sx={{

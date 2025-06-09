@@ -48,9 +48,9 @@ const StyledNavLink = styled(NavLink)(({ theme }) => ({
 export default function Navbar() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('FR');
+  const [selectedLanguage, setSelectedLanguage] = useState('fr');
   const {t, i18n }= useTranslation();
-  const navItems = ['Home', 'About', 'Contact'];
+  const navItems = ['Home', 'About', 'Contact','Nos Offres'];
 
   const handleDrawerToggle = () => setMobileOpen((o) => !o);
   const handleFlagClick = (e) => setAnchorEl(e.currentTarget);
@@ -125,7 +125,7 @@ export default function Navbar() {
             sx={{ p: 0.5, transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.1)' } }}
           >
             <Flag
-              code={selectedLanguage === 'FR' ? 'FR' : 'GB'}
+              code={selectedLanguage === 'fr' ? 'FR' : 'GB'}
               style={{ width: 28, height: 18, borderRadius: 3 }}
             />
           </IconButton>

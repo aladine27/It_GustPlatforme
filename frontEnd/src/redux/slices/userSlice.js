@@ -1,6 +1,6 @@
-/* 
+
 import { createSlice } from "@reduxjs/toolkit";
-import { LoginAction, LogoutAction, UpdateUserAction } from "../actions/userAction";
+import { LoginAction,} from "../actions/userAction";
 const initialState = {
     CurrentUser:null,
     isFetching:false,
@@ -27,7 +27,7 @@ extraReducers:(builder) =>{
         state.error=true;
         state.CurrentUser=null;
     })
-    .addCase(LogoutAction.pending,(state)=>{
+    /* .addCase(LogoutAction.pending,(state)=>{
         state.loading= true;
         state.error=false;
     })
@@ -44,7 +44,7 @@ extraReducers:(builder) =>{
         state.loading= false;
         state.CurrentUser=action.payload;
         state.error=false;
-    })
+    }) */
 
 
 }
@@ -54,4 +54,3 @@ extraReducers:(builder) =>{
 
 export default userSlice.reducer;
 
- */

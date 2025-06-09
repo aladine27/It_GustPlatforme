@@ -140,13 +140,13 @@ const handleCreateProject = (newProject) => {
   const handlePageChange = (_e, value) => setCurrentPage(value);
 
   return (
-    <Box sx={{ p: 3, bgcolor: '#f5f5f5', minHeight: '100vh' }}>
+    <Box sx={{ p: 3, bgcolor:'#F3FAFF', minHeight: '100vh' }}>
       <Card sx={{ p: 4, borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.1)', bgcolor: 'white' }}>
         <Box sx={{ mb: 2 }}>
           <Typography variant="h4" fontWeight="bold" color="#1976d2">
             {t('All Projects')}
           </Typography>
-          <Divider sx={{ mb: 3 }} />
+         
           
         </Box>
 

@@ -12,12 +12,12 @@ import {store} from './redux/store.js'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-  {/* <PersistGate loading={null} persistor={persistor}>  
-  <Provider store={store}> */}
+   <PersistGate loading={null} persistor={persistor}>  
+  <Provider store={store}> 
   <ThemeProvider theme={theme}>
     <App/>
   </ThemeProvider>
- {/*  </Provider>
-  </PersistGate> */}
+ </Provider>
+  </PersistGate>
   </StrictMode>,
 )
