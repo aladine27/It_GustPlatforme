@@ -1,29 +1,36 @@
-// src/pages/ResetPassword.js
 import { useState } from "react";
-import {
-  Avatar,
-  Button,
-  TextField,
-  Box,
-  Typography,
-  Container,
-  CssBaseline,
-  Stack,
-  Paper,
-} from "@mui/material";
+import {Avatar,Button,TextField,Box,Typography,Container,CssBaseline,Stack,Paper} from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { ForgotPasswordAction } from "../redux/actions/userAction";
+import { toast } from "react-toastify";
 
 export default function ResetPassword() {
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Ici tu appelleras ton API d’envoi de mail...
-    console.log("Demande reset pour", email);
-    // Puis tu rediriges vers une page de confirmation ou vers login
-    navigate("/reset-password/sent");
+
+    if (!email) {
+      toast.error("Veuillez entrer une adresse e-mail.");
+      return;
+    }
+
+    try {
+      const result = await dispatch(ForgotPasswordAction(email));
+      if (ForgotPasswordAction.fulfilled.match(result)) {
+        toast.success("E-mail de réinitialisation envoyé !");
+        navigate("/login");
+      } else {
+        toast.error(result.payload || "Utilisateur introuvable.");
+      }
+    } catch (error) {
+      toast.error("Erreur lors de la réinitialisation.");
+      console.error("Reset error:", error);
+    }
   };
 
   return (
@@ -31,16 +38,16 @@ export default function ResetPassword() {
       component="main"
       maxWidth="xs"
       sx={{
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        height: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       <CssBaseline />
-      <Paper elevation={3} sx={{ p: 5, borderRadius: 4, width: '100%', maxWidth: 400 }}>
+      <Paper elevation={3} sx={{ p: 5, borderRadius: 4, width: "100%", maxWidth: 400 }}>
         <Box sx={{ textAlign: "center", mb: 2 }}>
-          <Avatar sx={{ m: 'auto', bgcolor: "primary.main" }}>
+          <Avatar sx={{ m: "auto", bgcolor: "primary.main" }}>
             <LockOutlinedIcon />
           </Avatar>
           <Typography variant="h5" fontWeight={600} mt={1}>
