@@ -10,9 +10,11 @@ import { UpdateUserDto } from 'src/users/dto/update-user.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Public } from 'src/decorators/public.decorator';
 import { RolesGuard } from 'src/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorators';
 
 @Controller('auth')
 @ApiBearerAuth("access-token")
+@UseGuards(AccessTokenGuard) 
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -23,13 +25,13 @@ export class AuthController {
     return this.authService.signIn(createLoginDto)
 
     }
-  @UseGuards(AccessTokenGuard)
   @Get('Logout')
+  @UseGuards(RolesGuard)
+  @Roles('Admin','Rh','Employe','Manager')
   logout(@Req() req: Request) {
-    const user = req.user as {sub: string};
-    return this.authService.logout(user.sub);
+    const user = req.user as {userId: string};
+    return this.authService.logout(user.userId);
   }
-  
     @ApiBody({
       schema: { 
         type: 'object',
@@ -93,14 +95,17 @@ export class AuthController {
     }
     @Get('github')
     @UseGuards(AuthGuard('github'))
+    @Public()
   githubLogin(){
 
   }
 @Get('github/callback')
   @UseGuards(AuthGuard('github'))
+  @Public()   
   async githubCallback(@Req() req: Request, @Res() res: Response) {
     const user = req.user as any; // Cast to any to access properties
     const token = await this.authService.generateToken(user._id, user.email,user.Role);
+    
     return res.status(HttpStatus.OK).json({
       message: 'GitHub login successful',
       data: user,
@@ -127,7 +132,7 @@ export class AuthController {
 
   }
   @Post('forgot-password')
-  @Public()    
+  @Public()
   @ApiOperation({ summary: 'Réinitialisation du mot de passe' })
   @ApiBody({
     schema: {
@@ -139,24 +144,20 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: 'Mot de passe réinitialisé avec succès' })
   @ApiResponse({ status: 404, description: 'Utilisateur introuvable' })
-  async forgotPassword(@Body('email') email: string,@Res() res: Response) {
-    console.log('[Controller] received forgot-password request for:', email);
+  async forgotPassword(@Body('email') email: string, @Res() res: Response) {
     try {
       const result = await this.authService.forgotPassword(email);
-      console.log('[Controller] service result:', result);
       return res.status(HttpStatus.OK).json({
-        status: HttpStatus.OK,
+        status: result.status,
         message: result.message,
       });
     } catch (err) {
-      console.error('[Controller] error in forgot-password:', err);
       return res.status(err.getStatus?.() || 400).json({
         status: err.getStatus?.() || 400,
         message: err.message,
       });
     }
   }
-
 
   
 

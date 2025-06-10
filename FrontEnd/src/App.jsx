@@ -39,6 +39,7 @@ function App() {
             <Route path="Frais" element={<Frais />} />
             <Route path="Profile" element={<Profile />} />
             <Route path="export/:entity" element={<ExportPage />} />
+            <Route path="github-callback" element={<Login />} />
         </Route> 
         
         <Route/>

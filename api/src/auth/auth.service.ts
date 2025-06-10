@@ -101,58 +101,47 @@ async updatePassword(id: string, updateUserDto: UpdateUserDto) {
     return user; // ou null si pas trouvé
   }
   async forgotPassword(email: string): Promise<{ message: string; status: number }> {
-    // Vérifier que l’utilisateur existe
     const user = await this.userService.findbyEmail(email);
     if (!user) {
-      console.log('[Service] No user found for email:', email);
       throw new NotFoundException('Aucun utilisateur trouvé avec cet email');
     }
-    // Générer un mot de passe aléatoire en clair
-    const buffer = randomBytes(16);
+
+    const buffer = randomBytes(8);
     const plainPassword = buffer.toString('hex');
-    // Hacher le mot de passe
     const hashedPassword = await argon2.hash(plainPassword);
-    
-
-    // 4) Mettre à jour le mot de passe en base
     await this.userService.update(user._id, { password: hashedPassword });
-    console.log('[Service] Password updated in database');
 
-    // 5) Configurer le client SendinBlue
-    console.log('[Service] Configuring SendinBlue client');
+    // Configuration de Sendinblue
     const defaultClient = SibApiV3Sdk.ApiClient.instance;
-    const apiKeyAuth = defaultClient.authentications['api-key'];
-     
+    const apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = this.configService.get<string>('SENDINBLUE_API_KEY');
+
     const sendinblue = new SibApiV3Sdk.TransactionalEmailsApi();
 
-    // Préparer le contenu de l’e‑mail
     const emailParams: SibApiV3Sdk.SendSmtpEmail = {
       sender: { name: 'Votre Société', email: 'noreply@votredomaine.com' },
-      to: [{ email: user.email, name: user.fullName }],
-      subject: 'Votre nouveau mot de passe',
+      to: [{ email: user.email, name: user.fullName || 'Utilisateur' }],
+      subject: 'Réinitialisation de votre mot de passe',
       htmlContent: `
-        <p>Bonjour ${user.fullName},</p>
-        <p>Votre mot de passe a été réinitialisé. Le voici :</p>
-        <pre><strong>${plainPassword}</strong></pre>
-        <p>Vous pourrez le modifier ensuite dans votre profil.</p>
+        <p>Bonjour ${user.fullName || 'Utilisateur'},</p>
+        <p>Votre mot de passe a été réinitialisé avec succès. Voici votre nouveau mot de passe temporaire :</p>
+        <p><strong>${plainPassword}</strong></p>
+        <p>Merci de le modifier depuis votre profil après connexion.</p>
       `,
     };
 
-    //  Envoyer l’e‑mail
     try {
-      console.log('[Service] Sending email via SendinBlue to:', user.email);
       await sendinblue.sendTransacEmail(emailParams);
-      console.log('[Service] Email sent successfully');
-    } catch (error) {
-      console.error('[Service] Error sending email:', error);
-      throw error;
+      return {
+        message: 'Mot de passe réinitialisé et envoyé par email.',
+        status: 200,
+      };
+    } catch (err) {
+      console.error('Erreur Sendinblue:', err);
+      throw new BadRequestException('Échec de l’envoi du mot de passe par email');
     }
-    //  Retourner la confirmation
-    return {
-      message: 'Un email a été envoyé avec votre nouveau mot de passe.',
-      status: 200,
-    };
   }
+  
 }
 
 

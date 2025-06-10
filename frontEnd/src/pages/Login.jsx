@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Avatar,
   Button,
@@ -15,13 +15,13 @@ import {
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import GitHubIcon from '@mui/icons-material/GitHub';
 import GoogleIcon from '@mui/icons-material/Google';
-
+import { useLocation } from "react-router-dom";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
-import { LoginAction } from "../redux/actions/userAction";
+import { LoginAction, GithubLoginAction, GithubCallbackAction  } from "../redux/actions/userAction";
 import { toast } from "react-toastify";
 export default function Login() {
   const dispatch = useDispatch();
@@ -39,6 +39,25 @@ export default function Login() {
   } = useForm({
     resolver: yupResolver(validationSchema),
   });
+  useEffect(() => {
+    if (location.pathname === "/github-callback") {
+      const queryParams = location.search;
+      dispatch(GithubCallbackAction(queryParams))
+        .unwrap()
+        .then((result) => {
+          toast.success("Connexion GitHub réussie !");
+          console.log("GitHub login success:", result);
+          // Store token in localStorage or handle as needed
+          localStorage.setItem("token", result.token);
+          navigate("/dashboard");
+        })
+        .catch((error) => {
+          toast.error(error || "Échec de la connexion GitHub");
+          console.log("GitHub login failed:", error);
+          navigate("/login");
+        });
+    }
+  }, [dispatch, location, navigate]);
 
   const onSubmit = async (formData) => {
     try {
@@ -59,6 +78,14 @@ export default function Login() {
     }
   };
 
+  const handleGithubLogin = async () => {
+    try {
+      await dispatch(GithubLoginAction()).unwrap();
+    } catch (error) {
+      toast.error("Erreur lors de la connexion GitHub");
+      console.log("GitHub login error:", error);
+    }
+  };
   return (
     <Grid
       container
@@ -134,7 +161,7 @@ export default function Login() {
             </Typography>
 
             <Stack direction="row" spacing={2} justifyContent="center">
-              <Button variant="outlined" startIcon={<GitHubIcon />}>
+              <Button variant="outlined" startIcon={<GitHubIcon />} onClick={handleGithubLogin}>
                 GitHub
               </Button>
               <Button variant="outlined" startIcon={<GoogleIcon />}>

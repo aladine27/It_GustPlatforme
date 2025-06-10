@@ -22,7 +22,7 @@ async function bootstrap() {
     .setTitle('Pfe project')
     .setDescription('Pfe project API description')
     .setVersion('1.0')
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'access-token')
+    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT',name: 'Authorization', in: 'header' }, 'access-token')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
