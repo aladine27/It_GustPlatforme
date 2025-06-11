@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { ForgotPasswordAction } from "../redux/actions/userAction";
 import { toast } from "react-toastify";
+import * as Yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useForm } from "react-hook-form";
 
 export default function ResetPassword() {
   const [email, setEmail] = useState("");

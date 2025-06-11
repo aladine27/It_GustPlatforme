@@ -63,6 +63,85 @@ export const LoginAction = createAsyncThunk(
       }
     }
   );
+  export const FetchUserProfile = createAsyncThunk(
+    "user/fetchProfile",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await axios.get(
+                "http://localhost:3000/Auth/profile",
+                {
+                    withCredentials: true,
+                }
+            );
+            // La réponse du backend est { status, data: user }
+            // Nous retournons l'objet entier pour que le slice puisse l'utiliser.
+            return response.data;
+        } catch (error) {
+            // Rejeter avec un message d'erreur clair en cas d'échec
+            const errorMessage = error.response?.data?.message || "Impossible de récupérer le profil.";
+            return rejectWithValue(errorMessage);
+        }
+    }
+);
+export const updateUserAction = createAsyncThunk(
+  "user/updateProfile",
+  async ({ id, userData }, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      // Liste blanche des champs modifiables
+      const allowedFields = ['fullName', 'email', 'phone', 'address', 'domain'];
+      allowedFields.forEach(key => {
+        if (userData[key] !== null && userData[key] !== undefined) {
+          formData.append(key, userData[key]);
+        }
+      });
+      // Si l’utilisateur a sélectionné une nouvelle image, userData.image est un File
+      if (userData.image && userData.image instanceof File) {
+        formData.append('image', userData.image);
+      }
+          
+          const response = await axios.patch(
+            `http://localhost:3000/Auth/updateprofile/${id}`,
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            }
+          );
+          return response.data;
+        } catch (error) {
+          // Si 401, renvoyer le message ou code pour gérer en front
+          return rejectWithValue(error.response?.data || error.message);
+        }
+      }
+    );
+    export const UpdatePasswordAction = createAsyncThunk(
+      "user/updatePassword",
+      async ({ id, newPassword }, { rejectWithValue }) => {
+        console.log("Dispatch UpdatePasswordAction avec newPassword:", newPassword);
+        try {
+          const response = await axios.patch(
+            `http://localhost:3000/Auth/updatepassword/${id}`,
+            { password: newPassword },     // on n'envoie plus oldPassword
+            { withCredentials: true }
+          );
+          console.log("Réponse backend updatePassword :", response.data);
+          return response.data; 
+        } catch (error) {
+          const msg = error.response?.data?.message || "Erreur lors de la mise à jour du mot de passe";
+          console.error("Erreur UpdatePasswordAction:", msg);
+          return rejectWithValue(msg);
+        }
+      }
+    );
+    export const clearError = () => (dispatch) => {
+      dispatch({ type: 'CLEAR_USER_ERROR' });
+    };
+    
+
+  
+ 
 
   
 /* export const LogoutAction =createAsyncThunk(

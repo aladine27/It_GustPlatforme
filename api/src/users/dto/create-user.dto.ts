@@ -40,6 +40,9 @@ export class CreateUserDto {
     @IsString()
     @IsNotEmpty()
     address: string;
+    @IsString()
+    @IsNotEmpty()
+    domain: string;
 
     @ApiProperty({
         type: String,

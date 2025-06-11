@@ -1,50 +1,39 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import {
-  Box,
-  Container,
-  Typography,
-  Avatar,
-  Paper,
-  Grid,
-  Divider,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText
+  Box, Container, Typography, Avatar, Paper, Grid, Divider,
+  List, ListItem, ListItemIcon, ListItemText, CircularProgress,
 } from '@mui/material';
 import { styled } from '@mui/system';
-import EmailIcon from '@mui/icons-material/Email';
-import PhoneIcon from '@mui/icons-material/Phone';
-import HomeIcon from '@mui/icons-material/Home';
-import WorkIcon from '@mui/icons-material/Work';
-import EditIcon from '@mui/icons-material/Edit';
-import LockResetIcon from '@mui/icons-material/LockReset';
+import {
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  Home as HomeIcon,
+  Work as WorkIcon,
+  Edit as EditIcon,
+  LockReset as LockResetIcon,
+} from '@mui/icons-material';
+import { useDispatch, useSelector } from 'react-redux';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+import {
+  FetchUserProfile,
+  updateUserAction,
+  clearError
+} from '../redux/actions/userAction.js';
 
 import { ButtonComponent } from '../components/Global/ButtonComponent';
-import ChangePasswordModal from '../components/profile/ChangePasswordModal';
 import EditProfileModal from '../components/profile/EditProfile';
+import ChangePasswordModal from '../components/profile/ChangePasswordModal';
 
-// Données statiques de l'utilisateur
-const userData = {
-  fullName: 'Alice Dupont',
-  email: 'alice.dupont@example.com',
-  address: '456 Rue Principale, Paris',
-  phone: '+33 06 12 34 56 78',
-  domain: 'Développement Web',
-  image: 'https://randomuser.me/api/portraits/women/65.jpg',
-  role: 'Développeuse Front-End',
-};
-
-// Styles
 const ProfileContainer = styled(Box)({
-  
   backgroundColor: '#F3FAFF',
   padding: '40px 0',
   display: 'flex',
   alignItems: 'center',
   minHeight: '600px',
 });
-
 const ProfilePaper = styled(Paper)({
   padding: '32px',
   borderRadius: '20px',
@@ -53,7 +42,6 @@ const ProfilePaper = styled(Paper)({
   maxWidth: '900px',
   margin: '0 auto',
 });
-
 const UserAvatar = styled(Avatar)({
   width: 150,
   height: 150,
@@ -61,127 +49,189 @@ const UserAvatar = styled(Avatar)({
   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
 });
 
+axios.defaults.baseURL = 'http://localhost:3000';
+
 export default function Profile() {
-  const [openModal, setOpenModal] = useState(false);
-  const [oldPassword, setOldPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const dispatch = useDispatch();
+  const { CurrentUser, loading, error, errorMessage } = useSelector(state => state.user);
+
   const [openEditModal, setOpenEditModal] = useState(false);
-  const [editableUserData, setEditableUserData] = useState({ ...userData });
+  const [editableUser, setEditableUser] = useState(null);
+  const [openPasswordModal, setOpenPasswordModal] = useState(false);
+  const userData = CurrentUser?.user ? CurrentUser.user : CurrentUser;
 
-  const handleOpen = () => setOpenModal(true);
-  const handleClose = () => {
-    setOpenModal(false);
-    setOldPassword('');
-    setNewPassword('');
+  // Charger le profil et mettre le header Authorization
+  useEffect(() => {
+    // Avant de fetch, on efface une ancienne erreur éventuelle
+    dispatch(clearError());
+    if (!userData) {
+      const rawUser = localStorage.getItem("user");
+      if (rawUser) {
+        try {
+          const parsedUser = JSON.parse(rawUser);
+          const token = parsedUser?.token?.accessToken;
+          if (token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            dispatch(FetchUserProfile());
+          }
+        } catch (e) {
+          console.error("Erreur de parsing:", e);
+        }
+      }
+    }
+  }, [dispatch, userData]);
+
+  const getAvatarSrc = () => {
+    if (!userData?.image) return '';
+    const raw = userData.image;
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      return `${raw}?t=${Date.now()}`;
+    }
+    const base = axios.defaults.baseURL || window.location.origin;
+    return `${base}/uploads/users/${encodeURIComponent(raw)}?t=${Date.now()}`;
   };
+  const avatarSrc = getAvatarSrc();
 
-  const handleChangePassword = () => {
-    console.log('Ancien mot de passe :', oldPassword);
-    console.log('Nouveau mot de passe :', newPassword);
-    handleClose();
-  };
+  useEffect(() => {
+    console.log("userData.image changé :", userData?.image, "=> avatarSrc:", avatarSrc);
+  }, [userData?.image]);
 
-  const handleEditProfile = () => {
-    setEditableUserData({ ...userData });
+  const handleOpenEditModal = () => {
+    if (!userData) return;
+    setEditableUser({
+      fullName: userData.fullName,
+      email: userData.email,
+      phone: userData.phone,
+      address: userData.address,
+      domain: userData.domain,
+      image: userData.image,
+      _id: userData._id,
+    });
     setOpenEditModal(true);
   };
-
-  const handleSaveProfile = () => {
-    console.log('Données mises à jour :', editableUserData);
+  const handleCloseEditModal = () => {
     setOpenEditModal(false);
+    setEditableUser(null);
   };
 
+  const handleSaveChanges = () => {
+    if (!editableUser?._id) {
+      console.error("ID utilisateur manquant pour la mise à jour.");
+      return;
+    }
+    // Réassigner header Authorization si besoin
+    const rawUser = localStorage.getItem("user");
+    if (rawUser) {
+      try {
+        const parsedUser = JSON.parse(rawUser);
+        const token = parsedUser?.token?.accessToken;
+        if (token) {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        }
+      } catch {}
+    }
+    dispatch(updateUserAction({ id: editableUser._id, userData: editableUser }))
+      .unwrap()
+      .then(() => {
+        return dispatch(FetchUserProfile()).unwrap();
+      })
+      .then((fresh) => {
+        console.log("Refetch terminé, nouvelle image:", fresh.data.image);
+        toast.success("Profil mis à jour avec succès");
+        handleCloseEditModal();
+      })
+      .catch((err) => {
+        console.error("Erreur update ou fetch:", err);
+        toast.error("Échec de la mise à jour du profil");
+      });
+  };
+
+  // Condition loader : on affiche uniquement si loading true ET pas encore de userData
+  if (loading && !userData && !openEditModal && !openPasswordModal) {
+    return <ProfileContainer><CircularProgress /></ProfileContainer>;
+  }
+
+  // Si erreur après fetch
+  if (!loading && error) {
+    return (
+      <ProfileContainer>
+        <Typography color="error">
+          Erreur: {errorMessage || 'Une erreur est survenue.'}
+        </Typography>
+      </ProfileContainer>
+    );
+  }
+
+  // Si pas d’utilisateur après chargement (et pas d’erreur), message ou redirection
+  if (!loading && !userData) {
+    return (
+      <ProfileContainer>
+        <Typography>Aucun utilisateur connecté ou données non disponibles.</Typography>
+      </ProfileContainer>
+    );
+  }
+
+  // Sinon on a userData et loading est false : on affiche le profil
   return (
     <ProfileContainer>
+      <ToastContainer position="bottom-right" autoClose={5000} hideProgressBar={false} />
       <Container>
         <ProfilePaper elevation={3}>
-          <Grid container spacing={1}>
-            {/* Avatar et nom */}
-            <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-                <UserAvatar src={userData.image} alt="Profile" />
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">Nom complet</Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#333', mb: 0.5 }}>
-                    {userData.fullName}
-                  </Typography>
-                  <Typography variant="subtitle1" color="text.secondary">
-                    {userData.role}
-                  </Typography>
-                </Box>
-              </Box>
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={4} sx={{ textAlign: 'center' }}>
+              <UserAvatar src={avatarSrc} alt={userData.fullName} sx={{ margin: '0 auto 20px' }} />
+              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>{userData.fullName}</Typography>
+              <Typography variant="subtitle1" color="text.secondary">{userData.role}</Typography>
             </Grid>
-
-            {/* Informations et boutons */}
             <Grid item xs={12} md={8}>
-              <Box sx={{ pl: { md: 2 } }}>
-                <Typography variant="h6" sx={{ mb: 2, color: '#6b48ff' }}>
-                  Informations
-                </Typography>
-                <Divider sx={{ my: 3 }} />
-
-                <List>
-                  <ListItem>
-                    <ListItemIcon><EmailIcon sx={{ color: '#6b48ff' }} /></ListItemIcon>
-                    <ListItemText primary="Email" secondary={userData.email} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><PhoneIcon sx={{ color: '#6b48ff' }} /></ListItemIcon>
-                    <ListItemText primary="Téléphone" secondary={userData.phone} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><HomeIcon sx={{ color: '#6b48ff' }} /></ListItemIcon>
-                    <ListItemText primary="Adresse" secondary={userData.address} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><WorkIcon sx={{ color: '#6b48ff' }} /></ListItemIcon>
-                    <ListItemText primary="Domaine" secondary={userData.domain} />
-                  </ListItem>
-                </List>
-
-                <Divider sx={{ my: 3 }} />
-
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <ButtonComponent
-                      text="Modifier Profil"
-                      icon={<EditIcon />}
-                      onClick={handleEditProfile}
-                      fullWidth
+              <Typography variant="h6" sx={{ mb: 2, color: '#6b48ff' }}>Informations Personnelles</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <List>
+                {[
+                  { icon: <EmailIcon />, label: 'Email', value: userData.email },
+                  { icon: <PhoneIcon />, label: 'Téléphone', value: userData.phone },
+                  { icon: <HomeIcon />, label: 'Adresse', value: userData.address },
+                  { icon: <WorkIcon />, label: 'Domaine', value: userData.domain }
+                ].map((item, i) => (
+                  <ListItem key={i}>
+                    <ListItemIcon>{item.icon}</ListItemIcon>
+                    <ListItemText
+                      primary={item.label}
+                      secondary={item.value || 'Non renseigné'}
                     />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <ButtonComponent
-                      text="Changer mot de passe"
-                      icon={<LockResetIcon />}
-                      onClick={handleOpen}
-                      fullWidth
-                    />
-                  </Grid>
-                </Grid>
-              </Box>
+                  </ListItem>
+                ))}
+              </List>
+              <Divider sx={{ my: 3 }} />
+              <ButtonComponent
+                text="Modifier Profil"
+                icon={<EditIcon />}
+                onClick={handleOpenEditModal}
+              />
+              <ButtonComponent
+                text="Modifier mot de passe"
+                icon={<LockResetIcon />}
+                onClick={() => setOpenPasswordModal(true)}
+                sx={{ mt: 2 }}
+              />
             </Grid>
           </Grid>
         </ProfilePaper>
+      </Container>
 
-        <ChangePasswordModal
-          open={openModal}
-          handleClose={handleClose}
-          oldPassword={oldPassword}
-          newPassword={newPassword}
-          setOldPassword={setOldPassword}
-          setNewPassword={setNewPassword}
-          onConfirm={handleChangePassword}
-        />
-
+      {editableUser && (
         <EditProfileModal
           open={openEditModal}
-          handleClose={() => setOpenEditModal(false)}
-          userData={editableUserData}
-          setUserData={setEditableUserData}
-          onSave={handleSaveProfile}
+          handleClose={handleCloseEditModal}
+          userData={editableUser}
+          setUserData={setEditableUser}
+          onSave={handleSaveChanges}
         />
-      </Container>
+      )}
+      <ChangePasswordModal
+        open={openPasswordModal}
+        handleClose={() => setOpenPasswordModal(false)}
+      />
     </ProfileContainer>
   );
 }

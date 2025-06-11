@@ -15,6 +15,8 @@ export interface IUser extends Document {
        readonly role: string;
         
        readonly address: string;
+
+       readonly domain: string;
        
        readonly createdAt: Date;
        

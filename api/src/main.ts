@@ -13,6 +13,7 @@ async function bootstrap() {
   app.enableCors({
     origin: 'http://localhost:5173', // ton app React
     credentials: true,              // utile si tu envoies des cookies ou headers auth
+    allowedHeaders: ['Content-Type', 'Authorization'], 
   });
 
 

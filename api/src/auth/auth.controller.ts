@@ -11,12 +11,16 @@ import { AuthGuard } from '@nestjs/passport';
 import { Public } from 'src/decorators/public.decorator';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorators';
+import { UsersService } from 'src/users/users.service';
 
 @Controller('auth')
 @ApiBearerAuth("access-token")
 @UseGuards(AccessTokenGuard) 
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UsersService
+  ) {}
 
   @Post('SignIn')
    @UseGuards( RolesGuard)
@@ -60,6 +64,7 @@ export class AuthController {
   
     )
   @UseGuards(AccessTokenGuard)
+  @Roles('Admin','Rh','Employe','Manager')
   @Patch('updateprofile/:id')
     async updateprofile(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Res() res,@UploadedFile()image: Express.Multer.File) {
       try {
@@ -80,6 +85,8 @@ export class AuthController {
   
 
 }
+@UseGuards(AccessTokenGuard)
+@Roles('Admin','Rh','Employe','Manager')
 @Patch('updatepassword/:id')
  async updatepassword(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Res() res) {
       try {
@@ -158,6 +165,14 @@ export class AuthController {
       });
     }
   }
+  @Get('profile')
+@UseGuards(RolesGuard)
+@Roles('Admin','Rh','Employe','Manager')
+async getProfile(@Req() req: Request) {
+  const userId = (req.user as any).userId;
+  const user = await this.userService.findOne(userId);
+  return { status: HttpStatus.OK, data: user };
+}
 
   
 

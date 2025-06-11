@@ -22,6 +22,8 @@ import { EmployeModule } from './employe/employe.module';
 import { ManagerModule } from './manager/manager.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 const connection="process.env.MONGO_URI"
 
@@ -40,6 +42,14 @@ const connection="process.env.MONGO_URI"
         useUnifiedTopology: true,
       }),
       inject: [ConfigService],
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'), // chemin physique vers le dossier uploads
+      serveRoot: '/uploads',                     // URL de base pour y accéder
+      exclude: ['/api*'],                        // optionnel : exclure les routes API si nécessaire
+      serveStaticOptions: {
+        index: false,                            // ne pas servir d’index.html automatiquement
+      },
     }),
     
   
