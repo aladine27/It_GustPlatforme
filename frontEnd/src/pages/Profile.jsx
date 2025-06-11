@@ -20,6 +20,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import {
   FetchUserProfile,
   updateUserAction,
+  UpdatePasswordAction,
   clearError
 } from '../redux/actions/userAction.js';
 
@@ -60,22 +61,20 @@ export default function Profile() {
   const [openPasswordModal, setOpenPasswordModal] = useState(false);
   const userData = CurrentUser?.user ? CurrentUser.user : CurrentUser;
 
-  // Charger le profil et mettre le header Authorization
+  // Chargement du profil
   useEffect(() => {
-    // Avant de fetch, on efface une ancienne erreur éventuelle
     dispatch(clearError());
     if (!userData) {
-      const rawUser = localStorage.getItem("user");
-      if (rawUser) {
+      const raw = localStorage.getItem("user");
+      if (raw) {
         try {
-          const parsedUser = JSON.parse(rawUser);
-          const token = parsedUser?.token?.accessToken;
-          if (token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          const { token } = JSON.parse(raw);
+          if (token?.accessToken) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token.accessToken}`;
             dispatch(FetchUserProfile());
           }
         } catch (e) {
-          console.error("Erreur de parsing:", e);
+          console.error("Parsing user failed:", e);
         }
       }
     }
@@ -84,18 +83,12 @@ export default function Profile() {
   const getAvatarSrc = () => {
     if (!userData?.image) return '';
     const raw = userData.image;
-    if (raw.startsWith('http://') || raw.startsWith('https://')) {
-      return `${raw}?t=${Date.now()}`;
-    }
-    const base = axios.defaults.baseURL || window.location.origin;
-    return `${base}/uploads/users/${encodeURIComponent(raw)}?t=${Date.now()}`;
+    if (raw.startsWith('http')) return `${raw}?t=${Date.now()}`;
+    return `${axios.defaults.baseURL}/uploads/users/${encodeURIComponent(raw)}?t=${Date.now()}`;
   };
   const avatarSrc = getAvatarSrc();
 
-  useEffect(() => {
-    console.log("userData.image changé :", userData?.image, "=> avatarSrc:", avatarSrc);
-  }, [userData?.image]);
-
+  // Modals EDIT
   const handleOpenEditModal = () => {
     if (!userData) return;
     setEditableUser({
@@ -113,45 +106,70 @@ export default function Profile() {
     setOpenEditModal(false);
     setEditableUser(null);
   };
-
   const handleSaveChanges = () => {
-    if (!editableUser?._id) {
-      console.error("ID utilisateur manquant pour la mise à jour.");
-      return;
-    }
-    // Réassigner header Authorization si besoin
-    const rawUser = localStorage.getItem("user");
-    if (rawUser) {
+    if (!editableUser?._id) return toast.error("ID utilisateur manquant.");
+    const raw = localStorage.getItem("user");
+    if (raw) {
       try {
-        const parsedUser = JSON.parse(rawUser);
-        const token = parsedUser?.token?.accessToken;
-        if (token) {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        const { token } = JSON.parse(raw);
+        if (token?.accessToken) {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token.accessToken}`;
         }
       } catch {}
     }
     dispatch(updateUserAction({ id: editableUser._id, userData: editableUser }))
       .unwrap()
+      .then(() => dispatch(FetchUserProfile()).unwrap())
       .then(() => {
-        return dispatch(FetchUserProfile()).unwrap();
-      })
-      .then((fresh) => {
-        console.log("Refetch terminé, nouvelle image:", fresh.data.image);
         toast.success("Profil mis à jour avec succès");
         handleCloseEditModal();
       })
-      .catch((err) => {
-        console.error("Erreur update ou fetch:", err);
+      .catch(err => {
+        console.error(err);
         toast.error("Échec de la mise à jour du profil");
       });
   };
 
-  // Condition loader : on affiche uniquement si loading true ET pas encore de userData
+  // Modal CHANGE PASSWORD
+  const handleSavePassword = (oldPassword, newPassword) => {
+    if (!userData?._id) return toast.error("Utilisateur non authentifié");
+    if (oldPassword === newPassword) {
+      // double-check client-side
+      return toast.error("Le nouveau mot de passe ne peut pas être le même que l'ancien");
+    }
+    const raw = localStorage.getItem("user");
+    if (raw) {
+      try {
+        const { token } = JSON.parse(raw);
+        if (token?.accessToken) {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token.accessToken}`;
+        }
+      } catch {}
+    }
+    dispatch(UpdatePasswordAction({ id: userData._id, oldPassword, newPassword }))
+      .unwrap()
+      .then(res => {
+        toast.success(res.message || "Mot de passe mis à jour");
+        setOpenPasswordModal(false);
+      })
+      .catch(errMsg => {
+        // errMsg ici est la chaîne renvoyée par le backend
+        if (errMsg.includes("Old password incorrect")) {
+          toast.error("L'ancien mot de passe est incorrect");
+        } else if (errMsg.includes("Password is required")) {
+          toast.error("Le mot de passe ne peut pas être vide");
+        } else if (errMsg.includes("same as the old password")) {
+          toast.error("Le nouveau mot de passe ne peut pas être identique à l'ancien");
+        } else {
+          toast.error(errMsg);
+        }
+      });
+  };
+
+
   if (loading && !userData && !openEditModal && !openPasswordModal) {
     return <ProfileContainer><CircularProgress /></ProfileContainer>;
   }
-
-  // Si erreur après fetch
   if (!loading && error) {
     return (
       <ProfileContainer>
@@ -161,25 +179,23 @@ export default function Profile() {
       </ProfileContainer>
     );
   }
-
-  // Si pas d’utilisateur après chargement (et pas d’erreur), message ou redirection
   if (!loading && !userData) {
     return (
       <ProfileContainer>
-        <Typography>Aucun utilisateur connecté ou données non disponibles.</Typography>
+        <Typography>Aucun utilisateur connecté.</Typography>
       </ProfileContainer>
     );
   }
 
-  // Sinon on a userData et loading est false : on affiche le profil
+  // Affichage principal
   return (
     <ProfileContainer>
-      <ToastContainer position="bottom-right" autoClose={5000} hideProgressBar={false} />
+      <ToastContainer position="bottom-right" autoClose={5000} />
       <Container>
         <ProfilePaper elevation={3}>
           <Grid container spacing={4}>
             <Grid item xs={12} md={4} sx={{ textAlign: 'center' }}>
-              <UserAvatar src={avatarSrc} alt={userData.fullName} sx={{ margin: '0 auto 20px' }} />
+              <UserAvatar src={avatarSrc} alt={userData.fullName} sx={{ mb: 2 }} />
               <Typography variant="h5" sx={{ fontWeight: 'bold' }}>{userData.fullName}</Typography>
               <Typography variant="subtitle1" color="text.secondary">{userData.role}</Typography>
             </Grid>
@@ -191,14 +207,11 @@ export default function Profile() {
                   { icon: <EmailIcon />, label: 'Email', value: userData.email },
                   { icon: <PhoneIcon />, label: 'Téléphone', value: userData.phone },
                   { icon: <HomeIcon />, label: 'Adresse', value: userData.address },
-                  { icon: <WorkIcon />, label: 'Domaine', value: userData.domain }
+                  { icon: <WorkIcon />, label: 'Domaine', value: userData.domain },
                 ].map((item, i) => (
                   <ListItem key={i}>
                     <ListItemIcon>{item.icon}</ListItemIcon>
-                    <ListItemText
-                      primary={item.label}
-                      secondary={item.value || 'Non renseigné'}
-                    />
+                    <ListItemText primary={item.label} secondary={item.value || 'Non renseigné'} />
                   </ListItem>
                 ))}
               </List>
@@ -228,10 +241,14 @@ export default function Profile() {
           onSave={handleSaveChanges}
         />
       )}
-      <ChangePasswordModal
-        open={openPasswordModal}
-        handleClose={() => setOpenPasswordModal(false)}
-      />
+
+      {openPasswordModal && (
+        <ChangePasswordModal
+          open={openPasswordModal}
+          handleClose={() => setOpenPasswordModal(false)}
+          onSavePassword={handleSavePassword}
+        />
+      )}
     </ProfileContainer>
   );
 }

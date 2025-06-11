@@ -95,23 +95,22 @@ extraReducers:(builder) =>{
     .addCase(UpdatePasswordAction.pending, (state) => {
       state.loading = true;
       state.error = false;
-      state.errorMessage = null;
       state.successMessage = null;
-    })
-    .addCase(UpdatePasswordAction.fulfilled, (state, action) => {
+      state.errorMessage = null;
+  })
+  .addCase(UpdatePasswordAction.fulfilled, (state, action) => {
       state.loading = false;
       state.error = false;
-      state.errorMessage = null;
       state.successMessage = action.payload.message;
-      if (action.payload.data) {
-        state.CurrentUser = action.payload.data;
-      }
-    })
-    .addCase(UpdatePasswordAction.rejected, (state, action) => {
+      state.CurrentUser = action.payload.data;
+      localStorage.setItem("token", action.payload?.token?.accessToken);
+  })
+  .addCase(UpdatePasswordAction.rejected, (state, action) => {
       state.loading = false;
       state.error = true;
       state.errorMessage = action.payload;
-    })
+  })
+
      
       
 

@@ -118,20 +118,17 @@ export const updateUserAction = createAsyncThunk(
     );
     export const UpdatePasswordAction = createAsyncThunk(
       "user/updatePassword",
-      async ({ id, newPassword }, { rejectWithValue }) => {
-        console.log("Dispatch UpdatePasswordAction avec newPassword:", newPassword);
+      async ({ id, oldPassword, newPassword }, { rejectWithValue }) => {
         try {
           const response = await axios.patch(
             `http://localhost:3000/Auth/updatepassword/${id}`,
-            { password: newPassword },     // on n'envoie plus oldPassword
+            { oldPassword, password: newPassword },   // <-- on envoie les deux
             { withCredentials: true }
           );
-          console.log("Réponse backend updatePassword :", response.data);
-          return response.data; 
+          return response.data; // { message, data: user, status, token }
         } catch (error) {
-          const msg = error.response?.data?.message || "Erreur lors de la mise à jour du mot de passe";
-          console.error("Erreur UpdatePasswordAction:", msg);
-          return rejectWithValue(msg);
+          // on renvoie le message brut du backend (NotFoundException, BadRequestException, etc.)
+          return rejectWithValue(error.response?.data?.message || error.message);
         }
       }
     );
