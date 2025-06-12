@@ -49,7 +49,7 @@ export class UsersService {
   async sendAccountCreationEmail(email: string, fullName: string, password: string) {
     console.log('[Mail] Preparing to send email');
 
-    const apiKey = this.configService.get<string>('SENDINBLUE');
+    const apiKey = this.configService.get<string>('SENDINBLUE_API_KEY');
     const defaultClient = SibApiV3Sdk.ApiClient.instance;
     const apiKeyAuth = defaultClient.authentications['api-key'];
     apiKeyAuth.apiKey = apiKey;

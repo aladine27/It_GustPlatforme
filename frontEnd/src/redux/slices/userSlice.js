@@ -1,6 +1,6 @@
 
 import { createSlice } from "@reduxjs/toolkit";
-import { LoginAction,GithubLoginAction, GithubCallbackAction,ForgotPasswordAction,FetchUserProfile,UpdatePasswordAction } from "../actions/userAction";
+import { LoginAction,GithubLoginAction, GithubCallbackAction,ForgotPasswordAction,FetchUserProfile,UpdatePasswordAction,LogoutAction} from "../actions/userAction";
 const initialState = {
   CurrentUser: null,
   loading: false,
@@ -92,7 +92,7 @@ extraReducers:(builder) =>{
         state.errorMessage = action.payload;
         state.CurrentUser = null;
     })
-    .addCase(UpdatePasswordAction.pending, (state) => {
+  .addCase(UpdatePasswordAction.pending, (state) => {
       state.loading = true;
       state.error = false;
       state.successMessage = null;
@@ -110,6 +110,22 @@ extraReducers:(builder) =>{
       state.error = true;
       state.errorMessage = action.payload;
   })
+  .addCase(LogoutAction.fulfilled, (state) => {
+    state.loading = false;
+    state.CurrentUser = null;
+    state.error = false;
+    localStorage.removeItem("token");
+  })
+  .addCase(LogoutAction.rejected, (state) => {
+    state.loading = false;
+    state.error = true;
+  })
+  .addCase(LogoutAction.pending, (state) => {
+    state.loading = true;
+    state.error = false;
+  });
+  
+  
 
      
       

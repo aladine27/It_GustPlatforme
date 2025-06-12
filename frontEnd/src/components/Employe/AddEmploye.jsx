@@ -1,191 +1,196 @@
 import React, { useState } from "react";
 import {
-  TextField,
-  Button,
   Box,
+  Button,
   MenuItem,
-  FormControl,
-  InputLabel,
   Select,
+  InputLabel,
+  FormControl,
+  TextField,
+  Typography,
+  Avatar,
 } from "@mui/material";
-import { PersonAddAlt1 } from "@mui/icons-material";
-import { useTranslation } from "react-i18next";
+import { useDispatch } from "react-redux";
+import * as Yup from "yup";
+import { CreateUserAction } from "../../redux/actions/employeAction";
 import ModelComponent from "../Global/ModelComponent";
+import { PersonAddAlt1 } from "@mui/icons-material";
 
-const AddEmployeModal = ({ open, handleClose, onSubmit }) => {
-  const { t } = useTranslation();
+const AddEmployeModal = ({ open, handleClose }) => {
+  const dispatch = useDispatch();
 
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    username: "",
-    phoneNumber: "",
+    fullName: "",
     email: "",
-    password: "",
+    address: "",
+    phone: "",
+    role: "",
     domain: "",
-    status: "Actif",
+    image: null,
+    password: "admin123",
   });
 
   const [errors, setErrors] = useState({});
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-  const domainOptions = [
-    "Développement Web",
-    "Design UI/UX",
-    "DevOps",
-    "Développement mobile",
-    "Data Science",
-    "Cybersécurité",
-    "Marketing Digital",
-  ];
+  const validationSchema = Yup.object({
+    fullName: Yup.string().required("Le nom complet est requis"),
+    email: Yup.string().email("Email invalide").required("L'email est requis"),
+    address: Yup.string().required("L'adresse est requise"),
+    phone: Yup.string().required("Le numéro de téléphone est requis"),
+    role: Yup.string()
+      .oneOf(["Admin", "Employe", "Rh", "Manager"])
+      .required("Le rôle est requis"),
+    domain: Yup.string().required("Le domaine est requis"),
+    image: Yup.mixed().required("L'image est requise"),
+  });
 
   const handleChange = (field) => (e) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
+    const value = field === "image" ? e.target.files[0] : e.target.value;
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+
+    if (field === "image" && e.target.files[0]) {
+      setPreviewUrl(URL.createObjectURL(e.target.files[0]));
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!form.firstName.trim()) newErrors.firstName = t("Le prénom est requis");
-    if (!form.lastName.trim()) newErrors.lastName = t("Le nom est requis");
-    if (!form.username.trim()) newErrors.username = t("Le nom d'utilisateur est requis");
-    if (!form.phoneNumber.trim()) newErrors.phoneNumber = t("Le numéro de téléphone est requis");
-    if (!form.email.trim()) newErrors.email = t("L'email est requis");
-    if (!form.domain.trim()) newErrors.domain = t("Le domaine est requis");
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (form.email && !emailRegex.test(form.email)) {
-      newErrors.email = t("Format d'email invalide");
-    }
-
-    const phoneRegex = /^\+?[0-9]{10,15}$/;
-    if (form.phoneNumber && !phoneRegex.test(form.phoneNumber.replace(/\s/g, ""))) {
-      newErrors.phoneNumber = t("Format de téléphone invalide");
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    try {
+      await validationSchema.validate(form, { abortEarly: false });
 
-    const newEmployee = {
-      id: Date.now(),
-      name: `${form.firstName} ${form.lastName}`,
-      email: form.email,
-      phone: form.phoneNumber,
-      domain: form.domain,
-      status: form.status,
-      avatar: `${form.firstName.charAt(0)}${form.lastName.charAt(0)}`.toUpperCase(),
-      username: form.username,
-    };
-
-    onSubmit?.(newEmployee);
-    handleClose?.();
-
-    setForm({
-      firstName: "",
-      lastName: "",
-      username: "",
-      phoneNumber: "",
-      email: "",
-      password: "",
-      domain: "",
-      status: "Actif",
-    });
-    setErrors({});
+      await dispatch(CreateUserAction(form)).unwrap();
+      handleClose();
+      setForm({
+        fullName: "",
+        email: "",
+        address: "",
+        phone: "",
+        role: "",
+        domain: "",
+        image: null,
+        password: "admin123",
+      });
+      setPreviewUrl(null);
+      setErrors({});
+    } catch (validationErr) {
+      if (validationErr.inner) {
+        const newErrors = {};
+        validationErr.inner.forEach((err) => {
+          newErrors[err.path] = err.message;
+        });
+        setErrors(newErrors);
+      }
+    }
   };
 
   return (
     <ModelComponent
       open={open}
       handleClose={handleClose}
-      title={t("Ajouter un Employé")}
+      title="Ajouter un Employé"
       icon={<PersonAddAlt1 />}
     >
       <Box
         component="form"
-        sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
         onSubmit={handleSubmit}
+        sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
       >
         <TextField
-          label={t("Prénom") + "*"}
-          fullWidth
-          value={form.firstName}
-          onChange={handleChange("firstName")}
-          error={!!errors.firstName}
-          helperText={errors.firstName}
+          label="Nom complet"
+          name="fullName"
+          value={form.fullName}
+          onChange={handleChange("fullName")}
+          error={!!errors.fullName}
+          helperText={errors.fullName}
         />
+
         <TextField
-          label={t("Nom") + "*"}
-          fullWidth
-          value={form.lastName}
-          onChange={handleChange("lastName")}
-          error={!!errors.lastName}
-          helperText={errors.lastName}
-        />
-        <TextField
-          label={t("Nom d'utilisateur") + "*"}
-          fullWidth
-          value={form.username}
-          onChange={handleChange("username")}
-          error={!!errors.username}
-          helperText={errors.username}
-        />
-        <TextField
-          label={t("Numéro de téléphone") + "*"}
-          fullWidth
-          value={form.phoneNumber}
-          onChange={handleChange("phoneNumber")}
-          error={!!errors.phoneNumber}
-          helperText={errors.phoneNumber}
-        />
-        <TextField
-          label={t("Email") + "*"}
-          fullWidth
+          label="Email"
+          name="email"
           value={form.email}
           onChange={handleChange("email")}
           error={!!errors.email}
           helperText={errors.email}
         />
-        <FormControl fullWidth error={!!errors.domain}>
-          <InputLabel>{t("Domaine") + "*"}</InputLabel>
-          <Select
-            value={form.domain}
-            label={t("Domaine") + "*"}
-            onChange={handleChange("domain")}
-          >
-            {domainOptions.map((d) => (
-              <MenuItem key={d} value={d}>
-                {d}
-              </MenuItem>
-            ))}
+
+        <TextField
+          label="Adresse"
+          name="address"
+          value={form.address}
+          onChange={handleChange("address")}
+          error={!!errors.address}
+          helperText={errors.address}
+        />
+
+        <TextField
+          label="Téléphone"
+          name="phone"
+          value={form.phone}
+          onChange={handleChange("phone")}
+          error={!!errors.phone}
+          helperText={errors.phone}
+        />
+
+        <FormControl fullWidth error={!!errors.role}>
+          <InputLabel>Rôle</InputLabel>
+          <Select value={form.role} onChange={handleChange("role")} label="Rôle">
+            <MenuItem value="Admin">Admin</MenuItem>
+            <MenuItem value="Employe">Employe</MenuItem>
+            <MenuItem value="Rh">Rh</MenuItem>
+            <MenuItem value="Manager">Manager</MenuItem>
           </Select>
-          {errors.domain && (
-            <Box sx={{ color: "error.main", fontSize: "0.75rem", mt: 0.5, ml: 1.5 }}>
-              {errors.domain}
-            </Box>
+          {errors.role && (
+            <Typography color="error" fontSize="0.75rem">
+              {errors.role}
+            </Typography>
           )}
         </FormControl>
-        <FormControl fullWidth>
-          <InputLabel>{t("Statut")}</InputLabel>
-          <Select
-            value={form.status}
-            label={t("Statut")}
-            onChange={handleChange("status")}
-          >
-            <MenuItem value="Actif">{t("Actif")}</MenuItem>
-            <MenuItem value="Inactif">{t("Inactif")}</MenuItem>
+
+        <FormControl fullWidth error={!!errors.domain}>
+          <InputLabel>Domaine</InputLabel>
+          <Select value={form.domain} onChange={handleChange("domain")} label="Domaine">
+            <MenuItem value="Développement Web">Développement Web</MenuItem>
+            <MenuItem value="Design UI/UX">Design UI/UX</MenuItem>
+            <MenuItem value="DevOps">DevOps</MenuItem>
+            <MenuItem value="Mobile">Mobile</MenuItem>
+            <MenuItem value="Marketing">Marketing</MenuItem>
           </Select>
+          {errors.domain && (
+            <Typography color="error" fontSize="0.75rem">
+              {errors.domain}
+            </Typography>
+          )}
         </FormControl>
 
-        <Box display="flex" justifyContent="flex-end" gap={2}>
-          <Button type="submit" variant="contained" sx={{ fontWeight: "bold" }}>
-            {t("Créer utilisateur")}
+        <Button variant="outlined" component="label">
+          {form.image ? "Changer l'image" : "Importer une image"}
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={handleChange("image")}
+          />
+        </Button>
+        {errors.image && (
+          <Typography color="error" fontSize="0.75rem">
+            {errors.image}
+          </Typography>
+        )}
+
+        {previewUrl && (
+          <Avatar
+            src={previewUrl}
+            alt="Preview"
+            sx={{ width: 64, height: 64, mx: "auto" }}
+          />
+        )}
+
+        <Box display="flex" justifyContent="flex-end">
+          <Button type="submit" variant="contained">
+            Créer
           </Button>
         </Box>
       </Box>

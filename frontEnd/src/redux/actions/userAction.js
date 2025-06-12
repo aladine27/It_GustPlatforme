@@ -122,10 +122,10 @@ export const updateUserAction = createAsyncThunk(
         try {
           const response = await axios.patch(
             `http://localhost:3000/Auth/updatepassword/${id}`,
-            { oldPassword, password: newPassword },   // <-- on envoie les deux
+            { oldPassword, password: newPassword },  
             { withCredentials: true }
           );
-          return response.data; // { message, data: user, status, token }
+          return response.data; 
         } catch (error) {
           // on renvoie le message brut du backend (NotFoundException, BadRequestException, etc.)
           return rejectWithValue(error.response?.data?.message || error.message);
@@ -135,6 +135,25 @@ export const updateUserAction = createAsyncThunk(
     export const clearError = () => (dispatch) => {
       dispatch({ type: 'CLEAR_USER_ERROR' });
     };
+  
+    export const LogoutAction = createAsyncThunk(
+      "user/logout",
+      async (_, { rejectWithValue }) => {
+        try {
+          const token = localStorage.getItem("token");
+          const response = await axios.get("http://localhost:3000/Auth/Logout", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          return response.data;
+        } catch (error) {
+          return rejectWithValue(error.response?.data?.message || error.message);
+        }
+      }
+    );
+    
+    
     
 
   

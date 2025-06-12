@@ -59,6 +59,9 @@ export class UsersController {
       
     }
   }
+
+  @UseGuards( RolesGuard)
+  @Roles('Admin')
   @Get('/getbyEmail/:email')
   async findByEmail(@Param('email') email: string, @Res() res) {
     try {
@@ -105,6 +108,8 @@ export class UsersController {
     }
   }
   @Get('/getbyRole/:role')
+  @UseGuards( RolesGuard)
+  @Roles('Admin')
   async finduserByRole(@Param('role') role: string, @Res() res) {
     try {
       const usersrole = await this.usersService.findUserByRole(role);
@@ -145,6 +150,8 @@ async findAll( @Res() res) {
   
 
   @Get(':id')
+  @UseGuards( RolesGuard)
+  @Roles('Admin')
   async findOne(@Param('id') id: string, @Res() res) {
     try {
        const user = await this.usersService.findOne(id);
@@ -192,6 +199,8 @@ async findAll( @Res() res) {
   )
 
   @Patch(':id')
+  @UseGuards( RolesGuard)
+  @Roles('Admin')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Res() res,@UploadedFile()image: Express.Multer.File) {
     try {
       updateUserDto.image = image?.filename
@@ -209,6 +218,8 @@ async findAll( @Res() res) {
   }
 
   @Delete(':id')
+  @UseGuards( RolesGuard)
+  @Roles('Admin')
   async remove(@Param('id') id: string, @Res() res) {
     try {
       const user = await this.usersService.remove(id);

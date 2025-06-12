@@ -21,6 +21,7 @@ const Buttons = ({ to, children ,isWhite, bgColor }) => {
           color="inherit"
           component={NavLink}
           to={to}
+         
           sx={{
           backgroundColor: bgColor || '#57ADDE',
           color: isWhite ? '#338CC7' : '#fff',

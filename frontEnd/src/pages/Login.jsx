@@ -92,8 +92,7 @@ export default function Login() {
     };
 
     return (
-        <Grid
-            container
+        <Grid container
             sx={{
                 backgroundColor: "#1A9BC3",
                 display: "flex",
