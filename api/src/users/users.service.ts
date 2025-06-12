@@ -237,7 +237,12 @@ export class UsersService {
           { email: regex },
           { address: regex },
           { phone: regex },
-          { role: regex },
+          { role: regex
+           },
+           { domain: regex
+           },
+           
+
         ],
       });
   

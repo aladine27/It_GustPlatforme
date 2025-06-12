@@ -1,6 +1,6 @@
 
 import { createSlice } from "@reduxjs/toolkit";
-import { LoginAction,GithubLoginAction, GithubCallbackAction,ForgotPasswordAction,FetchUserProfile,UpdatePasswordAction,LogoutAction} from "../actions/userAction";
+import { LoginAction,GithubLoginAction, GithubCallbackAction,ForgotPasswordAction,FetchUserProfile,UpdatePasswordAction,LogoutAction,GoogleLoginAction,GoogleCallbackAction} from "../actions/userAction";
 const initialState = {
   CurrentUser: null,
   loading: false,
@@ -123,8 +123,39 @@ extraReducers:(builder) =>{
   .addCase(LogoutAction.pending, (state) => {
     state.loading = true;
     state.error = false;
-  });
-  
+  })
+  // Google Login Actions
+.addCase(GoogleLoginAction.pending, (state) => {
+  state.isFetching = true;
+  state.error = false;
+})
+.addCase(GoogleLoginAction.fulfilled, (state) => {
+  state.isFetching = false;
+})
+.addCase(GoogleLoginAction.rejected, (state) => {
+  state.isFetching = false;
+  state.error = true;
+})
+
+// Google Callback Actions
+.addCase(GoogleCallbackAction.pending, (state) => {
+  state.isFetching = true;
+  state.error = false;
+})
+.addCase(GoogleCallbackAction.fulfilled, (state, action) => {
+  state.isFetching = false;
+  state.CurrentUser = action.payload.data;
+  state.error = false;
+  localStorage.setItem("token", action.payload.token);
+
+})
+
+.addCase(GoogleCallbackAction.rejected, (state) => {
+  state.isFetching = false;
+  state.error = true;
+  state.CurrentUser = null;
+})
+
   
 
      

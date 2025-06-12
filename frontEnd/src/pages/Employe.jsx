@@ -16,7 +16,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 
-import { FetchEmployesAction } from '../redux/actions/employeAction';
+import { FetchEmployesBySearchAction } from '../redux/actions/employeAction';
 import TableComponent from '../components/Global/TableComponent';
 import PaginationComponent from '../components/Global/PaginationComponent';
 import { ButtonComponent } from '../components/Global/ButtonComponent';
@@ -28,26 +28,34 @@ const Employe = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
-  // 1. Récupérer la liste depuis Redux
   const { list: rows, loading, error: loadError } = useSelector(state => state.employe);
 
- 
+  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
+
+  // Token header setup
   useEffect(() => {
-    const raw = localStorage.getItem('user');
-    if (raw) {
-      try {
-        const { token } = JSON.parse(raw);
-        if (token?.accessToken) {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token.accessToken}`;
-        }
-      } catch (e) {
-        console.error('Parsing user/token failed:', e);
-      }
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
-    dispatch(FetchEmployesAction());
+  }, []);
+
+  // Appel initial : fetch tous les employés
+  useEffect(() => {
+    dispatch(FetchEmployesBySearchAction(''));
   }, [dispatch]);
 
-  // 3. Pour les chips de domaine
+  // Recherche dynamique
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      dispatch(FetchEmployesBySearchAction(search));
+    }, 300); // debounce 300ms
+
+    return () => clearTimeout(delayDebounce);
+  }, [search, dispatch]);
+
   const domainColorMap = {};
   const availableColors = ['primary','secondary','success','warning','info','error'];
   let colorIndex = 0;
@@ -59,11 +67,9 @@ const Employe = () => {
     return domainColorMap[domain];
   };
 
-  // 4. Définition des colonnes, ajout de la photo en première colonne
   const columns = [
     {
       id: 'image',
-      
       align: 'center',
       render: row => (
         <Avatar
@@ -95,7 +101,6 @@ const Employe = () => {
     { id: 'role', label: 'Rôle', align: 'center' },
   ];
 
-  // 5. Actions & modals
   const [openAdd, setOpenAdd] = useState(false);
   const [openExport, setOpenExport] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -118,21 +123,10 @@ const Employe = () => {
     { icon: <DeleteIcon />, tooltip: t('Supprimer'), onClick: handleOpenDelete }
   ];
 
-  // 6. Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3;
   const totalPages = Math.ceil((rows?.length || 0) / itemsPerPage);
   const paginatedRows = rows.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const handlePageChange = (_e, value) => setCurrentPage(value);
 
-  // 7. Recherche (locale)
-  const [search, setSearch] = useState('');
-  const filteredRows = paginatedRows.filter(r =>
-    r.fullName.toLowerCase().includes(search.toLowerCase()) ||
-    r.email.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // 8. Affichage
   if (loading) {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -187,7 +181,7 @@ const Employe = () => {
             />
           </Box>
 
-          <TableComponent columns={columns} rows={filteredRows} actions={actions} />
+          <TableComponent columns={columns} rows={paginatedRows} actions={actions} />
 
           <Box mt={4} display="flex" justifyContent="center">
             <PaginationComponent count={totalPages} page={currentPage} onChange={handlePageChange} />
@@ -200,7 +194,6 @@ const Employe = () => {
         handleClose={() => setOpenAdd(false)}
         onSubmit={employe => {
           console.log("Nouvel employé :", employe);
-          // dispatcher action add ici
         }}
       />
 

@@ -46,6 +46,34 @@ export const LoginAction = createAsyncThunk(
       }
     }
   );
+  export const GoogleLoginAction = createAsyncThunk(
+    "auth/googleLogin",
+    async (_, { rejectWithValue }) => {
+      try {
+        window.location.href = "http://localhost:3000/auth/google";
+        return null;
+      } catch (error) {
+        return rejectWithValue(error.message);
+      }
+    }
+  );
+  
+  export const GoogleCallbackAction = createAsyncThunk(
+    "auth/googleCallback",
+    async (queryParams, { rejectWithValue }) => {
+      try {
+        const response = await axios.get(
+          `http://localhost:3000/auth/google/callback${queryParams}`,
+          { withCredentials: true }
+        );
+        return response.data; // { message, data, token }
+      } catch (error) {
+        return rejectWithValue(
+          error.response?.data?.message || error.message
+        );
+      }
+    }
+  );  
   export const ForgotPasswordAction = createAsyncThunk(
     "auth/forgotPassword",
     async (email, { rejectWithValue }) => {

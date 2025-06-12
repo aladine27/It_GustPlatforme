@@ -27,6 +27,10 @@ export default function Login() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();
+    const handleGoogleLogin = () => {
+        window.location.href = "http://localhost:3000/auth/google";
+      };
+      
 
     const validationSchema = Yup.object().shape({
         email: Yup.string().email("Email invalide").required("Email requis"),
@@ -140,7 +144,7 @@ export default function Login() {
                             <Button variant="outlined" startIcon={<GitHubIcon />} onClick={handleGithubLogin}>
                                 GitHub
                             </Button>
-                            <Button variant="outlined" startIcon={<GoogleIcon />}>
+                            <Button variant="outlined" startIcon={<GoogleIcon />} onClick={handleGoogleLogin}>
                                 Google
                             </Button>
                         </Stack>

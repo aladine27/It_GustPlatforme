@@ -53,5 +53,22 @@ export const CreateUserAction = createAsyncThunk(
       );
     }
   }
+  
+);
+export const FetchEmployesBySearchAction = createAsyncThunk(
+  'employe/search',
+  async (searchTerm, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`http://localhost:3000/users/search?q=${encodeURIComponent(searchTerm)}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data.data; // assuming { message, status, data }
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
 );
 

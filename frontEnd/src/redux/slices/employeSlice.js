@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { FetchEmployesAction,CreateUserAction } from "../actions/employeAction";
+import { FetchEmployesAction,CreateUserAction,FetchEmployesBySearchAction } from "../actions/employeAction";
 
 const initialState = {
   list: [],           // liste des employés
@@ -50,7 +50,19 @@ const employeSlice = createSlice({
         state.loading = false;
         state.error = true;
         state.errorMessage = action.payload;
-      });
+      })
+      .addCase(FetchEmployesBySearchAction.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(FetchEmployesBySearchAction.fulfilled, (state, action) => {
+        state.loading = false;
+        state.list = action.payload;
+      })
+      .addCase(FetchEmployesBySearchAction.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
   },
 });
 

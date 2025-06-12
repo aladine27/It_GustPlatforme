@@ -17,6 +17,7 @@ import ResetPassword from './pages/ResetPassword'
 import ExportPage from './components/ExportModal'
 import { ToastContainer } from 'react-toastify'
 import GithubRedirect from './pages/GithubRedirect'
+import GoogleRedirect from './pages/GoogleRedirect'
 
 function App() {
  
@@ -28,6 +29,7 @@ function App() {
         
         <Route path="/login" element={<Login />} /> 
         <Route path="/resetPassword" element={<ResetPassword/>}/>
+        <Route path="/google-redirect" element={<GoogleRedirect />} />
         <Route path="/" element={<Home />} />
         <Route path="/auth/github-redirect" element={<GithubRedirect />} />
         <Route path="/Dashboard" element={<Dashboard />} >

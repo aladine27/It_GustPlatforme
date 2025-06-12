@@ -123,21 +123,29 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
+  @Public() 
   googleLogin() {}
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async  googleCallback(@Req() req: Request, @Res() res: Response) {
-    const user =req.user as any; // Cast to any to access properties
-    const token = await this.authService.generateToken(user._id,user.email,user.Role);
-    return res.status(HttpStatus.OK).json({
-      message: 'Google login successful',
-      data: user,
-      status: HttpStatus.OK,
-      token,
-    });
-
+  @Public()
+  async googleCallback(@Req() req: Request, @Res() res: Response) {
+    try {
+      const user = req.user as any;
+      const token = await this.authService.generateToken(user._id, user.email, user.role);
+  
+      // Encodage base64 + encodeURIComponent
+      const userEncoded = encodeURIComponent(Buffer.from(JSON.stringify(user)).toString("base64"));
+  
+      const redirectUrl = `http://localhost:5173/google-redirect?token=${token.accessToken}&user=${userEncoded}`;
+  
+      return res.redirect(redirectUrl);
+    } catch (err) {
+      console.error("[Google Callback Error]", err);
+      return res.status(500).json({ statusCode: 500, message: 'Internal server error' });
+    }
   }
+  
   @Post('forgot-password')
   @Public()
   @ApiOperation({ summary: 'Réinitialisation du mot de passe' })
