@@ -106,20 +106,20 @@ export class AuthController {
   githubLogin(){
 
   }
-@Get('github/callback')
+  @Get('github/callback')
   @UseGuards(AuthGuard('github'))
   @Public()   
   async githubCallback(@Req() req: Request, @Res() res: Response) {
-    const user = req.user as any; // Cast to any to access properties
-    const token = await this.authService.generateToken(user._id, user.email,user.Role);
-    
-    return res.status(HttpStatus.OK).json({
-      message: 'GitHub login successful',
-      data: user,
-      status: HttpStatus.OK,
-      token,
-    });
+    const user = req.user as any;
+    const token = await this.authService.generateToken(user._id, user.email, user.role);
+  
+    // Encodage base64 des infos user à passer dans l'URL
+    const userEncoded = Buffer.from(JSON.stringify(user)).toString('base64');
+  
+    const redirectUrl = `http://localhost:5173/auth/github-redirect?token=${token.accessToken}&user=${userEncoded}`;
+    return res.redirect(redirectUrl);
   }
+  
 
   @Get('google')
   @UseGuards(AuthGuard('google'))

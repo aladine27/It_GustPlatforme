@@ -16,6 +16,7 @@ import Profile from './pages/Profile'
 import ResetPassword from './pages/ResetPassword'
 import ExportPage from './components/ExportModal'
 import { ToastContainer } from 'react-toastify'
+import GithubRedirect from './pages/GithubRedirect'
 
 function App() {
  
@@ -28,6 +29,7 @@ function App() {
         <Route path="/login" element={<Login />} /> 
         <Route path="/resetPassword" element={<ResetPassword/>}/>
         <Route path="/" element={<Home />} />
+        <Route path="/auth/github-redirect" element={<GithubRedirect />} />
         <Route path="/Dashboard" element={<Dashboard />} >
             <Route path="Employe" element={<Employe />} />
             <Route path="Evenement" element={<Evenement />} />
@@ -39,7 +41,7 @@ function App() {
             <Route path="Frais" element={<Frais />} />
             <Route path="Profile" element={<Profile />} />
             <Route path="export/:entity" element={<ExportPage />} />
-            <Route path="github-callback" element={<Login />} />
+          
         </Route> 
         
         <Route/>
