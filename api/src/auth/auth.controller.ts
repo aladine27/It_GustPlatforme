@@ -113,10 +113,19 @@ export class AuthController {
     const user = req.user as any;
     const token = await this.authService.generateToken(user._id, user.email, user.role);
   
-    // Encodage base64 des infos user à passer dans l'URL
-    const userEncoded = Buffer.from(JSON.stringify(user)).toString('base64');
-  
-    const redirectUrl = `http://localhost:5173/auth/github-redirect?token=${token.accessToken}&user=${userEncoded}`;
+    const redirectUrl = `http://localhost:5173/auth/github-redirect?token=${token.accessToken}&user=${encodeURIComponent(Buffer.from(JSON.stringify({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      address: user.address,
+      phone: user.phone,
+      domain: user.domain,
+      image: user.image,
+      role: user.role,
+      accessToken: token.accessToken,
+      refreshToken: token.refreshToken
+    })).toString("base64"))}`;
+
     return res.redirect(redirectUrl);
   }
   
@@ -137,9 +146,20 @@ export class AuthController {
       // Encodage base64 + encodeURIComponent
       const userEncoded = encodeURIComponent(Buffer.from(JSON.stringify(user)).toString("base64"));
   
-      const redirectUrl = `http://localhost:5173/google-redirect?token=${token.accessToken}&user=${userEncoded}`;
-  
-      return res.redirect(redirectUrl);
+    const redirectUrl = `http://localhost:5173/google-redirect?token=${token.accessToken}&user=${encodeURIComponent(Buffer.from(JSON.stringify({
+    _id: user._id,
+    fullName: user.fullName,
+    email: user.email,
+    address: user.address,
+    phone: user.phone,
+    domain: user.domain,
+    image: user.image,
+    role: user.role,
+    accessToken: token.accessToken,
+    refreshToken: token.refreshToken
+  })).toString("base64"))}`;
+
+  return res.redirect(redirectUrl);
     } catch (err) {
       console.error("[Google Callback Error]", err);
       return res.status(500).json({ statusCode: 500, message: 'Internal server error' });

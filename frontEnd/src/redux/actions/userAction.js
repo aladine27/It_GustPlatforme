@@ -101,8 +101,7 @@ export const LoginAction = createAsyncThunk(
                     withCredentials: true,
                 }
             );
-            // La réponse du backend est { status, data: user }
-            // Nous retournons l'objet entier pour que le slice puisse l'utiliser.
+         
             return response.data;
         } catch (error) {
             // Rejeter avec un message d'erreur clair en cas d'échec

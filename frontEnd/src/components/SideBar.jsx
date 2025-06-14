@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  Sidebar,
-  Menu,
-  Logo,
-} from "react-mui-sidebar";
+import { Sidebar, Menu } from "react-mui-sidebar";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -16,31 +12,40 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import PersonIcon from '@mui/icons-material/Person';
 import WalletIcon from '@mui/icons-material/Wallet';
 import { Box, Typography } from "@mui/material";
+import { useSelector } from "react-redux";
 
 const SidebarPro = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const { CurrentUser } = useSelector((state) => state.user);
+  const userRole = CurrentUser?.role || CurrentUser?.user?.role;
 
-  const menuItems = [
-    { text: t("Employe"), icon: <Groups2Icon />, path: '/dashboard/employe' },
-    { text: t("Evenement"), icon: <EventIcon />, path: '/dashboard/evenement' },
-    { text: t("Projet"), icon: <AppRegistrationIcon />, path: '/dashboard/projet' },
-    { text: t("Tache"), icon: <CheckCircleIcon />, path: '/dashboard/tache' },
-    { text: t("Document"), icon: <ArticleIcon />, path: '/dashboard/document' },
-    { text: t("Congé"), icon: <EventAvailableIcon />, path: '/dashboard/conge' },
-    { text: t("Recrutement"), icon: <WalletIcon />, path: '/dashboard/recrutement' },
-    { text: t("Frais"), icon: <WalletIcon />, path: '/dashboard/frais' },
-    { text: t("Profil"), icon: <PersonIcon />, path: '/dashboard/profile' },
+  
+
+
+  const menuItems = [ 
+    { text: t("Employe"), icon: <Groups2Icon />, path: '/dashboard/employe', roles: ['Admin', 'Manager'] },
+    { text: t("Evenement"), icon: <EventIcon />, path: '/dashboard/evenement', roles: ['Admin', 'Manager', 'Rh', 'Employe'] },
+    { text: t("Projet"), icon: <AppRegistrationIcon />, path: '/dashboard/projet', roles: ['Admin', 'Manager', 'Employe'] },
+    { text: t("Tache"), icon: <CheckCircleIcon />, path: '/dashboard/tache', roles: ['Admin', 'Manager', 'Employe'] },
+    { text: t("Document"), icon: <ArticleIcon />, path: '/dashboard/document', roles: ['Admin', 'Manager', 'Rh', 'Employe'] },
+    { text: t("Congé"), icon: <EventAvailableIcon />, path: '/dashboard/conge', roles: ['Admin', 'Manager', 'Rh', 'Employe'] },
+    { text: t("Recrutement"), icon: <WalletIcon />, path: '/dashboard/recrutement', roles: ['Admin', 'Manager', 'Rh'] },
+    { text: t("Frais"), icon: <WalletIcon />, path: '/dashboard/frais', roles: ['Admin', 'Manager', 'Rh', 'Employe'] },
+    { text: t("Profil"), icon: <PersonIcon />, path: '/dashboard/profile', roles: ['Admin', 'Manager', 'Rh', 'Employe'] },
   ];
+
+  const filteredMenuItems = menuItems.filter((item) => {
+    return item.roles.includes(userRole);
+  });
+
+  console.log("📋 Sidebar affichera:", filteredMenuItems.map(i => i.text));
 
   return (
     <Sidebar width="270px" showProfile={false}>
-    
-
       <Menu subHeading={t("")}>
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           const isActive = location.pathname.startsWith(item.path);
-
           return (
             <Box
               key={item.text}

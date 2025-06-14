@@ -7,6 +7,7 @@ const initialState = {
   error: false,        // null ou string
   successMessage: null,
   errorMessage: null,
+  token: null,
 }
 
 const userSlice = createSlice({
@@ -53,12 +54,16 @@ extraReducers:(builder) =>{
     .addCase(GithubCallbackAction.fulfilled, (state, action) => {
         state.isFetching = false;
         state.CurrentUser = action.payload.data;
+        state.token = action.payload.token;
+        
         state.error = false;
       })
     .addCase(GithubCallbackAction.rejected, (state) => {
         state.isFetching = false;
         state.error = true;
         state.CurrentUser = null;
+        
+        
       })
     .addCase(ForgotPasswordAction.pending, (state) => {
         state.loading = true;
@@ -145,6 +150,7 @@ extraReducers:(builder) =>{
 .addCase(GoogleCallbackAction.fulfilled, (state, action) => {
   state.isFetching = false;
   state.CurrentUser = action.payload.data;
+  state.token = action.payload.token;
   state.error = false;
   localStorage.setItem("token", action.payload.token);
 
