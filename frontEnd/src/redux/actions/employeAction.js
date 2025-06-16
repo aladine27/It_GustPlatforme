@@ -1,4 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, isRejectedWithValue } from "@reduxjs/toolkit";
 import axios from "axios";
 
 export const FetchEmployesAction = createAsyncThunk(
@@ -46,7 +46,7 @@ export const CreateUserAction = createAsyncThunk(
         }
       );
 
-      return response.data.data; // renvoie le nouvel utilisateur
+      return response.data.data; 
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Erreur lors de la création de l'utilisateur"
@@ -69,6 +69,67 @@ export const FetchEmployesBySearchAction = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
+
   }
 );
+export const ExportEmployesExcel = createAsyncThunk(
+  "employe/exportExcel",
+  async ({start,end},{rejectWithValue}) =>{
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/users/export/excel/${start}/${end}`,
+        {
+          responseType: "blob",
+          withCredentials: true,
+        }
+      );
+      console.log("Fichier PDF téléchargé :", response);
+      return response.data;
+     
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+      
+    }
+
+  }
+
+);
+export const ExportEmployesPdf = createAsyncThunk(
+  "employe/exportPdf",
+  async ({ start, end }, { rejectWithValue }) => {
+    try {
+     
+      const response = await axios.get(
+        `http://localhost:3000/users/export/pdf/${start}/${end}`,
+        {
+          responseType: "blob",
+          withCredentials: true,
+        }
+      );
+      console.log("Fichier PDF téléchargé :", response);
+      return response.data; 
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+export const deleteEmployeAction = createAsyncThunk(
+  "employe/delete",
+  async (id, { rejectWithValue }) => {
+    try {
+   
+      await axios.delete(`http://localhost:3000/users/${id}`, {
+        withCredentials: true,
+      });
+      return id; 
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Erreur lors de la suppression");
+    }
+  }
+);
+
 

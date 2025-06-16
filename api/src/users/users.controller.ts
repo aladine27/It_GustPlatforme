@@ -235,9 +235,9 @@ async findAll( @Res() res) {
    
   }
 
-/** Export Excel with URL parameters */
+
 @Get('export/excel/:start/:end')
-@UseGuards(RolesGuard) // Ensure RolesGuard is applied
+@UseGuards(RolesGuard)
 @Roles('Admin')
 async exportExcel(
   @Param('start') start: string,

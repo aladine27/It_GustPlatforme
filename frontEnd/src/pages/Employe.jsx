@@ -16,13 +16,14 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 
-import { FetchEmployesBySearchAction } from '../redux/actions/employeAction';
+import { FetchEmployesBySearchAction,deleteEmployeAction } from '../redux/actions/employeAction';
 import TableComponent from '../components/Global/TableComponent';
 import PaginationComponent from '../components/Global/PaginationComponent';
 import { ButtonComponent } from '../components/Global/ButtonComponent';
 import AddEmployeModal from '../components/Employe/AddEmploye';
 import DeleteEmploye from '../components/Employe/DeleteEmploye';
 import ExportModal from '../components/ExportModal';
+import { toast } from 'react-toastify';
 
 const Employe = () => {
   const { t } = useTranslation();
@@ -114,9 +115,15 @@ const Employe = () => {
     setSelectedEmploye(null);
     setOpenDelete(false);
   };
-  const handleConfirmDelete = () => {
-    // dispatcher action delete ici si besoin
-    handleCloseDelete();
+  const handleConfirmDelete = async () => {
+    if (!selectedEmploye?._id) return;
+    try {
+      await dispatch(deleteEmployeAction(selectedEmploye._id)).unwrap();
+      toast.success('Employé supprimé !');
+      handleCloseDelete();
+    } catch (err) {
+      toast.error('Erreur lors de la suppression : ' + err);
+    }
   };
 
   const actions = [
@@ -197,14 +204,18 @@ const Employe = () => {
         }}
       />
 
-      <DeleteEmploye
-        open={openDelete}
-        handleClose={handleCloseDelete}
-        handleConfirm={handleConfirmDelete}
-        employeName={selectedEmploye?.fullName}
-        cancelText={t('Annuler')}
-        confirmText={t('Supprimer')}
-      />
+{openDelete && selectedEmploye && (
+  <DeleteEmploye
+    open={true}
+    handleClose={handleCloseDelete}
+    handleConfirm={handleConfirmDelete}
+    employeName={selectedEmploye.fullName}
+    cancelText={t('Annuler')}
+    confirmText={t('Supprimer')}
+  />
+)}
+
+
 
       <ExportModal
         open={openExport}

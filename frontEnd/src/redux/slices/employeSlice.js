@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { FetchEmployesAction,CreateUserAction,FetchEmployesBySearchAction } from "../actions/employeAction";
+import { FetchEmployesAction,CreateUserAction,FetchEmployesBySearchAction,ExportEmployesExcel,ExportEmployesPdf,deleteEmployeAction } from "../actions/employeAction";
 
 const initialState = {
   list: [],           // liste des employés
@@ -12,11 +12,11 @@ const employeSlice = createSlice({
   name: "employe",
   initialState,
   reducers: {
-    // tu pourras ajouter d’autres reducers ici (ex: clear list, etc.)
+  
   },
   extraReducers: (builder) => {
     builder
-      // début de l’appel
+    
       .addCase(FetchEmployesAction.pending, (state) => {
         state.loading = true;
         state.error = false;
@@ -62,6 +62,48 @@ const employeSlice = createSlice({
       .addCase(FetchEmployesBySearchAction.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(ExportEmployesExcel.pending, (state) => {
+        state.loading = true;
+        state.error = false;
+      })
+      .addCase(ExportEmployesExcel.fulfilled, (state) => {
+        state.loading = false;
+        state.error = false;
+      })
+      .addCase(ExportEmployesExcel.rejected, (state, action) => {
+        state.loading = false;
+        state.error = true;
+        state.errorMessage = action.payload || "Erreur export Excel";
+      })
+      
+      .addCase(ExportEmployesPdf.pending, (state) => {
+        state.loading = true;
+        state.error = false;
+      })
+      .addCase(ExportEmployesPdf.fulfilled, (state) => {
+        state.loading = false;
+        state.error = false;
+      })
+      .addCase(ExportEmployesPdf.rejected, (state, action) => {
+        state.loading = false;
+        state.error = true;
+        state.errorMessage = action.payload || "Erreur export PDF";
+      })
+      .addCase(deleteEmployeAction.pending, (state) => {
+        state.loading = true;
+        state.error = false;
+        state.errorMessage = null;
+      })
+      .addCase(deleteEmployeAction.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = false;
+        state.list = state.list.filter(emp => emp._id !== action.payload);
+      })
+      .addCase(deleteEmployeAction.rejected, (state, action) => {
+        state.loading = false;
+        state.error = true;
+        state.errorMessage = action.payload;
       })
   },
 });

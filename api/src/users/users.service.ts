@@ -147,58 +147,111 @@ export class UsersService {
   }
   async exportUsersToPdf(startDate?: Date, endDate?: Date): Promise<Buffer> {
     const users = await this.fetchUsersByDateRange(startDate, endDate);
-
+  
     const doc = new PDFDocument({ size: 'A4', margin: 40 });
     const buffers: Buffer[] = [];
     doc.on('data', chunk => buffers.push(chunk));
     const endPromise = new Promise<Buffer>(resolve =>
       doc.on('end', () => resolve(Buffer.concat(buffers))),
     );
-
-    // Titre et période
+  
+    // 1. TITRE ET PÉRIODE
     doc
-      .fontSize(18)
+      .fontSize(18).fillColor('#1976D2').font('Helvetica-Bold')
       .text('Liste des utilisateurs', { align: 'center' })
       .moveDown(0.5)
-      .fontSize(12)
+      .fontSize(12).fillColor('black').font('Helvetica')
       .text(
         `Période : ${startDate?.toISOString().split('T')[0] || '∞'} → ${endDate?.toISOString().split('T')[0] || '∞'}`,
         { align: 'center' },
       )
       .moveDown(1);
-
-    // En-têtes de colonne
+  
+    // 2. TABLEAU (entêtes + lignes)
     const headers = ['Nom complet', 'Email', 'Téléphone', 'Rôle', 'Date de création'];
-    const colWidths = [120, 160, 80, 60, 80];
-    let x = doc.page.margins.left;
-    headers.forEach((h, i) => {
+    const colWidths = [120, 170, 90, 70, 90];
+    const rowHeight = 26;
+    const startX = doc.page.margins.left;
+    let y = doc.y + 10;
+  
+    // Helper: dessine une cellule (bordure + texte)
+    function drawCell(
+      doc: PDFKit.PDFDocument,
+      text: string,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      options: { header?: boolean, align?: 'left' | 'center' | 'right' } = {}
+    ) {
+      doc.rect(x, y, width, height).strokeColor('#cfd8dc').lineWidth(0.7).stroke();
       doc
-        .font('Helvetica-Bold')
-        .text(h, x, doc.y, { width: colWidths[i], underline: true });
+        .fillColor(options.header ? '#1976D2' : 'black')
+        .font(options.header ? 'Helvetica-Bold' : 'Helvetica')
+        .fontSize(options.header ? 12 : 11)
+        .text(text, x + 4, y + 7, {
+          width: width - 8,
+          align: options.align || 'left',
+          continued: false,
+          lineBreak: false,
+        });
+    }
+    
+  
+    // En-têtes avec fond coloré
+    let x = startX;
+    doc.save();
+    headers.forEach((header, i) => {
+      // Fond bleu clair
+      doc.rect(x, y, colWidths[i], rowHeight).fillAndStroke('#e3f2fd', '#90caf9');
+      // Texte
+      drawCell(doc, header, x, y, colWidths[i], rowHeight, { header: true, align: 'center' });
       x += colWidths[i];
     });
-    doc.moveDown(0.5);
-
-    // Lignes des utilisateurs
-    users.forEach(u => {
-      let xRow = doc.page.margins.left;
+    doc.restore();
+    y += rowHeight;
+  
+    // Lignes des utilisateurs (alternance couleurs)
+    users.forEach((u, idx) => {
+      let xRow = startX;
       const cells = [
-        u.fullName,
-        u.email,
-        u.phone,
-        u.role,
-        u.createdAt.toISOString().split('T')[0],
+        u.fullName || '',
+        u.email || '',
+        u.phone || '',
+        u.role || '',
+        u.createdAt ? u.createdAt.toISOString().split('T')[0] : '',
       ];
-      cells.forEach((text, i) => {
-        doc.font('Helvetica').text(text, xRow, doc.y, { width: colWidths[i] });
+      // Alternance fond gris très clair pour meilleure lisibilité
+      if (idx % 2 === 1) {
+        doc.rect(xRow, y, colWidths.reduce((a, b) => a + b, 0), rowHeight).fill('#f6f7fb');
+      }
+      cells.forEach((cell, i) => {
+        drawCell(doc, cell, xRow, y, colWidths[i], rowHeight, { align: i === 1 ? 'left' : 'center' });
         xRow += colWidths[i];
       });
-      doc.moveDown(0.5);
+      y += rowHeight;
+  
+      // Nouvelle page si besoin
+      if (y > doc.page.height - doc.page.margins.bottom - rowHeight * 2) {
+        doc.addPage();
+        y = doc.page.margins.top + 10;
+        // Redessiner l’entête sur nouvelle page
+        let xNew = startX;
+        doc.save();
+        headers.forEach((header, i) => {
+          doc.rect(xNew, y, colWidths[i], rowHeight).fillAndStroke('#e3f2fd', '#90caf9');
+          drawCell(doc, header, xNew, y, colWidths[i], rowHeight, { header: true, align: 'center' });
+          xNew += colWidths[i];
+        });
+        doc.restore();
+        y += rowHeight;
+      }
     });
-
+  
     doc.end();
     return endPromise;
   }
+  
     async exportUsersToExcel(startDate?: Date,endDate?: Date): Promise<Buffer> {
       const users = await this.fetchUsersByDateRange(startDate, endDate);
       const workbook = new ExcelJS.Workbook();
