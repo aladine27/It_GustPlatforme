@@ -10,11 +10,22 @@ import * as argon2 from 'argon2';
 import { ConfigService } from '@nestjs/config';
 import * as ExcelJS from 'exceljs';
 import * as PDFDocument from 'pdfkit';
-
+import axios from 'axios';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class UsersService {
+  
   constructor(@InjectModel('users') private userModel: Model<IUser>,private readonly configService: ConfigService) {}
+  isVirtualEmail(email: string): boolean {
+    return (
+      email.endsWith('@smtp.dev') ||
+      email.endsWith('@mail.tm') ||
+      email.endsWith('@test.tn')
+    );
+  }
+  
+  
   async generateRandomPassword():Promise<string> {
     const randomBytesPromise = new Promise<string>((resolve, reject) => {
       randomBytes(8, (err, buffer) => {
@@ -38,6 +49,7 @@ export class UsersService {
     });
    
     const user = await newUser.save();
+    console.log('[CREATE USER] User enregistré en BDD :', user.email);
       // Envoi de l'email après la création
       await this.sendAccountCreationEmail(user.email, user.fullName, plainPassword);
 
@@ -48,37 +60,75 @@ export class UsersService {
 
   async sendAccountCreationEmail(email: string, fullName: string, password: string) {
     console.log('[Mail] Preparing to send email');
-
-    const apiKey = this.configService.get<string>('SENDINBLUE_API_KEY');
-    const defaultClient = SibApiV3Sdk.ApiClient.instance;
-    const apiKeyAuth = defaultClient.authentications['api-key'];
-    apiKeyAuth.apiKey = apiKey;
-
-    const sendinblue = new SibApiV3Sdk.TransactionalEmailsApi();
-
-    const emailParams: SibApiV3Sdk.SendSmtpEmail = {
-      sender: { name: 'Plateforme ITGust', email: 'noreply@itg.com' },
-      to: [{ email, name: fullName }],
-      subject: 'Bienvenue sur notre plateforme',
-      htmlContent: `
-        <h3>Bonjour ${fullName},</h3>
-        <p>Votre compte a été créé avec succès.</p>
-        <p>Voici vos informations de connexion :</p>
-        <ul>
-          <li>Email : <strong>${email}</strong></li>
-          <li>Mot de passe : <strong>${password}</strong></li>
-        </ul>
-        <p>Vous pouvez changer votre mot de passe après connexion.</p>
-      `,
-    };
-
+  
+    if (this.isVirtualEmail(email)) {
+      // Envoi avec Mailtrap
+      try {
+        const transporter = nodemailer.createTransport({
+          host: 'sandbox.smtp.mailtrap.io', // ou celui affiché dans ton dashboard Mailtrap
+          port: 2525, // ou celui fourni
+          auth: {
+            user: this.configService.get<string>('MAILTRAP_USER'), // à mettre dans .env !
+            pass: this.configService.get<string>('MAILTRAP_PASS'), // à mettre dans .env !
+          },
+        });
+  
+        await transporter.sendMail({
+          from: '"Plateforme ITGust" <noreply@itg.com>',
+          to: email,
+          subject: 'Bienvenue sur notre plateforme (TEST)',
+          html: `
+            <h3>Bonjour ${fullName},</h3>
+            <p>Votre compte a été créé avec succès.</p>
+            <p>Voici vos informations de connexion :</p>
+            <ul>
+              <li>Email : <strong>${email}</strong></li>
+              <li>Mot de passe : <strong>${password}</strong></li>
+            </ul>
+            <p>Vous pouvez changer votre mot de passe après connexion.</p>
+          `,
+        });
+  
+        console.log('[Mail] Email virtuel envoyé via Mailtrap à', email);
+      } catch (error) {
+        console.error('[Mail] Erreur lors de l’envoi via Mailtrap :', error);
+      }
+      return;
+    }
+  
+    // ----- Email réel (Sendinblue)
     try {
+      const apiKey = this.configService.get<string>('SENDINBLUE_API_KEY');
+      const defaultClient = SibApiV3Sdk.ApiClient.instance;
+      const apiKeyAuth = defaultClient.authentications['api-key'];
+      apiKeyAuth.apiKey = apiKey;
+  
+      const sendinblue = new SibApiV3Sdk.TransactionalEmailsApi();
+  
+      const emailParams: SibApiV3Sdk.SendSmtpEmail = {
+        sender: { name: 'Plateforme ITGust', email: 'noreply@itg.com' },
+        to: [{ email, name: fullName }],
+        subject: 'Bienvenue sur notre plateforme',
+        htmlContent: `
+          <h3>Bonjour ${fullName},</h3>
+          <p>Votre compte a été créé avec succès.</p>
+          <p>Voici vos informations de connexion :</p>
+          <ul>
+            <li>Email : <strong>${email}</strong></li>
+            <li>Mot de passe : <strong>${password}</strong></li>
+          </ul>
+          <p>Vous pouvez changer votre mot de passe après connexion.</p>
+        `,
+      };
+  
       await sendinblue.sendTransacEmail(emailParams);
-      console.log('[Mail] Email envoyé avec succès à', email);
+      console.log('[Mail] Email réel envoyé avec succès à', email);
     } catch (error) {
-      console.error('[Mail] Erreur lors de l’envoi de l’email :', error);
+      console.error('[Mail] Erreur lors de l’envoi du mail réel :', error);
     }
   }
+  
+
 
   
 
@@ -135,19 +185,36 @@ export class UsersService {
   
   async fetchUsersByDateRange(startDate?: Date, endDate?: Date): Promise<IUser[]> {
     const filter: any = {};
-    if (startDate || endDate) {filter.createdAt = {};
-      if (startDate) filter.createdAt.$gte = startDate;
-      if (endDate)   filter.createdAt.$lte = endDate;
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        // début de la journée locale
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        filter.createdAt.$gte = start;
+      }
+      if (endDate) {
+        // fin de la journée locale
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = end;
+      }
     }
+    console.log("[fetchUsersByDateRange] Filtre utilisé :", filter);
     const users = await this.userModel.find(filter);
+    console.log("[fetchUsersByDateRange] Users trouvés :", users.length);
     if (!users || users.length === 0) {
       throw new NotFoundException('Aucun utilisateur trouvé pour ce filtre');
     }
     return users;
   }
+  
+  
   async exportUsersToPdf(startDate?: Date, endDate?: Date): Promise<Buffer> {
     const users = await this.fetchUsersByDateRange(startDate, endDate);
-  
+   // AJOUTE CE LOG :
+   console.log("[EXPORT PDF] Nb users exportés :", users.length, users.map(u => u.fullName));
+
     const doc = new PDFDocument({ size: 'A4', margin: 40 });
     const buffers: Buffer[] = [];
     doc.on('data', chunk => buffers.push(chunk));
@@ -254,6 +321,9 @@ export class UsersService {
   
     async exportUsersToExcel(startDate?: Date,endDate?: Date): Promise<Buffer> {
       const users = await this.fetchUsersByDateRange(startDate, endDate);
+        // AJOUTE CE LOG :
+  console.log("[EXPORT EXCEL] Nb users exportés :", users.length, users.map(u => u.fullName));
+
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('Users');
   
@@ -305,7 +375,71 @@ export class UsersService {
   
       return users;
     }
-  
-  
+    // users.service.js
+   
+
+    async importUsersFromExcel(fileBuffer: Buffer): Promise<IUser[]> {
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(fileBuffer);
+    
+      const worksheet = workbook.worksheets[0];
+      const created: IUser[] = [];
+      const userPromises: Promise<void>[] = [];
+    
+      console.log("[IMPORT EXCEL] Nombre de lignes (avec header):", worksheet.rowCount);
+    
+      worksheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return; // skip header
+    
+        const [_, fullName, email, phone, role, address] = row.values as any[];
+        console.log(`[IMPORT EXCEL] Row ${rowNumber} :`, { fullName, email, phone, role, address });
+    
+        if (!fullName || !email || !role) {
+          console.log(`[IMPORT EXCEL] Ligne ${rowNumber} ignorée (champ obligatoire manquant)`);
+          return;
+        }
+    
+        let phoneValue: number | undefined;
+        if (phone !== undefined && phone !== null && String(phone).trim() !== '') {
+          phoneValue = Number(phone);
+          if (isNaN(phoneValue)) {
+            console.log(`[IMPORT EXCEL] Ligne ${rowNumber} ignorée (téléphone invalide):`, phone);
+            return;
+          }
+        }
+        let parsedEmail = typeof email === 'object' && email !== null && 'text' in email
+    ? email.text
+    : email;
+    
+        const userDto: CreateUserDto = {
+          fullName: String(fullName),
+          email: String(parsedEmail),
+          phone: Number(phoneValue),
+          role: String(role),
+          address: address ? String(address) : "",
+          password: "",
+          image: "",
+          domain: "",
+        };
+        console.log(`[IMPORT EXCEL] Création user :`, userDto);
+    
+        userPromises.push(
+          this.create(userDto)
+            .then(user => {
+              console.log(`[IMPORT EXCEL] User ajouté à la BDD:`, user.email);
+              created.push(user);
+            })
+            .catch(e => {
+              console.error(`[IMPORT EXCEL] Erreur création user ligne ${rowNumber} :`, e.message);
+            })
+        );
+      });
+    
+      await Promise.all(userPromises);
+    
+      console.log(`[IMPORT EXCEL] Utilisateurs créés :`, created.map(u => u.email));
+      return created;
+    }
+    
     
 }

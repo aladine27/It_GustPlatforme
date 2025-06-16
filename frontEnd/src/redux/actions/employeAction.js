@@ -131,5 +131,31 @@ export const deleteEmployeAction = createAsyncThunk(
     }
   }
 );
+export const ImportEmployesExcel = createAsyncThunk(
+  "employe/importExcel",
+  async (file, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axios.post(
+        "http://localhost:3000/users/import/excel",
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      // backend retourne juste la liste des users créés (array d'objets users)
+      return response.data.data; // ou juste response.data selon ton controller
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Erreur lors de l'import Excel"
+      );
+    }
+  }
+);
 
 

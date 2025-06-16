@@ -37,7 +37,7 @@ function App() {
       case 'Rh':
         return 'evenement';
       case 'Employe':
-        return 'taches';
+        return 'tache';
       default:
         return 'profile';
     }

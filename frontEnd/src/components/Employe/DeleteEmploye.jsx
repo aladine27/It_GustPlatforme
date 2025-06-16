@@ -9,12 +9,14 @@ import {
   TextField,
   Typography,
   Avatar,
+  Grid,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import * as Yup from "yup";
 import { CreateUserAction } from "../../redux/actions/employeAction";
 import ModelComponent from "../Global/ModelComponent";
-import { PersonAddAlt1 } from "@mui/icons-material";
+import { CloseOutlined, DeleteOutline, PersonAddAlt1 } from "@mui/icons-material";
+import { ButtonComponent } from '../../components/Global/ButtonComponent';
 
 const DeleteEmploye = ({ open, handleClose, handleConfirm, employeName, cancelText = "Annuler", confirmText = "Supprimer" }) => {
   return (
@@ -27,7 +29,7 @@ const DeleteEmploye = ({ open, handleClose, handleConfirm, employeName, cancelTe
       <Grid container direction="column" alignItems="center" spacing={2} sx={{ mt: 2 }}>
         <Grid item>
           <Typography>
-            Es-tu sûr de vouloir supprimer <strong>{employeName}</strong> ?
+            Es-tu sûr de vouloir supprimer {employeName} ?
           </Typography>
         </Grid>
         <Grid item container justifyContent="center" spacing={2}>

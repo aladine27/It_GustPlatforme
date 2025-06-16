@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { FetchEmployesAction,CreateUserAction,FetchEmployesBySearchAction,ExportEmployesExcel,ExportEmployesPdf,deleteEmployeAction } from "../actions/employeAction";
+import { FetchEmployesAction,CreateUserAction,FetchEmployesBySearchAction,ExportEmployesExcel,ExportEmployesPdf,deleteEmployeAction,ImportEmployesExcel} from "../actions/employeAction";
 
 const initialState = {
   list: [],           // liste des employés
@@ -104,6 +104,26 @@ const employeSlice = createSlice({
         state.loading = false;
         state.error = true;
         state.errorMessage = action.payload;
+      })
+      .addCase(ImportEmployesExcel.pending, (state) => {
+        state.loading = true;
+        state.error = false;
+        state.errorMessage = null;
+      })
+      .addCase(ImportEmployesExcel.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = false;
+        state.errorMessage = null;
+        // On ajoute tous les employés importés à la liste (ou on remplace selon ta logique)
+        // Ici, on fusionne sans doublons par _id
+        const existingIds = new Set(state.list.map(emp => emp._id));
+        const newUsers = action.payload.filter(emp => !existingIds.has(emp._id));
+        state.list = [...state.list, ...newUsers];
+      })
+      .addCase(ImportEmployesExcel.rejected, (state, action) => {
+        state.loading = false;
+        state.error = true;
+        state.errorMessage = action.payload || "Erreur lors de l'import Excel";
       })
   },
 });

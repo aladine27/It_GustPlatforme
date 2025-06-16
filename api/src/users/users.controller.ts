@@ -3,7 +3,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { diskStorage, memoryStorage } from 'multer';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorators';
 import { AccessTokenGuard } from 'src/guards/accessToken.guard';
@@ -319,8 +319,43 @@ async exportPdf(
   }
 }
 
-
-
+@Post('import/excel')
+@UseGuards(RolesGuard)
+@Roles('Admin')
+@ApiConsumes('multipart/form-data')
+@ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      file: { type: 'string', format: 'binary', description: 'Fichier Excel à importer' },
+    }
+  }
+})
+@UseInterceptors(
+  FileInterceptor('file', {
+    storage: memoryStorage(),
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2Mo max
+  })
+)
+async importExcel(@UploadedFile() file: Express.Multer.File, @Res() res: Response) {
+  try {
+    if (!file || !file.buffer) {
+      return res.status(HttpStatus.BAD_REQUEST).json({ status: 400, message: "Aucun fichier reçu" });
+    }
+    const result = await this.usersService.importUsersFromExcel(file.buffer);
+    return res.status(HttpStatus.OK).json({
+      status: 200,
+      message: `Import terminé  utilisateurs créés`,
+      data: result,
+    });
+  } catch (e) {
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      status: 500,
+      message: e.message,
+      data: null,
+    });
+  }
+}
 
 
 }

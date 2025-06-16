@@ -16,7 +16,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 
-import { FetchEmployesBySearchAction,deleteEmployeAction } from '../redux/actions/employeAction';
+import { FetchEmployesBySearchAction,deleteEmployeAction,ImportEmployesExcel } from '../redux/actions/employeAction';
 import TableComponent from '../components/Global/TableComponent';
 import PaginationComponent from '../components/Global/PaginationComponent';
 import { ButtonComponent } from '../components/Global/ButtonComponent';
@@ -34,6 +34,7 @@ const Employe = () => {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
+  const fileInputRef = React.useRef();
 
   // Token header setup
   useEffect(() => {
@@ -129,7 +130,24 @@ const Employe = () => {
   const actions = [
     { icon: <DeleteIcon />, tooltip: t('Supprimer'), onClick: handleOpenDelete }
   ];
-
+  const handleImportClick = () => {
+    fileInputRef.current.click();
+  };
+  
+  const handleImportFile = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+  
+    try {
+      await dispatch(ImportEmployesExcel(file)).unwrap();
+      toast.success('Import terminé avec succès !');
+    } catch (err) {
+      toast.error('Erreur lors de l’import : ' + err);
+    } finally {
+      event.target.value = ""; // reset pour permettre un nouvel import
+    }
+  };
+  
   const totalPages = Math.ceil((rows?.length || 0) / itemsPerPage);
   const paginatedRows = rows.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const handlePageChange = (_e, value) => setCurrentPage(value);
@@ -168,7 +186,19 @@ const Employe = () => {
                 <ButtonComponent onClick={() => setOpenExport(true)} text={t('Export')} icon={<CloudDownload />} />
               </Grid>
               <Grid item>
-                <ButtonComponent text={t('Import')} icon={<FileUpload />} />
+              <ButtonComponent
+                      text={t('Import')}
+                      icon={<FileUpload />}
+                      onClick={handleImportClick}
+                    />
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      style={{ display: 'none' }}
+                      accept=".xlsx, .xls"
+                      onChange={handleImportFile}
+                    />
+
               </Grid>
             </Grid>
             <TextField

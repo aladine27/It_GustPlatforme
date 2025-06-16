@@ -100,6 +100,15 @@ async updatePassword(id: string, updateUserDto: UpdateUserDto) {
     const user = await this.userService.findbyEmail(email);
     return user; // ou null si pas trouvé
   }
+  isVirtualEmail(email: string): boolean {
+    // Liste des domaines d’emails virtuels à supporter ici
+    return (
+      email.endsWith('@smtp.dev') ||
+      email.endsWith('@mail.tm') ||
+      email.endsWith('@test.tn')
+    );
+  }
+  
   async forgotPassword(email: string): Promise<{ message: string; status: number }> {
     const user = await this.userService.findbyEmail(email);
     if (!user) {

@@ -25,8 +25,15 @@ export default function ExportModal({ open, onClose, entity }) {
   const { exportLoading } = useSelector(state => state.employe);
 
   // Format YYYY-MM-DD
-  const toDateInputValue = date => date ? new Date(date).toISOString().split('T')[0] : "";
-
+  const toDateInputValue = date =>
+    date
+      ? date.getFullYear() +
+        "-" +
+        String(date.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(date.getDate()).padStart(2, "0")
+      : "";
+      
   const handleExport = async (format) => {
     if (!startDate || !endDate) {
       toast.error("Veuillez choisir la date de début et de fin.");
@@ -67,6 +74,7 @@ export default function ExportModal({ open, onClose, entity }) {
       onClose();
     } catch (err) {
       toast.error("Erreur lors de l'export : " + err);
+      onClose();
     }
   };
   

@@ -21,7 +21,7 @@ export class User {
     password: string;
     @Prop() 
     domain: string;
-   @Prop({required: true})
+   
     image: string; 
     @Prop({required: true,type: String, enum: [Admin.name,Manager.name,Employe.name,Rh.name]}) 
     role: string;
