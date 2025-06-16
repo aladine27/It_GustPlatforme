@@ -23,11 +23,10 @@ import {
   UpdatePasswordAction,
   clearError
 } from '../redux/actions/userAction.js';
-
+import { useTranslation } from 'react-i18next'
 import { ButtonComponent } from '../components/Global/ButtonComponent';
 import EditProfileModal from '../components/profile/EditProfile';
 import ChangePasswordModal from '../components/profile/ChangePasswordModal';
-
 const ProfileContainer = styled(Box)({
   backgroundColor: '#F3FAFF',
   padding: '40px 0',
@@ -53,9 +52,10 @@ const UserAvatar = styled(Avatar)({
 axios.defaults.baseURL = 'http://localhost:3000';
 
 export default function Profile() {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { CurrentUser, loading, error, errorMessage } = useSelector(state => state.user);
-
+  
   const [openEditModal, setOpenEditModal] = useState(false);
   const [editableUser, setEditableUser] = useState(null);
   const [openPasswordModal, setOpenPasswordModal] = useState(false);
@@ -200,14 +200,14 @@ export default function Profile() {
               <Typography variant="subtitle1" color="text.secondary">{userData.role}</Typography>
             </Grid>
             <Grid item xs={12} md={8}>
-              <Typography variant="h6" sx={{ mb: 2, color: '#6b48ff' }}>Informations Personnelles</Typography>
+              <Typography variant="h6" sx={{ mb: 2, color: '#6b48ff' }}>{t('Informations Personnelles')}</Typography>
               <Divider sx={{ mb: 2 }} />
               <List>
                 {[
-                  { icon: <EmailIcon />, label: 'Email', value: userData.email },
-                  { icon: <PhoneIcon />, label: 'Téléphone', value: userData.phone },
-                  { icon: <HomeIcon />, label: 'Adresse', value: userData.address },
-                  { icon: <WorkIcon />, label: 'Domaine', value: userData.domain },
+                        { icon: <EmailIcon />, label: t('Email'), value: userData.email },
+                        { icon: <PhoneIcon />, label: t('Téléphone'), value: userData.phone },
+                        { icon: <HomeIcon />, label: t('Adresse'), value: userData.address },
+                        { icon: <WorkIcon />, label: t('Domaine'), value: userData.domain },
                 ].map((item, i) => (
                   <ListItem key={i}>
                     <ListItemIcon>{item.icon}</ListItemIcon>
@@ -217,12 +217,12 @@ export default function Profile() {
               </List>
               <Divider sx={{ my: 3 }} />
               <ButtonComponent
-                text="Modifier Profil"
+                text={t('Modifier Profil')}
                 icon={<EditIcon />}
                 onClick={handleOpenEditModal}
               />
               <ButtonComponent
-                text="Modifier mot de passe"
+                text={t('Modifier mot de passe')}
                 icon={<LockResetIcon />}
                 onClick={() => setOpenPasswordModal(true)}
                 sx={{ mt: 2 }}

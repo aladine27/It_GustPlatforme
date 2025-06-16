@@ -33,7 +33,7 @@ const Employe = () => {
 
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3;
+  const itemsPerPage = 5;
   const fileInputRef = React.useRef();
 
   // Token header setup
@@ -53,7 +53,7 @@ const Employe = () => {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       dispatch(FetchEmployesBySearchAction(search));
-    }, 300); // debounce 300ms
+    }, 500); // debounce 300ms
 
     return () => clearTimeout(delayDebounce);
   }, [search, dispatch]);
@@ -85,11 +85,11 @@ const Employe = () => {
         />
       )
     },
-    { id: 'fullName', label: 'Nom Complet', align: 'left' },
-    { id: 'email',    label: 'Email',        align: 'left' },
+    { id: 'fullName', label: t('Nom Complet'), align: 'left' },
+    { id: 'email',    label: t('Email'),        align: 'left' },
     {
       id: 'domain',
-      label: 'Domaine',
+      label: t('Domaine'),
       align: 'center',
       render: row => (
         <Chip
@@ -100,7 +100,7 @@ const Employe = () => {
         />
       )
     },
-    { id: 'role', label: 'Rôle', align: 'center' },
+    { id: 'role', label: t('Rôle'), align: 'center' },
   ];
 
   const [openAdd, setOpenAdd] = useState(false);
@@ -235,15 +235,16 @@ const Employe = () => {
       />
 
 {openDelete && selectedEmploye && (
-  <DeleteEmploye
-    open={true}
-    handleClose={handleCloseDelete}
-    handleConfirm={handleConfirmDelete}
-    employeName={selectedEmploye.fullName}
-    cancelText={t('Annuler')}
-    confirmText={t('Supprimer')}
-  />
-)}
+        <DeleteEmploye
+          open={true}
+          handleClose={handleCloseDelete}
+          handleConfirm={handleConfirmDelete}
+          employeName={selectedEmploye.fullName || ""}
+          cancelText={t('Annuler')}
+          confirmText={t('Supprimer')}
+        />
+      )}
+
 
 
 

@@ -104,11 +104,14 @@ extraReducers:(builder) =>{
       state.errorMessage = null;
   })
   .addCase(UpdatePasswordAction.fulfilled, (state, action) => {
-      state.loading = false;
-      state.error = false;
-      state.successMessage = action.payload.message;
-      state.CurrentUser = action.payload.data;
-      localStorage.setItem("token", action.payload?.token?.accessToken);
+    state.loading = false;
+    state.error = false;
+    state.successMessage = action.payload.message;
+    state.CurrentUser = action.payload.user || action.payload.data;
+    // MAJ token seulement si présent
+    if (action.payload?.token?.accessToken) {
+      state.token = action.payload.token.accessToken;
+    }
   })
   .addCase(UpdatePasswordAction.rejected, (state, action) => {
       state.loading = false;

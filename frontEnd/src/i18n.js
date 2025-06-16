@@ -23,7 +23,19 @@ const resources = {
       'Frais':'Wallet',
       'Profile':'Profil',
       'Tout les Projets':'All Projects',
-      'Rechercher ici': 'Search here'
+      'Rechercher ici': 'Search here',
+      'Nom Complet': 'Full Name',
+      'Domaine':     'Domain',
+      'Rôle':        'Role',
+      'Email':       'Email',
+      'Téléphone': 'Phone',
+      'Adresse': 'Address',
+      'Modifier Profil': 'Edit Profile',
+      'Modifier mot de passe': 'Change Password',
+      'Informations Personnelles': 'Personal Information',
+      'Non renseigné': 'Not filled',
+      'Informations Personnelles':'Personal Information',
+
 
 
 
@@ -52,7 +64,19 @@ const resources = {
       'Recrutement':'Recrutement',
       'Frais':'Frais',
       'Profile':'Profile',
-      'Tout les Projets':'Tout les Projets'
+      'Tout les Projets':'Tout les Projets',
+      'Nom Complet': 'Nom Complet',
+      'Domaine':'Domaine',
+      'Rôle':'Rôle',
+      'Email':'Email',
+      'Modifier Profil': 'Modifier Profil',
+      'Modifier mot de passe': 'Modifier mot de passe',
+      'Non renseigné': 'Non renseigné',
+      'Email': 'Email',
+      'Téléphone': 'Téléphone',
+      'Adresse': 'Adresse',
+      'Informations Personnelles':'Informations Personnelles',
+      
     }
   }
 };

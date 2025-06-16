@@ -40,7 +40,7 @@ export const LoginAction = createAsyncThunk(
           `http://localhost:3000/auth/github/callback${queryParams}`,
           { withCredentials: true }
         );
-        return response.data;      // { message, data: user, status, token }
+        return response.data;    
       } catch (error) {
         return rejectWithValue(error.response?.data?.message || error.message);
       }
@@ -152,6 +152,10 @@ export const updateUserAction = createAsyncThunk(
             { oldPassword, password: newPassword },  
             { withCredentials: true }
           );
+               // Sauvegarde immédiate du token côté front
+               if (response.data?.token?.accessToken) {
+                localStorage.setItem("token", response.data.token.accessToken);
+              }
           return response.data; 
         } catch (error) {
           // on renvoie le message brut du backend (NotFoundException, BadRequestException, etc.)

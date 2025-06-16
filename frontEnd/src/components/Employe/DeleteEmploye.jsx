@@ -1,24 +1,20 @@
-import React, { useState } from "react";
-import {
-  Box,
-  Button,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
-  TextField,
-  Typography,
-  Avatar,
-  Grid,
-} from "@mui/material";
-import { useDispatch } from "react-redux";
-import * as Yup from "yup";
-import { CreateUserAction } from "../../redux/actions/employeAction";
+import { CloseOutlined, DeleteOutline } from "@mui/icons-material";
 import ModelComponent from "../Global/ModelComponent";
-import { CloseOutlined, DeleteOutline, PersonAddAlt1 } from "@mui/icons-material";
+import { Grid, Typography } from "@mui/material";
 import { ButtonComponent } from '../../components/Global/ButtonComponent';
 
-const DeleteEmploye = ({ open, handleClose, handleConfirm, employeName, cancelText = "Annuler", confirmText = "Supprimer" }) => {
+const DeleteEmploye = ({
+  open,
+  handleClose,
+  handleConfirm,
+  employeName,
+  cancelText = "Annuler",
+  confirmText = "Supprimer"
+}) => {
+  // DEBUG : on log à chaque rendu
+  console.log('DeleteEmploye rendered');
+  console.log('employeName:', employeName);
+
   return (
     <ModelComponent
       open={open}
@@ -26,7 +22,7 @@ const DeleteEmploye = ({ open, handleClose, handleConfirm, employeName, cancelTe
       title="Confirmer la suppression"
       icon={<DeleteOutline />}
     >
-      <Grid container direction="column" alignItems="center" spacing={2} sx={{ mt: 2 }}>
+      <Grid container direction="column" alignItems="center" spacing={2} sx={{ mt: 0 }}>
         <Grid item>
           <Typography>
             Es-tu sûr de vouloir supprimer {employeName} ?
@@ -44,4 +40,5 @@ const DeleteEmploye = ({ open, handleClose, handleConfirm, employeName, cancelTe
     </ModelComponent>
   );
 };
+
 export default DeleteEmploye;

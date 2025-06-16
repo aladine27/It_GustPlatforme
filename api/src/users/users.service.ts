@@ -391,8 +391,10 @@ export class UsersService {
       worksheet.eachRow((row, rowNumber) => {
         if (rowNumber === 1) return; // skip header
     
-        const [_, fullName, email, phone, role, address] = row.values as any[];
-        console.log(`[IMPORT EXCEL] Row ${rowNumber} :`, { fullName, email, phone, role, address });
+        // Modifie ici l'ordre si besoin, selon ton fichier Excel
+        // [_id, fullName, email, phone, role, address, image, domain]
+        const [_, fullName, email, phone, role, address, image, domain] = row.values as any[];
+        console.log(`[IMPORT EXCEL] Row ${rowNumber} :`, { fullName, email, phone, role, address, image, domain });
     
         if (!fullName || !email || !role) {
           console.log(`[IMPORT EXCEL] Ligne ${rowNumber} ignorée (champ obligatoire manquant)`);
@@ -408,8 +410,8 @@ export class UsersService {
           }
         }
         let parsedEmail = typeof email === 'object' && email !== null && 'text' in email
-    ? email.text
-    : email;
+          ? email.text
+          : email;
     
         const userDto: CreateUserDto = {
           fullName: String(fullName),
@@ -418,8 +420,8 @@ export class UsersService {
           role: String(role),
           address: address ? String(address) : "",
           password: "",
-          image: "",
-          domain: "",
+          image: (!image || image === "null" || image === null) ? "" : String(image),          // Correction ici
+          domain: domain ? String(domain) : "", // Correction pour domain si tu as la colonne
         };
         console.log(`[IMPORT EXCEL] Création user :`, userDto);
     
@@ -440,6 +442,7 @@ export class UsersService {
       console.log(`[IMPORT EXCEL] Utilisateurs créés :`, created.map(u => u.email));
       return created;
     }
+    
     
     
 }
