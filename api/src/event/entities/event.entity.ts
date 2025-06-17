@@ -19,6 +19,9 @@ status: String;
 eventType: Types.ObjectId;
 @Prop({ type: SchemaTypes.ObjectId, ref: 'users', required: true })
 user: Types.ObjectId;
+@Prop([{ type: SchemaTypes.ObjectId, ref: 'users' }])
+invited: Types.ObjectId[]; 
+
 
             
 }

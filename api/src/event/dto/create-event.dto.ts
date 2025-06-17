@@ -55,7 +55,13 @@ export class CreateEventDto {
       @IsString() 
     @IsNotEmpty()
     user: string;
-        
+    @ApiProperty({
+        type: [String],
+        description: 'The list of invited users'
+      })
+      @IsNotEmpty()
+      invited: string[];
+    
 }
 
 
