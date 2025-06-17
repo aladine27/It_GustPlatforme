@@ -20,6 +20,7 @@ import GithubRedirect from './pages/GithubRedirect';
 import GoogleRedirect from './pages/GoogleRedirect';
 import PrivateRoute from './components/PrivateRoute';
 import { useSelector } from 'react-redux';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   const { CurrentUser } = useSelector((state) => state.user);
@@ -47,6 +48,7 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
+       
           <Route path="/login" element={<Login />} />
           <Route path="/resetPassword" element={<ResetPassword />} />
           <Route path="/google-redirect" element={<GoogleRedirect />} />
@@ -61,6 +63,7 @@ function App() {
 
             {/* Employé (Admin only) */}
             <Route element={<PrivateRoute rolesAllowed={["Admin"]} />}>
+              <Route path="adminDashboard" element={<AdminDashboard />} /> 
               <Route path="employe" element={<Employe />} />
             </Route>
 

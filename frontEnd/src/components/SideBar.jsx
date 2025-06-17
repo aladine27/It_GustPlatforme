@@ -13,7 +13,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import WalletIcon from '@mui/icons-material/Wallet';
 import { Box, Typography } from "@mui/material";
 import { useSelector } from "react-redux";
-
+import DashboardIcon from '@mui/icons-material/Dashboard';
 const SidebarPro = () => {
   const { t } = useTranslation();
   const location = useLocation();
@@ -24,7 +24,8 @@ const SidebarPro = () => {
 
 
   const menuItems = [ 
-    { text: t("Employe"), icon: <Groups2Icon />, path: '/dashboard/employe', roles: ['Admin', 'Manager'] },
+    { text: t("adminDashboard"), icon: <DashboardIcon />, path: '/dashboard/adminDashboard', roles: ['Admin'] },
+    { text: t("Employe"), icon: <Groups2Icon />, path: '/dashboard/employe', roles: ['Admin'] },
     { text: t("Evenement"), icon: <EventIcon />, path: '/dashboard/evenement', roles: ['Admin', 'Manager', 'Rh', 'Employe'] },
     { text: t("Projet"), icon: <AppRegistrationIcon />, path: '/dashboard/projet', roles: ['Admin', 'Manager', 'Employe'] },
     { text: t("Tache"), icon: <CheckCircleIcon />, path: '/dashboard/tache', roles: ['Admin', 'Manager', 'Employe'] },
@@ -33,6 +34,8 @@ const SidebarPro = () => {
     { text: t("Recrutement"), icon: <WalletIcon />, path: '/dashboard/recrutement', roles: ['Admin', 'Manager', 'Rh'] },
     { text: t("Frais"), icon: <WalletIcon />, path: '/dashboard/frais', roles: ['Admin', 'Manager', 'Rh', 'Employe'] },
     { text: t("Profil"), icon: <PersonIcon />, path: '/dashboard/profile', roles: ['Admin', 'Manager', 'Rh', 'Employe'] },
+    
+    
   ];
 
   const filteredMenuItems = menuItems.filter((item) => {

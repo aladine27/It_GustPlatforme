@@ -7,6 +7,9 @@ import {
   Box,
   Menu,
   MenuItem,
+  Badge,
+  Avatar,
+  Typography,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Flag from 'react-world-flags';
@@ -16,7 +19,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { LogoutAction } from '../redux/actions/userAction';
 import { Buttons } from './Global/ButtonComponent';
 import logo from '../assets/logo.jpeg';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { toast } from 'react-toastify';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import PersonIcon from '@mui/icons-material/Person';
 
 const StyledNavLink = styled(NavLink)(({ theme }) => ({
   position: 'relative',
@@ -47,26 +53,36 @@ const StyledNavLink = styled(NavLink)(({ theme }) => ({
 }));
 
 export default function Navbar() {
-  const [anchorEl, setAnchorEl] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('fr');
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const CurrentUser = useSelector((state) => state.user.CurrentUser);
 
+  // Séparation des états des menus
+  const [userMenu, setUserMenu] = useState(null);   // Pour le menu utilisateur
+  const [langMenu, setLangMenu] = useState(null);   // Pour le menu flag/langue
+
   const navItems = ['Home', 'About', 'Contact', 'Nos Offres'];
 
   const handleDrawerToggle = () => setMobileOpen((o) => !o);
-  const handleFlagClick = (e) => setAnchorEl(e.currentTarget);
-  const handleClose = () => setAnchorEl(null);
 
-  const handleLanguageChange = (e) => {
-    const lang = e.target.value;
+  // Menu utilisateur
+  const handleUserClick = (event) => setUserMenu(event.currentTarget);
+  const handleUserClose = () => setUserMenu(null);
+
+  // Menu langue
+  const handleFlagClick = (e) => setLangMenu(e.currentTarget);
+  const handleFlagClose = () => setLangMenu(null);
+
+  // Changement de langue
+  const handleLanguageChange = (lang) => {
     setSelectedLanguage(lang);
     i18n.changeLanguage(lang);
-    handleClose();
+    handleFlagClose();
   };
 
+  // Déconnexion
   const handleLogout = async () => {
     try {
       await dispatch(LogoutAction()).unwrap();
@@ -124,24 +140,191 @@ export default function Navbar() {
         {/* Right: login/logout + langue */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, justifyContent: 'flex-end' }}>
           {CurrentUser ? (
-            <Box
-              component="button"
-              onClick={handleLogout}
-              sx={{
-                backgroundColor: "#C62828",
-                color: "#fff",
-                px: 2,
-                py: 1,
-                borderRadius: 2,
-                fontWeight: 'bold',
-                border: "none",
-                cursor: "pointer",
-                '&:hover': {
-                  backgroundColor: "#b71c1c"
-                }
-              }}
-            >
-              {t("logout")}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <IconButton>
+                <Badge color="error">
+                  <NotificationsIcon sx={{ color: '#227FBF' }} />
+                </Badge>
+              </IconButton>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  px: 2,
+                  py: 0.7,
+                  bgcolor: '#F3FAFF',
+                  borderRadius: 4,
+                  boxShadow: '0 2px 8px rgba(34,127,191,0.07)',
+                  gap: 1.3,
+                  cursor: 'pointer',
+                  transition: 'box-shadow 0.2s, background 0.2s',
+                  '&:hover': {
+                    boxShadow: '0 4px 16px rgba(34,127,191,0.15)',
+                    bgcolor: '#e9f4fb',
+                  },
+                  ml: 2,
+                  minWidth: 140,
+                }}
+                onClick={handleUserClick}
+              >
+                <Avatar
+                  sx={{
+                    width: 38,
+                    height: 38,
+                    border: '2px solid #227FBF',
+                    bgcolor: '#eaf6fb',
+                  }}
+                  src={
+                    CurrentUser.user.image
+                      ? `http://localhost:3000/uploads/users/${encodeURIComponent(CurrentUser.user.image)}?t=${Date.now()}`
+                      : undefined
+                  }
+                />
+                {/* Bloc nom et rôle en colonne */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
+                  <Typography
+                    sx={{
+                      color: '#1976d2',
+                      fontWeight: 700,
+                      fontSize: '1.12rem',
+                      lineHeight: 1.2,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {CurrentUser.user.fullName}
+                  </Typography>
+                  {CurrentUser.user.role && (
+                    <Typography
+                      sx={{
+                        color: '#227FBF',
+                        fontWeight: 500,
+                        fontSize: '0.97rem',
+                        lineHeight: 1.1,
+                        mt: '1px',
+                        letterSpacing: 0.3,
+                        textTransform: 'capitalize',
+                      }}
+                    >
+                      {CurrentUser.user.role}
+                    </Typography>
+                  )}
+                </Box>
+                <Box sx={{ ml: 1, display: 'flex', alignItems: 'center' }}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="#227FBF">
+                    <path d="M5.5 8l4.5 4.5L14.5 8" stroke="#227FBF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </Box>
+              </Box>
+
+              {/* Menu déroulant User */}
+              <Menu
+                anchorEl={userMenu}
+                open={Boolean(userMenu)}
+                onClose={handleUserClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                PaperProps={{
+                  sx: {
+                    borderRadius: 3,
+                    minWidth: 220,
+                    boxShadow: '0 6px 24px rgba(34,127,191,0.10)',
+                    mt: 1,
+                  },
+                }}
+              >
+                {/* Header du menu (avatar + nom + email) */}
+                <Box sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  py: 2,
+                  px: 2,
+                  bgcolor: '#f5faff',
+                  borderTopLeftRadius: 12,
+                  borderTopRightRadius: 12,
+                  borderBottom: '1px solid #E0E7EF',
+                  mb: 1
+                }}>
+                  <Avatar
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      mb: 1,
+                      bgcolor: '#eaf6fb',
+                      border: '2px solid #227FBF',
+                    }}
+                    src={
+                      CurrentUser.user.image
+                        ? `http://localhost:3000/uploads/users/${encodeURIComponent(CurrentUser.user.image)}?t=${Date.now()}`
+                        : undefined
+                    }
+                  />
+                  <Typography sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.07rem', mb: 0.2 }}>
+                    {CurrentUser.user.fullName}
+                  </Typography>
+                  {CurrentUser.user.email && (
+                    <Typography sx={{ color: '#608AB3', fontSize: '0.93rem' }}>
+                      {CurrentUser.user.email}
+                    </Typography>
+                  )}
+                </Box>
+                {/* Bouton Profil */}
+                <MenuItem
+                  onClick={() => {
+                    handleUserClose();
+                    window.location.href = "profile"; // ou useNavigate() si tu veux
+                  }}
+                  sx={{
+                    color: '#1976d2',
+                    fontWeight: 500,
+                    px: 2,
+                    py: 1,
+                    gap: 1.2,
+                    borderRadius: 2,
+                    my: 0.2,
+                    '&:hover': {
+                      bgcolor: '#eaf6fb',
+                      color: '#094466',
+                    },
+                    fontSize: '0.97rem'
+                  }}
+                >
+                  <PersonIcon sx={{ fontSize: 20, color: 'inherit', mr: 1 }} />
+                  {t('Mon Profil')}
+                </MenuItem>
+                {/* Bouton Déconnexion */}
+                <MenuItem
+                  onClick={() => {
+                    handleUserClose();
+                    handleLogout();
+                  }}
+                  sx={{
+                    color: '#1976d2',
+                    fontWeight: 500,
+                    px: 2,
+                    py: 1,
+                    gap: 1.2,
+                    borderRadius: 2,
+                    my: 0,
+                    '&:hover': {
+                      bgcolor: '#f5faff',
+                      color: '#094466',
+                    },
+                    fontSize: '0.97rem'
+                  }}
+                >
+                  <LogoutIcon sx={{ fontSize: 20, color: 'inherit', mr: 1 }} />
+                  {t('Déconnexion')}
+                </MenuItem>
+              </Menu>
             </Box>
           ) : (
             <Buttons to="/login" bgColor="#09759D">
@@ -149,6 +332,7 @@ export default function Navbar() {
             </Buttons>
           )}
 
+          {/* ==== Bouton langue ==== */}
           <IconButton
             onClick={handleFlagClick}
             sx={{ p: 0.5, transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.1)' } }}
@@ -158,24 +342,27 @@ export default function Navbar() {
               style={{ width: 28, height: 18, borderRadius: 3 }}
             />
           </IconButton>
-
+          {/* ==== Menu langue ==== */}
           <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-            sx={{ mt: 1 }}
+            anchorEl={langMenu}
+            open={Boolean(langMenu)}
+            onClose={handleFlagClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
           >
-            <MenuItem
-              value="FR"
-              onClick={() => handleLanguageChange({ target: { value: 'fr' } })}
-            >
-              🇫🇷 Français
+            <MenuItem onClick={() => handleLanguageChange('fr')}>
+              <Flag code="FR" style={{ width: 26, marginRight: 10 }} />
+              Français
             </MenuItem>
-            <MenuItem
-              value="EN"
-              onClick={() => handleLanguageChange({ target: { value: 'en' } })}
-            >
-              🇬🇧 English
+            <MenuItem onClick={() => handleLanguageChange('en')}>
+              <Flag code="GB" style={{ width: 26, marginRight: 10 }} />
+              English
             </MenuItem>
           </Menu>
         </Box>
