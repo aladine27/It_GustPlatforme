@@ -19,16 +19,16 @@ export class EventController {
   @Roles('Admin','Rh')
   async create(@Body() createEventDto: CreateEventDto, @Res() res) {
     try {
-      console.log('POST /event - body:', createEventDto);
+      
       const newEvent = await this.eventService.create(createEventDto);
-      console.log('POST /event - created:', newEvent);
+      
       return res.status(HttpStatus.CREATED).json({
         message: 'Event created successfully',
         status: HttpStatus.CREATED,
         data: newEvent
       });
     } catch (error) { 
-      console.log('POST /event - error:', error);
+      
       return res.status(HttpStatus.BAD_REQUEST).json({
         data: null,
         status: HttpStatus.BAD_REQUEST,
@@ -61,17 +61,17 @@ export class EventController {
   @Roles('Admin','Rh')
   @Get()
   async findAll(@Req() req, @Res() res) {
-    console.log('GET /event - Headers:', req.headers);
+   
     try {
       const events = await this.eventService.findAll();
-      console.log('GET /event - events:', events);
+      
       return res.status(HttpStatus.OK).json({
         message: 'Events retrieved successfully',
         data: events,
         status: HttpStatus.OK
       });
     } catch (error) {
-      console.log('GET /event - error:', error.message);
+     
       return res.status(HttpStatus.BAD_REQUEST).json({
         data: null,
         status: HttpStatus.BAD_REQUEST,

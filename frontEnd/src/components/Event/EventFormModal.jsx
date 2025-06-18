@@ -1,196 +1,342 @@
-// src/components/events/EventFormModal.jsx
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
-  Box, Grid, TextField, Chip, Autocomplete, FormControl, InputLabel, Select, MenuItem, Stack
+  Box, Grid, TextField, Chip, Autocomplete, Stack
 } from "@mui/material";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { CloseOutlined, DeleteOutline, SaveOutlined } from "@mui/icons-material";
 import ModelComponent from "../Global/ModelComponent";
 import { ButtonComponent } from "../Global/ButtonComponent";
+import * as Yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useForm, Controller } from "react-hook-form";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+function parseDurationToMinutes(durationStr) {
+  let min = 0;
+  const h = durationStr.match(/(\d+)h/);
+  const m = durationStr.match(/(\d+)min/);
+  if (h) min += parseInt(h[1], 10) * 60;
+  if (m) min += parseInt(m[1], 10);
+  return min;
+}
+
+function computeStatus(startDate, duration) {
+  const now = new Date();
+  const debut = new Date(startDate);
+  const minutes = parseDurationToMinutes(duration);
+  const fin = new Date(debut.getTime() + minutes * 60000);
+
+  if (now < debut) return "Planifié";
+  if (now >= debut && now <= fin) return "En cours";
+  if (now > fin) return "Terminé";
+  return "Planifié"; // fallback
+}
 
 export default function EventFormModal({
-  open, onClose, onSave, onDelete, event, eventTypes, employes, loadingEmployes
+  open, onClose, onSave, onDelete, event, eventTypes, employes, loadingEmployes, currentUserId
 }) {
-  const [title, setTitle] = useState(event?.title || '');
-  const [description, setDescription] = useState(event?.description || '');
-  const [startDate, setStartDate] = useState(event?.startDate ? new Date(event?.startDate) : new Date());
-  const [duration, setDuration] = useState(event?.duration || '');
-  const [location, setLocation] = useState(event?.location || '');
-  const [status, setStatus] = useState(event?.status || 'Planifié');
-  const [selectedTypes, setSelectedTypes] = useState(event?.types || []);
-  const [invitedUsers, setInvitedUsers] = useState(event?.invited || []);
+  // --- SCHEMA YUP ---
+  const eventSchema = Yup.object().shape({
+    title: Yup.string()
+      .required("Le titre est requis")
+      .min(3, "Minimum 3 caractères")
+      .max(100, "Maximum 100 caractères")
+      .matches(/^[^<>/]+$/, "Caractères spéciaux non autorisés"),
+    description: Yup.string()
+      .required("La description est requise")
+      .max(500, "Maximum 500 caractères"),
+    startDate: Yup.date()
+      .typeError("Date invalide")
+      .required("La date de début est requise")
+      .min(new Date(), "La date de début doit être dans le futur"),
+    duration: Yup.string()
+      .required("La durée est requise")
+      .matches(/^\d+h$|^\d+min$|^\d+h\d+min$/, "Format : 1h, 90min, 2h30min")
+      .test("is-positive", "Durée positive requise", value => {
+        if (!value) return false;
+        let min = 0;
+        const h = value.match(/(\d+)h/);
+        const m = value.match(/(\d+)min/);
+        if (h) min += parseInt(h[1], 10) * 60;
+        if (m) min += parseInt(m[1], 10);
+        return min > 0 && min <= 1440; // 24h max
+      }),
+    location: Yup.string()
+      .required("L'emplacement est requis")
+      .max(100, "Maximum 100 caractères"),
+    types: Yup.array()
+      .of(
+        Yup.object().shape({
+          _id: Yup.string().required(),
+          name: Yup.string().required()
+        })
+      )
+      .min(1, "Le type d'événement est requis"),
+    invited: Yup.array()
+      .of(
+        Yup.object().shape({
+          _id: Yup.string().required(),
+          fullName: Yup.string().required()
+        })
+      )
+      .required("Au moins un invité est requis")
+      .min(1, "Au moins un invité est requis")
+      .test("no-duplicates", "Un même employé ne peut être invité plusieurs fois", (arr) => {
+        if (!arr) return true;
+        const ids = arr.map(e => e._id);
+        return ids.length === new Set(ids).size;
+      })
+      .test("no-self-invite", "Vous ne pouvez pas vous inviter vous-même", (arr) => {
+        if (!arr || !currentUserId) return true;
+        return !arr.some(e => e._id === currentUserId);
+      })
+      .test("max-length", "Pas plus de 100 invités", (arr) => !arr || arr.length <= 100)
+      .test("valid-employees", "Un invité n'existe pas", function(arr) {
+        if (!arr) return true;
+        const ids = (employes || []).map(e => e._id);
+        return arr.every(u => ids.includes(u._id));
+      })
+  });
+
+  // --- HOOK FORM ---
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors }
+  } = useForm({
+    resolver: yupResolver(eventSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      startDate: new Date(),
+      duration: "",
+      location: "",
+      types: [],
+      invited: [],
+    }
+  });
 
   useEffect(() => {
     if (open) {
-      setTitle(event?.title || '');
-      setDescription(event?.description || '');
-      setStartDate(event?.startDate ? new Date(event?.startDate) : new Date());
-      setDuration(event?.duration || '');
-      setLocation(event?.location || '');
-      setStatus(event?.status || 'Planifié');
-      setSelectedTypes(event?.types || []);
-      setInvitedUsers(event?.invited || []);
+      // Synchronisation du type sélectionné avec la liste complète des types
+      let selectedType = [];
+      if (event?.types && eventTypes && event.types.length > 0) {
+        // si event.types contient déjà un objet complet, parfait
+        if (event.types[0].name) {
+          selectedType = [event.types[0]];
+        } else {
+          // sinon, c'est un id : retrouve l'objet complet dans eventTypes
+          const found = eventTypes.find(et => et._id === (event.types[0]._id || event.types[0]));
+          if (found) selectedType = [found];
+        }
+      } else if (event?.eventType && eventTypes) {
+        // compatibilité : eventType peut être utilisé dans certains cas
+        const found = eventTypes.find(et => et._id === (event.eventType._id || event.eventType));
+        if (found) selectedType = [found];
+      }
+      reset({
+        title: event?.title || "",
+        description: event?.description || "",
+        startDate: event?.startDate ? new Date(event?.startDate) : new Date(),
+        duration: event?.duration || "",
+        location: event?.location || "",
+        types: event?.types || (event?.eventType ? [event.eventType] : []), 
+        invited: event?.invited || [],
+      });
     }
-  }, [open, event]);
+  }, [open, event, eventTypes, reset]);
+  
 
-  const handleSubmit = () => {
-    if (!title.trim()) {
-      alert('Le titre est requis');
-      return;
-    }
-    if (!selectedTypes[0]?._id) {
-      alert("Le type d’événement est requis");
-      return;
-    }
-    const eventData = {
+  // --- SUBMIT ---
+  const onSubmit = (data) => {
+    const statutAuto = computeStatus(data.startDate, data.duration);
+
+    onSave({
       id: event?.id || event?._id || undefined,
-      title,
-      description,
-      startDate,
-      duration,
-      location,
-      status,
-      types: selectedTypes,
-      invited: invitedUsers
-    };
-    onSave(eventData);
+      ...data,
+      status: statutAuto,
+    });
+    toast.success("Événement enregistré avec succès !");
+  };
+
+  const onInvalid = (errs) => {
+    const first = Object.values(errs)[0];
+    if (first?.message) toast.error(first.message);
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <ToastContainer />
       <ModelComponent
         open={open}
         handleClose={onClose}
         title={event?.id || event?._id ? 'Modifier un événement' : 'Ajouter un événement'}
         icon={<SaveOutlined />}
       >
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              label="Titre"
-              fullWidth
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              variant="outlined"
-              required
-            />
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                label="Titre *"
+                fullWidth
+                {...register("title")}
+                error={!!errors.title}
+                helperText={errors.title?.message}
+                variant="outlined"
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Description *"
+                fullWidth
+                multiline
+                minRows={3}
+                {...register("description")}
+                error={!!errors.description}
+                helperText={errors.description?.message}
+                variant="outlined"
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="startDate"
+                control={control}
+                render={({ field }) => (
+                  <DateTimePicker
+                    label="Date de début *"
+                    value={field.value}
+                    onChange={field.onChange}
+                    renderInput={(params) =>
+                      <TextField
+                        {...params}
+                        fullWidth
+                        error={!!errors.startDate}
+                        helperText={errors.startDate?.message}
+                        required
+                      />
+                    }
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Durée (ex: 1h, 90min, 2h30min) *"
+                fullWidth
+                {...register("duration")}
+                error={!!errors.duration}
+                helperText={errors.duration?.message}
+                variant="outlined"
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Emplacement *"
+                fullWidth
+                {...register("location")}
+                error={!!errors.location}
+                helperText={errors.location?.message}
+                variant="outlined"
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+  <Controller
+    name="types"
+    control={control}
+    render={({ field }) => (
+      <Autocomplete
+        options={eventTypes || []}
+        getOptionLabel={(option) => option.name}
+        value={field.value[0] || null}
+        isOptionEqualToValue={(opt, val) => opt._id === val._id}
+        onChange={(_, newValue) => field.onChange(newValue ? [newValue] : [])}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            variant="outlined"
+            label="Type d'événement *"
+            placeholder="Sélectionner"
+            error={!!errors.types}
+            helperText={errors.types?.message}
+            required
+          />
+        )}
+      />
+    )}
+  />
+</Grid>
+
+            <Grid item xs={12}>
+              <Controller
+                name="invited"
+                control={control}
+                render={({ field }) => {
+                  const filteredEmployes = (employes || []).filter(
+                    emp =>
+                      !field.value.some(inv => inv._id === emp._id) &&
+                      emp._id !== currentUserId
+                  );
+                  return (
+                    <Autocomplete
+                      multiple
+                      options={filteredEmployes}
+                      getOptionLabel={(option) => option.fullName}
+                      value={field.value}
+                      isOptionEqualToValue={(opt, val) => opt._id === val._id}
+                      onChange={(_, newValue) => field.onChange(newValue)}
+                      loading={loadingEmployes}
+                      renderTags={(value, getTagProps) =>
+                        value.map((user, index) => (
+                          <Chip key={user._id} label={user.fullName} color="secondary" {...getTagProps({ index })} />
+                        ))
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          variant="outlined"
+                          label="Inviter des employés *"
+                          placeholder="Rechercher un employé"
+                          error={!!errors.invited}
+                          helperText={errors.invited?.message}
+                          required
+                        />
+                      )}
+                    />
+                  );
+                }}
+              />
+            </Grid>
           </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Description"
-              fullWidth
-              multiline
-              minRows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              variant="outlined"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <DateTimePicker
-              label="Date de début"
-              value={startDate}
-              onChange={setStartDate}
-              renderInput={(params) => <TextField {...params} fullWidth />}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Durée (ex: 1h, 90min)"
-              fullWidth
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              variant="outlined"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Emplacement"
-              fullWidth
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              variant="outlined"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <InputLabel>Statut</InputLabel>
-              <Select
-                value={status}
-                label="Statut"
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                <MenuItem value="Planifié">Planifié</MenuItem>
-                <MenuItem value="En cours">En cours</MenuItem>
-                <MenuItem value="Terminé">Terminé</MenuItem>
-                <MenuItem value="Annulé">Annulé</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            {/* Sélection d'un seul type */}
-            <Autocomplete
-              options={eventTypes || []}
-              getOptionLabel={(option) => option.name}
-              value={selectedTypes[0] || null}
-              isOptionEqualToValue={(opt, val) => opt._id === val._id}
-              onChange={(_, newValue) => setSelectedTypes(newValue ? [newValue] : [])}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  label="Type d'événement"
-                  placeholder="Sélectionner"
-                />
-              )}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Autocomplete
-              multiple
-              options={employes || []}
-              getOptionLabel={(option) => option.fullName}
-              value={invitedUsers}
-              isOptionEqualToValue={(opt, val) => opt._id === val._id}
-              onChange={(_, newValue) => setInvitedUsers(newValue)}
-              loading={loadingEmployes}
-              renderTags={(value, getTagProps) =>
-                value.map((user, index) => (
-                  <Chip key={user._id} label={user.fullName} color="secondary" {...getTagProps({ index })} />
-                ))
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  label="Inviter des employés"
-                  placeholder="Rechercher un employé"
-                />
-              )}
-            />
-          </Grid>
-        </Grid>
-        <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 3 }}>
-          {(event?.id || event?._id) && (
+          <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 3 }}>
+            {(event?.id || event?._id) && (
+              <ButtonComponent
+                onClick={() => onDelete(event.id || event._id)}
+                text="Supprimer"
+                icon={<DeleteOutline />}
+                color="error"
+              />
+            )}
             <ButtonComponent
-              onClick={() => onDelete(event.id || event._id)}
-              text="Supprimer"
-              icon={<DeleteOutline />}
-              color="error"
+              onClick={onClose}
+              text="Annuler"
+              icon={<CloseOutlined />}
+              color="secondary"
             />
-          )}
-          <ButtonComponent
-            onClick={onClose}
-            text="Annuler"
-            icon={<CloseOutlined />}
-          />
-          <ButtonComponent
-            onClick={handleSubmit}
-            text="Enregistrer"
-            icon={<SaveOutlined />}
-          />
-        </Stack>
+            <ButtonComponent
+              type="submit"
+              text="Enregistrer"
+              icon={<SaveOutlined />}
+            />
+          </Stack>
+        </form>
       </ModelComponent>
     </LocalizationProvider>
   );

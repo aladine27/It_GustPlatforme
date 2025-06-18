@@ -31,7 +31,7 @@ export class EventService {
   }
 
   async findAll():Promise<IEvent[]> {
-    const events = await  this.eventModel.find();
+    const events = await  this.eventModel.find().populate('eventType').populate('invited').populate('user');
     if (!events || events.length === 0) {
       throw new NotFoundException('No events found');
     } 
@@ -40,7 +40,7 @@ export class EventService {
 
 
   async findOne(id: string):Promise<IEvent> {
-    const event = await this.eventModel.findById(id);
+    const event = await this.eventModel.findById(id).populate('eventType').populate('invited').populate('user');
     if (!event) {
       throw new NotFoundException('No event found');
     }
