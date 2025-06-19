@@ -21,6 +21,8 @@ import GoogleRedirect from './pages/GoogleRedirect';
 import PrivateRoute from './components/PrivateRoute';
 import { useSelector } from 'react-redux';
 import AdminDashboard from './pages/AdminDashboard';
+import CongeIndex from './pages/CongeIndex';
+import CongeHistory from './pages/CongeHistory';
 
 function App() {
   const { CurrentUser } = useSelector((state) => state.user);
@@ -82,7 +84,9 @@ function App() {
             <Route element={<PrivateRoute rolesAllowed={["Admin", "Rh", "Manager", "Employe"]} />}>
               <Route path="evenement" element={<Evenement />} />
               <Route path="document" element={<Document />} />
-              <Route path="conge" element={<Conge />} />
+              <Route path="congeIndex" element={<Conge />} />
+              <Route path="conge" element={<CongeIndex />} />
+              <Route path="conge/history" element={<CongeHistory />} />
               <Route path="frais" element={<Frais />} />
             </Route>
 

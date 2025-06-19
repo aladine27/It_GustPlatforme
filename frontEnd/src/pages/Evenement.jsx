@@ -265,7 +265,7 @@ const hasRoomConflict = (eventData) => {
           mb={2}
           sx={{ px: 4, pt: 4 }}
         >
-          Gestion des Événements
+         Mon Planning d’Événements
         </Typography>
         <Divider sx={{ mb: 3, mx: 4 }} />
         <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 4, mb: 2 }}>
@@ -279,7 +279,7 @@ const hasRoomConflict = (eventData) => {
             gap: 1
           }}>
             <span role="img" aria-label="calendar" style={{ fontSize: 22 }}>📅</span>
-            Aujourd'hui : {today}
+            {t('Aujourd\'hui')}: {today}
           </Typography>
         </Box>
         {/* --- Boutons d'ajout visibles seulement pour Admin/RH --- */}
