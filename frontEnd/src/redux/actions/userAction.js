@@ -176,7 +176,9 @@ export const updateUserAction = createAsyncThunk(
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          });
+          }
+        
+        );
           return response.data;
         } catch (error) {
           return rejectWithValue(error.response?.data?.message || error.message);

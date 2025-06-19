@@ -144,7 +144,7 @@ export default function EventFormModal({
         startDate: event?.startDate ? new Date(event?.startDate) : new Date(),
         duration: event?.duration || "",
         location: event?.location || "",
-        types: event?.types || (event?.eventType ? [event.eventType] : []), 
+        types: selectedType,
         invited: event?.invited || [],
       });
     }

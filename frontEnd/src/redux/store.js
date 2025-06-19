@@ -8,7 +8,6 @@ import storage from 'redux-persist/lib/storage';
 const rootReducer = combineReducers({
     user:userReducer,
     employe:employeReducer,
-    employe: employeReducer,
     event: eventSlice.reducer,
     eventType: eventTypeSlice.reducer,
 });

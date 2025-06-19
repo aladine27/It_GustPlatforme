@@ -1,15 +1,8 @@
 import React, { useState } from 'react';
 import { styled } from '@mui/material/styles';
 import {
-  AppBar,
-  Toolbar,
-  IconButton,
-  Box,
-  Menu,
-  MenuItem,
-  Badge,
-  Avatar,
-  Typography,
+  AppBar, Toolbar, IconButton, Box, Menu, MenuItem, Badge,
+  Avatar, Typography,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Flag from 'react-world-flags';
@@ -41,15 +34,9 @@ const StyledNavLink = styled(NavLink)(({ theme }) => ({
     background: '#ffeb3b',
     transition: 'width 0.3s',
   },
-  '&:hover': {
-    color: '#ffeb3b',
-  },
-  '&:hover::after': {
-    width: '100%',
-  },
-  '&.active': {
-    color: '#ffeb3b',
-  },
+  '&:hover': { color: '#ffeb3b' },
+  '&:hover::after': { width: '100%' },
+  '&.active': { color: '#ffeb3b' },
 }));
 
 export default function Navbar() {
@@ -59,9 +46,15 @@ export default function Navbar() {
   const dispatch = useDispatch();
   const CurrentUser = useSelector((state) => state.user.CurrentUser);
 
+  // Helpers pour avoir toutes les infos utilisateur correctement
+  const userImage   = CurrentUser?.image   || CurrentUser?.user?.image;
+  const userFullName= CurrentUser?.fullName|| CurrentUser?.user?.fullName;
+  const userEmail   = CurrentUser?.email   || CurrentUser?.user?.email;
+  const userRole    = CurrentUser?.role    || CurrentUser?.user?.role;
+
   // Séparation des états des menus
-  const [userMenu, setUserMenu] = useState(null);   // Pour le menu utilisateur
-  const [langMenu, setLangMenu] = useState(null);   // Pour le menu flag/langue
+  const [userMenu, setUserMenu] = useState(null);
+  const [langMenu, setLangMenu] = useState(null);
 
   const navItems = ['Home', 'About', 'Contact', 'Nos Offres'];
 
@@ -103,13 +96,7 @@ export default function Navbar() {
         px: 2,
       }}
     >
-      <Toolbar
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
+      <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         {/* Left: Logo + menu */}
         <Box sx={{ display: 'flex', flex: 1, alignItems: 'center', gap: 2 }}>
           <IconButton
@@ -120,11 +107,7 @@ export default function Navbar() {
             <MenuIcon />
           </IconButton>
           <Link to="/" style={{ textDecoration: 'none' }}>
-            <img
-              src={logo}
-              alt="Logo"
-              style={{ width: "90px", height: "60px" }}
-            />
+            <img src={logo} alt="Logo" style={{ width: "90px", height: "60px" }} />
           </Link>
         </Box>
 
@@ -175,8 +158,8 @@ export default function Navbar() {
                     bgcolor: '#eaf6fb',
                   }}
                   src={
-                    CurrentUser.user.image
-                      ? `http://localhost:3000/uploads/users/${encodeURIComponent(CurrentUser.user.image)}?t=${Date.now()}`
+                    userImage
+                      ? `http://localhost:3000/uploads/users/${encodeURIComponent(userImage)}?t=${Date.now()}`
                       : undefined
                   }
                 />
@@ -193,9 +176,9 @@ export default function Navbar() {
                       textOverflow: 'ellipsis',
                     }}
                   >
-                    {CurrentUser.user.fullName}
+                    {userFullName}
                   </Typography>
-                  {CurrentUser.user.role && (
+                  {userRole && (
                     <Typography
                       sx={{
                         color: '#227FBF',
@@ -207,7 +190,7 @@ export default function Navbar() {
                         textTransform: 'capitalize',
                       }}
                     >
-                      {CurrentUser.user.role}
+                      {userRole}
                     </Typography>
                   )}
                 </Box>
@@ -262,17 +245,17 @@ export default function Navbar() {
                       border: '2px solid #227FBF',
                     }}
                     src={
-                      CurrentUser.user.image
-                        ? `http://localhost:3000/uploads/users/${encodeURIComponent(CurrentUser.user.image)}?t=${Date.now()}`
+                      userImage
+                        ? `http://localhost:3000/uploads/users/${encodeURIComponent(userImage)}?t=${Date.now()}`
                         : undefined
                     }
                   />
                   <Typography sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.07rem', mb: 0.2 }}>
-                    {CurrentUser.user.fullName}
+                    {userFullName}
                   </Typography>
-                  {CurrentUser.user.email && (
+                  {userEmail && (
                     <Typography sx={{ color: '#608AB3', fontSize: '0.93rem' }}>
-                      {CurrentUser.user.email}
+                      {userEmail}
                     </Typography>
                   )}
                 </Box>
@@ -280,7 +263,7 @@ export default function Navbar() {
                 <MenuItem
                   onClick={() => {
                     handleUserClose();
-                    window.location.href = "profile"; // ou useNavigate() si tu veux
+                    window.location.href = "profile";
                   }}
                   sx={{
                     color: '#1976d2',

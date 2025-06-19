@@ -185,9 +185,7 @@ export default function TypeFormModal({
                 )}
               />
               <Stack direction="row" spacing={2} justifyContent="flex-end">
-                <Button onClick={onClose} variant="outlined" color="inherit" disabled={isSubmitting}>
-                  Annuler
-                </Button>
+               
                 <Button
                   type="submit"
                   variant="contained"

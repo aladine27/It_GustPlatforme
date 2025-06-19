@@ -190,7 +190,7 @@ export default function Profile() {
   // Affichage principal
   return (
     <ProfileContainer>
-      <ToastContainer position="bottom-right" autoClose={5000} />
+      <ToastContainer position="bottom-right" autoClose={3000} />
       <Container>
         <ProfilePaper elevation={3}>
           <Grid container spacing={4}>

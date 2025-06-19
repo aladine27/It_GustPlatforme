@@ -129,9 +129,40 @@ export default function Evenement() {
     setDetailsModalOpen(false);
     setModalOpen(true);
   };
+  // Vérifie si une autre réservation existe dans la même salle au même créneau
+const hasRoomConflict = (eventData) => {
+  return calendarEvents.some(ev => {
+    // Ignore si ce n'est pas la même salle
+    if (ev.extendedProps.location.trim().toLowerCase() !== eventData.location.trim().toLowerCase()) return false;
+    // Ignore si c'est le même event (en édition)
+    if ((eventData.id || eventData._id) && ev.id === (eventData.id || eventData._id)) return false;
+
+    // Périodes à comparer
+    const start1 = new Date(ev.start);
+    const end1 = new Date(ev.end);
+    const start2 = new Date(eventData.startDate);
+    // Durée de l'event à valider
+    let totalMin = 0;
+    const hMatch = eventData.duration?.match(/(\d+)h/);
+    const mMatch = eventData.duration?.match(/(\d+)min/);
+    if (hMatch) totalMin += parseInt(hMatch[1], 10) * 60;
+    if (mMatch) totalMin += parseInt(mMatch[1], 10);
+    const end2 = new Date(start2.getTime() + totalMin * 60000);
+
+    // Teste le chevauchement de créneaux
+    return start1 < end2 && start2 < end1;
+  });
+};
+
+
 
   // Enregistre (ajoute ou met à jour) un événement
   const handleSaveEvent = async (eventData) => {
+    if (eventData.location && hasRoomConflict(eventData)) {
+      alert("Conflit de salle : cette salle est déjà réservée sur ce créneau. Merci de choisir un autre créneau ou une autre salle.");
+      return;
+    }
+    
     const eventTypeId = eventData.types?.[0]?._id || eventData.types?._id || eventData.eventType?._id;
     const payload = {
       title: eventData.title,
@@ -287,8 +318,8 @@ export default function Evenement() {
             selectable
             style={{ height: '85vh', minHeight: 470, background: 'transparent' }}
             // Affiche le calendrier uniquement de 8h à 18h (jours de travail)
-            min={new Date(1970, 0, 1, 8, 0)}  // 8h00 (Janvier, car mois = 0)
-            max={new Date(1970, 0, 1, 18, 0)} // 18h00
+            min={new Date(1970, 0, 1, 6, 0)}  // 8h00 (Janvier, car mois = 0)
+            max={new Date(1970, 0, 1, 22, 0)} // 18h00
             onSelectSlot={["Admin", "RH"].includes(userRole) ? handleSelectSlot : undefined}
             onSelectEvent={handleSelectEvent}
             views={['month', 'week', 'day', 'agenda']}
