@@ -23,6 +23,7 @@ import { useSelector } from 'react-redux';
 import AdminDashboard from './pages/AdminDashboard';
 import CongeIndex from './pages/CongeIndex';
 import CongeHistory from './pages/CongeHistory';
+import CongeEmploye from './pages/CongeEmploye';
 
 function App() {
   const { CurrentUser } = useSelector((state) => state.user);
@@ -86,6 +87,7 @@ function App() {
               <Route path="document" element={<Document />} />
               <Route path="congeIndex" element={<Conge />} />
               <Route path="conge" element={<CongeIndex />} />
+              <Route path="employee/Conge" element={<CongeEmploye />} />
               <Route path="conge/history" element={<CongeHistory />} />
               <Route path="frais" element={<Frais />} />
             </Route>

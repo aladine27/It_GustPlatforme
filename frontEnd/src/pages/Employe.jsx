@@ -172,10 +172,7 @@ const Employe = () => {
     <>
       <Box sx={{ p:3, bgcolor:'#F3FAFF', minHeight:'100vh' }}>
         <Card sx={{ p:4, borderRadius:3, boxShadow:'0 8px 32px rgba(0,0,0,0.1)', bgcolor:'white' }}>
-          <Typography variant="h4" fontWeight="bold" color="#1976d2" mb={2}>
-            {t('Gestion des Comptes Utilisateurs')}
-          </Typography>
-          <Divider sx={{ mb:3 }} />
+         
 
           <Box sx={{ display:'flex', justifyContent:'space-between', alignItems:'center', mb:3 }}>
             <Grid container spacing={2} justifyContent="flex-end" alignItems="center" sx={{ width:'fit-content' }}>

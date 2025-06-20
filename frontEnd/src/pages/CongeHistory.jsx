@@ -14,6 +14,7 @@ import {
   Button,
   Chip,
   Avatar,
+  Divider,
 } from "@mui/material"
 import {
   CheckCircle,
@@ -242,21 +243,7 @@ const CongeHistory = () => {
 
   return (
     <Box sx={{ bgcolor: "#f8fafc", minHeight: "100vh", p: 3 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-        <Typography
-          variant="h4"
-          fontWeight="bold"
-          sx={{
-            color: "#1976d2",
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          <AssessmentIcon sx={{ color:"#1976d2", }} />
-          Historique des Congés
-        </Typography>
-      </Box>
+      
 
       {/* Statistics Cards */}
       <Grid container spacing={3} mb={4}>
@@ -284,94 +271,97 @@ const CongeHistory = () => {
       </Grid>
 
       {/* Filters */}
-      <Card sx={{ mb: 3, borderRadius: 3 }} elevation={2}>
-        <CardContent sx={{ p: 3 }}>
-          <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                label="Rechercher par employé ou type"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Statut</InputLabel>
-                <Select
-                  value={statusFilter}
-                  label="Statut"
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  sx={{ borderRadius: 2 }}
-                >
-                  <MenuItem value="all">Tous les statuts</MenuItem>
-                  <MenuItem value="approved">Approuvé</MenuItem>
-                  <MenuItem value="rejected">Rejeté</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Type de congé</InputLabel>
-                <Select
-                  value={typeFilter}
-                  label="Type de congé"
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  sx={{ borderRadius: 2 }}
-                >
-                  <MenuItem value="all">Tous les types</MenuItem>
-                  <MenuItem value="Congé payé">Congé payé</MenuItem>
-                  <MenuItem value="Congé maladie">Congé maladie</MenuItem>
-                  <MenuItem value="RTT">RTT</MenuItem>
-                  <MenuItem value="Congé sans solde">Congé sans solde</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<FilterIcon />}
-                onClick={() => {
-                  setSearchTerm("")
-                  setStatusFilter("all")
-                  setTypeFilter("all")
-                }}
-                sx={{
-                  borderRadius: 2,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  py: 1.5,
-                }}
-              >
-                Réinitialiser
-              </Button>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-
-      {/* Table des congés */}
-      <Box sx={{ mt: 3 }}>
-        <TableComponent
-          columns={columns}
-          rows={filteredLeaves}
-          actions={actions}
+      <Card sx={{ borderRadius: 3, mb: 3 }} elevation={2}>
+  <CardContent sx={{ p: 3, pb: 0 }}>
+    <Grid container spacing={3} alignItems="center">
+      <Grid item xs={12} md={4}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          label="Rechercher par employé ou type"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+            },
+          }}
         />
-      </Box>
+      </Grid>
+      <Grid item xs={12} md={3}>
+        <FormControl fullWidth>
+          <InputLabel>Statut</InputLabel>
+          <Select
+            value={statusFilter}
+            label="Statut"
+            onChange={(e) => setStatusFilter(e.target.value)}
+            sx={{ borderRadius: 2 }}
+          >
+            <MenuItem value="all">Tous les statuts</MenuItem>
+            <MenuItem value="approved">Approuvé</MenuItem>
+            <MenuItem value="rejected">Rejeté</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={12} md={3}>
+        <FormControl fullWidth>
+          <InputLabel>Type de congé</InputLabel>
+          <Select
+            value={typeFilter}
+            label="Type de congé"
+            onChange={(e) => setTypeFilter(e.target.value)}
+            sx={{ borderRadius: 2 }}
+          >
+            <MenuItem value="all">Tous les types</MenuItem>
+            <MenuItem value="Congé payé">Congé payé</MenuItem>
+            <MenuItem value="Congé maladie">Congé maladie</MenuItem>
+            <MenuItem value="RTT">RTT</MenuItem>
+            <MenuItem value="Congé sans solde">Congé sans solde</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={12} md={2}>
+        <Button
+          fullWidth
+          variant="outlined"
+          startIcon={<FilterIcon />}
+          onClick={() => {
+            setSearchTerm("");
+            setStatusFilter("all");
+            setTypeFilter("all");
+          }}
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: 600,
+            py: 1.5,
+          }}
+        >
+          Réinitialiser
+        </Button>
+      </Grid>
+    </Grid>
+  </CardContent>
+
+  {/* Le divider entre filtres et tableau */}
+  <Divider sx={{ mb:3 }} />
+
+  <Box sx={{ px: 3, pb: 3 }}>
+    <TableComponent
+      columns={columns}
+      rows={filteredLeaves}
+      actions={actions}
+    />
+  </Box>
+</Card>
+
     </Box>
   )
 }

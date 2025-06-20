@@ -25,6 +25,13 @@ export const theme = createTheme({
             fontSize: '1.5rem',
             fontWeight: 600,
         },
+        h3: {
+            fontFamily:"inter",
+            fontSize: '500',
+            fontWeight: "bold",
+            marginBottom:"10px",
+            color:"#080D50"
+        },
         body1: {
             fontSize: '1rem',
             fontWeight: 400,
