@@ -34,13 +34,23 @@ const ProfileContainer = styled(Box)({
   alignItems: 'center',
   minHeight: '600px',
 });
+
 const ProfilePaper = styled(Paper)({
-  padding: '32px',
-  borderRadius: '20px',
-  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-  maxWidth: '900px',
+  padding: '56px 60px 56px 60px',
+  borderRadius: '38px',
+  backgroundColor: 'rgba(255, 255, 255, 0.97)',
+  boxShadow: '0 16px 48px rgba(25, 118, 210, 0.12)',
+  maxWidth: '1250px',
+  minWidth: '1050px',
+  width: '100%',
   margin: '0 auto',
+  transition: 'box-shadow 0.2s',
+  '@media (max-width:1100px)': {
+    maxWidth: '99vw',
+    minWidth: 'unset',
+    padding: '32px 8px',
+    borderRadius: '16px'
+  },
 });
 const UserAvatar = styled(Avatar)({
   width: 150,

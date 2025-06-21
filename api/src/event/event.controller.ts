@@ -37,8 +37,8 @@ export class EventController {
     }
     
   }
-    @UseGuards( RolesGuard)
-    @Roles('Admin','Rh')
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   @Get('/geteventbyUserID/:user')
   async findEventByUser(@Param('user') user: string, @Res() res) {
     try {

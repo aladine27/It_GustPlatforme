@@ -1,13 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus,UseGuards } from '@nestjs/common';
 import { LeaveTypeService } from './leave-type.service';
 import { CreateLeaveTypeDto } from './dto/create-leave-type.dto';
 import { UpdateLeaveTypeDto } from './dto/update-leave-type.dto';
+import { Roles } from 'src/decorators/roles.decorators';
+import { AccessTokenGuard } from 'src/guards/accessToken.guard';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { Response } from 'express';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth("access-token")
+@UseGuards(AccessTokenGuard) 
 @Controller('leave-type')
 export class LeaveTypeController {
   constructor(private readonly leaveTypeService: LeaveTypeService) {}
 
   @Post()
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async create(@Body() createLeaveTypeDto: CreateLeaveTypeDto, @Res() res) {
     try {
       const newLeaveType = await this.leaveTypeService.create(createLeaveTypeDto);
@@ -25,6 +34,8 @@ export class LeaveTypeController {
   }
 
   @Get()
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async findAll( @Res() res) {
     try {
       const leaveTypes = await this.leaveTypeService.findAll();
@@ -43,6 +54,8 @@ export class LeaveTypeController {
   }
 
   @Get(':id')
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async findOne(@Param('id') id: string, @Res() res) {
     try {
       const leaveType = await this.leaveTypeService.findOne(id);
@@ -62,6 +75,8 @@ export class LeaveTypeController {
   }
 
   @Patch(':id')
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async update(@Param('id') id: string, @Body() updateLeaveTypeDto: UpdateLeaveTypeDto, @Res() res) {
     try {
       const leaveType = await this.leaveTypeService.update(id, updateLeaveTypeDto);
@@ -79,6 +94,8 @@ export class LeaveTypeController {
   }
 
   @Delete(':id')
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async remove(@Param('id') id: string, @Res() res) {
     try {
       const leaveType = await this.leaveTypeService.remove(id);

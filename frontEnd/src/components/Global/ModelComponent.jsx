@@ -1,13 +1,6 @@
-import { CloseOutlined } from '@mui/icons-material';
-import {
-  Box,
-  Grid,
-  IconButton,
-  Modal,
-  Typography,
-  Divider
-} from '@mui/material';
-import React from 'react';
+import { CloseOutlined } from "@mui/icons-material";
+import { Box, Divider, Grid, IconButton, Modal, Typography } from "@mui/material";
+import React from "react";
 
 const style = {
   position: 'absolute',
@@ -20,6 +13,8 @@ const style = {
   borderRadius: 4,
   boxShadow: 24,
   p: 4,
+  maxHeight: '80vh',            
+  overflowY: 'auto',             
 };
 
 const ModelComponent = ({ open, handleClose, title, children, icon }) => {

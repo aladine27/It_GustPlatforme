@@ -27,10 +27,10 @@ import {
 } from "@mui/icons-material";
 import TypeCongeFormModal from "../components/Conge/TypeCongéFormModal";
 import PregnantWomanIcon from "@mui/icons-material/PregnantWoman";
-import { StyledCard } from "../style/style";
+
 // --- Nouvelle importation :
 import PaginationComponent from "../components/Global/PaginationComponent";
-
+import { StyledCard, StyledButton, Title } from "../style/style";
 // ============ DATA & HELPERS =============
 const defaultTypesConge = [
   { _id: "vacation", name: "Vacation", color: "#4caf50", icon: <BeachIcon sx={{ mr: 0.5 }} /> },
@@ -150,250 +150,262 @@ const Conge = () => {
   }, [selectedType]);
 
   return (
-    <Box sx={{ bgcolor: "#f8fafc", minHeight: "100vh", p: 3 }}>
-      {/* ... bouton Ajouter ... */}
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
-        <Button
-          startIcon={<AddCircleOutlineIcon />}
-          variant="outlined"
-          sx={{ borderRadius: 3, fontWeight: 700, textTransform: "none" }}
-          onClick={() => setModalOpen(true)}
-        >
-          Ajouter un nouveau type
-        </Button>
-      </Box>
+    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pt: 0, pb: 3, px: { xs: 1, md: 3 } }}>
+    {/* bouton Ajouter */}
+    <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
+      <StyledButton
+        startIcon={<AddCircleOutlineIcon />}
+        variant="contained"
+        onClick={() => setModalOpen(true)}
+      >
+        Ajouter un nouveau type
+      </StyledButton>
+    </Box>
 
-      {/* WHO'S ON LEAVE section */}
-      <StyledCard elevation={2}>
-        <Typography variant="h3" sx={{ mb: 1 }}>
-          Who's on leave?
-        </Typography>
-        {/* Filtre Type */}
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 4 }}>
-          <Box sx={{ minWidth: 240, maxWidth: 340 }}>
-            <Select
-              fullWidth
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              variant="outlined"
-              sx={{ bgcolor: "#fff", borderRadius: 3, fontWeight: 700 }}
-              MenuProps={{ PaperProps: { sx: { maxHeight: 320 } } }}
-            >
-              <MenuItem value="all">
+    {/* WHO'S ON LEAVE section */}
+    <StyledCard elevation={2}>
+      <Title>Who's on leave?</Title>
+
+      {/* Filtre Type */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 4 }}>
+        <Box sx={{ minWidth: 240, maxWidth: 340 }}>
+          <Select
+            fullWidth
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            variant="outlined"
+            sx={{ bgcolor: "#fff", borderRadius: 3, fontWeight: 700 }}
+            MenuProps={{ PaperProps: { sx: { maxHeight: 320 } } }}
+          >
+            <MenuItem value="all">
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Chip
+                  label="All"
+                  size="small"
+                  sx={{
+                    fontWeight: 700,
+                    bgcolor: "#e3f2fd",
+                    color: "#1976d2",
+                  }}
+                />
+              </Box>
+            </MenuItem>
+            {leaveTypes.map((type) => (
+              <MenuItem key={type} value={type}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Chip
-                    label="All"
+                    label={type.charAt(0).toUpperCase() + type.slice(1)}
                     size="small"
                     sx={{
-                      fontWeight: 700,
                       bgcolor: "#e3f2fd",
                       color: "#1976d2",
+                      fontWeight: 700,
                     }}
                   />
                 </Box>
               </MenuItem>
-              {leaveTypes.map((type) => (
-                <MenuItem key={type} value={type}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Chip
-                      label={type.charAt(0).toUpperCase() + type.slice(1)}
-                      size="small"
-                      sx={{
-                        bgcolor: "#e3f2fd",
-                        color: "#1976d2",
-                        fontWeight: 700,
-                      }}
-                    />
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
+            ))}
+          </Select>
         </Box>
+      </Box>
 
-        {/* Liste paginée */}
-        <CardContent sx={{ p: 0 }}>
-          {paginatedLeaves.map((person, index) => (
-            <React.Fragment key={person.name + person.startDate}>
-              <Box
+      {/* Liste paginée */}
+      <CardContent sx={{ p: 0 }}>
+        {paginatedLeaves.map((person, index) => (
+          <React.Fragment key={person.name + person.startDate}>
+            <Box
+              sx={{
+                p: 3,
+                display: "flex",
+                alignItems: "center",
+                gap: 3,
+                borderLeft: "7px solid #1976d2",
+                bgcolor: "#fff",
+              }}
+            >
+              <Avatar
                 sx={{
-                  p: 3,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 3,
-                  borderLeft: "7px solid #1976d2",
-                  bgcolor: "#fff",
+                  bgcolor: "#e3f2fd",
+                  color: "#1976d2",
+                  width: 64,
+                  height: 64,
+                  fontWeight: 700,
+                  fontSize: 30,
+                  border: "2.5px solid #bbdefb",
+                  mr: 2,
                 }}
               >
-                <Avatar
+                {person.name[0].toUpperCase()}
+              </Avatar>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  variant="h6"
                   sx={{
-                    bgcolor: "#e3f2fd",
-                    color: "#1976d2",
-                    width: 64,
-                    height: 64,
                     fontWeight: 700,
-                    fontSize: 30,
-                    border: "2.5px solid #bbdefb",
-                    mr: 2,
+                    mb: 0.1,
+                    color: "#232323",
+                    textTransform: "capitalize",
+                    fontSize: "1.25rem",
                   }}
                 >
-                  {person.name[0].toUpperCase()}
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      mb: 0.1,
-                      color: "#232323",
-                      textTransform: "capitalize",
-                      fontSize: "1.25rem",
-                    }}
-                  >
-                    {person.name}
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: "#505050",
-                      fontWeight: 500,
-                      mb: 0.5,
-                      fontSize: "1.08rem",
-                    }}
-                  >
-                    {person.type}
-                  </Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <CalendarIcon sx={{ fontSize: 17, color: "#666" }} />
-                    <Typography variant="body2" sx={{ color: "#666" }}>
-                      Since {person.startDate}
-                    </Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ ml: 3, minWidth: 100, textAlign: "center" }}>
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      color: "#1976d2",
-                      fontWeight: 800,
-                      lineHeight: 1.1,
-                      fontSize: "2rem",
-                    }}
-                  >
-                    {person.days}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#333",
-                      fontWeight: 600,
-                      letterSpacing: 0.3,
-                    }}
-                  >
-                    Days off
+                  {person.name}
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: "#505050",
+                    fontWeight: 500,
+                    mb: 0.5,
+                    fontSize: "1.08rem",
+                  }}
+                >
+                  {person.type}
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <CalendarIcon sx={{ fontSize: 17, color: "#666" }} />
+                  <Typography variant="body2" sx={{ color: "#666" }}>
+                    Since {person.startDate}
                   </Typography>
                 </Box>
               </Box>
-              {index < paginatedLeaves.length - 1 && <Divider />}
-            </React.Fragment>
-          ))}
-          {paginatedLeaves.length === 0 && (
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{ textAlign: "center", pt: 5 }}
-            >
-              No leave found for this type.
-            </Typography>
-          )}
-        </CardContent>
-        {/* PAGINATION */}
-        <PaginationComponent
-          count={Math.ceil(filteredLeaves.length / pageSizeWho)}
-          page={pageWho}
-          onChange={(_, value) => setPageWho(value)}
-        />
-      </StyledCard>
+              <Box sx={{ ml: 3, minWidth: 100, textAlign: "center" }}>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: 800,
+                    lineHeight: 1.1,
+                    fontSize: "2rem",
+                  }}
+                >
+                  {person.days}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#333",
+                    fontWeight: 600,
+                    letterSpacing: 0.3,
+                  }}
+                >
+                  Days off
+                </Typography>
+              </Box>
+            </Box>
+            {index < paginatedLeaves.length - 1 && <Divider />}
+          </React.Fragment>
+        ))}
+        {paginatedLeaves.length === 0 && (
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ textAlign: "center", pt: 5 }}
+          >
+            No leave found for this type.
+          </Typography>
+        )}
+      </CardContent>
+      {/* PAGINATION */}
+      <PaginationComponent
+        count={Math.ceil(filteredLeaves.length / pageSizeWho)}
+        page={pageWho}
+        onChange={(_, value) => setPageWho(value)}
+      />
+    </StyledCard>
 
-      {/* PENDING REQUESTS section */}
-      <Box sx={{ mt: 8 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: "#1976d2", display: "flex", alignItems: "center", gap: 2 }}>
-          <ScheduleIcon sx={{ color: "#ff9800" }} />
-          Pending Requests
-          <Badge badgeContent={pendingRequests.length} color="warning" sx={{ "& .MuiBadge-badge": { bgcolor: "#ff9800", color: "white", fontWeight: 700 } }} />
-        </Typography>
-        <StyledCard elevation={2} sx={{ borderRadius: 3, overflow: "hidden" }}>
-          <CardContent sx={{ p: 0 }}>
-            {paginatedPending.map((request, index) => (
-              <React.Fragment key={index}>
-                <Box sx={{ p: 3, display: "flex", alignItems: "center", gap: 3 }}>
-                  <Avatar sx={{ bgcolor: "#e3f2fd", color: "#1976d2", width: 56, height: 56, fontSize: 20, fontWeight: 700 }}>
-                    {request.name[0].toUpperCase()}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-                      {request.name}
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: "#666", mb: 1 }}>
-                      {request.type}
-                    </Typography>
-                    <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                        <CalendarIcon sx={{ fontSize: 16, color: "#666" }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {request.startDate} - {request.endDate}
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" sx={{ fontWeight: 600, color: "#1976d2" }}>
-                        {request.days} days
+    {/* PENDING REQUESTS section */}
+    <Box sx={{ mt: 8 }}>
+     
+      <StyledCard elevation={2} sx={{ borderRadius: 3, overflow: "hidden" }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: "#1976d2", display: "flex", alignItems: "center", gap: 2 }}>
+        <ScheduleIcon sx={{ color: "#ff9800" }} />
+        Pending Requests
+        <Badge badgeContent={pendingRequests.length} color="warning" sx={{ "& .MuiBadge-badge": { bgcolor: "#ff9800", color: "white", fontWeight: 700 } }} />
+      </Typography>
+        <CardContent sx={{ p: 0 }}>
+          {paginatedPending.map((request, index) => (
+            <React.Fragment key={index}>
+              <Box sx={{ p: 3, display: "flex", alignItems: "center", gap: 3 }}>
+                <Avatar sx={{ bgcolor: "#e3f2fd", color: "#1976d2", width: 56, height: 56, fontSize: 20, fontWeight: 700 }}>
+                  {request.name[0].toUpperCase()}
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                    {request.name}
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: "#666", mb: 1 }}>
+                    {request.type}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <CalendarIcon sx={{ fontSize: 16, color: "#666" }} />
+                      <Typography variant="body2" color="text.secondary">
+                        {request.startDate} - {request.endDate}
                       </Typography>
                     </Box>
-                  </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    {statusChip(request.status)}
-                    <Stack direction="row" spacing={1}>
-                      <Button variant="contained" size="small" sx={{ bgcolor: "#4caf50", minWidth: 40, "&:hover": { bgcolor: "#45a049" }, fontWeight: 600, p: 0 }}>
-                        <CheckIcon />
-                      </Button>
-                      <Button variant="contained" size="small" sx={{
-                        bgcolor: "#f44336", minWidth: 40, width: 40, height: 40, p: 0, "&:hover": { bgcolor: "#c62828" },
-                        borderRadius: "50%", boxShadow: "0 2px 6px 0 rgba(244,67,54,0.15)", display: "flex", alignItems: "center", justifyContent: "center"
-                      }}>
-                        <CloseIcon sx={{ fontSize: 24 }} />
-                      </Button>
-                      <Button variant="outlined" size="small" startIcon={<ViewIcon />} sx={{
-                        borderColor: "#1976d2", color: "#1976d2", textTransform: "none", fontWeight: 600,
-                        "&:hover": { borderColor: "#1565c0", bgcolor: "rgba(25, 118, 210, 0.04)" },
-                      }}>
-                        Details
-                      </Button>
-                    </Stack>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: "#1976d2" }}>
+                      {request.days} days
+                    </Typography>
                   </Box>
                 </Box>
-                {index < paginatedPending.length - 1 && <Divider />}
-              </React.Fragment>
-            ))}
-          </CardContent>
-          {/* PAGINATION SOUS LA CARTE */}
-          <PaginationComponent
-            count={Math.ceil(pendingRequests.length / pageSizePending)}
-            page={pagePending}
-            onChange={(_, value) => setPagePending(value)}
-          />
-        </StyledCard>
-      </Box>
-
-      {/* MODAL POUR LA GESTION DES TYPES */}
-      <TypeCongeFormModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        typesConge={typesConge}
-        onCreate={handleCreateType}
-        onDeleteType={handleDeleteType}
-        onEditType={handleEditType}
-      />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  {statusChip(request.status)}
+                  <Stack direction="row" spacing={1}>
+                    <StyledButton
+                      variant="contained"
+                      size="small"
+                      sx={{ bgcolor: "#4caf50", minWidth: 40, "&:hover": { bgcolor: "#45a049" }, fontWeight: 600, p: 0 }}
+                    >
+                      <CheckIcon />
+                    </StyledButton>
+                    <StyledButton
+                      variant="contained"
+                      size="small"
+                      sx={{
+                        bgcolor: "#f44336", minWidth: 40, width: 40, height: 40, p: 0, "&:hover": { bgcolor: "#c62828" },
+                        borderRadius: "50%", boxShadow: "0 2px 6px 0 rgba(244,67,54,0.15)", display: "flex", alignItems: "center", justifyContent: "center"
+                      }}
+                    >
+                      <CloseIcon sx={{ fontSize: 24 }} />
+                    </StyledButton>
+                    <StyledButton
+                      variant="outlined"
+                      size="small"
+                      startIcon={<ViewIcon />}
+                      sx={{
+                        borderColor: "#1976d2", color: "#1976d2", textTransform: "none", fontWeight: 600,
+                        "&:hover": { borderColor: "#1565c0", bgcolor: "rgba(25, 118, 210, 0.04)" },
+                      }}
+                    >
+                      Details
+                    </StyledButton>
+                  </Stack>
+                </Box>
+              </Box>
+              {index < paginatedPending.length - 1 && <Divider />}
+            </React.Fragment>
+          ))}
+        </CardContent>
+        {/* PAGINATION SOUS LA CARTE */}
+        <PaginationComponent
+          count={Math.ceil(pendingRequests.length / pageSizePending)}
+          page={pagePending}
+          onChange={(_, value) => setPagePending(value)}
+        />
+      </StyledCard>
     </Box>
-  );
+
+    {/* MODAL POUR LA GESTION DES TYPES */}
+    <TypeCongeFormModal
+      open={modalOpen}
+      onClose={() => setModalOpen(false)}
+      typesConge={typesConge}
+      onCreate={handleCreateType}
+      onDeleteType={handleDeleteType}
+      onEditType={handleEditType}
+    />
+  </Box>
+);
 };
 
 export default Conge;

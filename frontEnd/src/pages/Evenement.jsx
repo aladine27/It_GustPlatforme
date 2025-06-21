@@ -30,6 +30,7 @@ import CustomToolbar from '../components/Event/CustomToolbar';
 import EventFormModal from '../components/Event/EventFormModal';
 import TypeFormModal from '../components/Event/TypeFormModal';
 import EventDetailsModal from '../components/Event/EventDetailModal.jsx'; // Ajoute ce composant !
+import { StyledPaper } from '../style/style.jsx';
 
 const localizer = momentLocalizer(moment);
 
@@ -256,17 +257,9 @@ const hasRoomConflict = (eventData) => {
   
 
   return (
-    <Box sx={{ p: 4, bgcolor: '#F3FAFF', minHeight: '100vh' }}>
-      <Paper elevation={3} sx={{ p: 0, borderRadius: 3, overflow: 'hidden' }}>
-        <Typography
-          variant="h4"
-          fontWeight="bold"
-          color="primary.main"
-          mb={2}
-          sx={{ px: 4, pt: 4 }}
-        >
-         Mon Planning d’Événements
-        </Typography>
+  
+      <StyledPaper elevation={3} sx={{ p: 0, borderRadius: 3, overflow: 'hidden' }}>
+      
         <Divider sx={{ mb: 3, mx: 4 }} />
         <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 4, mb: 2 }}>
           <Typography sx={{
@@ -427,8 +420,8 @@ const hasRoomConflict = (eventData) => {
               toolbar: CustomToolbar,
             }}
           />
-        </Box>
-      </Paper>
+    </Box>
+      
 
       {/* --- MODALES EXTERNES --- */}
       <TypeFormModal
@@ -469,6 +462,7 @@ const hasRoomConflict = (eventData) => {
         loadingEmployes={employesLoading}
         userRole={userRole}
       />
-    </Box>
+  </StyledPaper>
+    
   );
 }

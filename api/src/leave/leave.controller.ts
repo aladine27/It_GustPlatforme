@@ -1,11 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Res, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Res, UseInterceptors, UploadedFile, UseGuards, Req  } from '@nestjs/common';
 import { LeaveService } from './leave.service';
 import { CreateLeaveDto } from './dto/create-leave.dto';
 import { UpdateLeaveDto } from './dto/update-leave.dto';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-
+import { Roles } from 'src/decorators/roles.decorators';
+import { AccessTokenGuard } from 'src/guards/accessToken.guard';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { Response } from 'express';
+import { ApiBearerAuth } from '@nestjs/swagger';
+@ApiBearerAuth("access-token")
+@UseGuards(AccessTokenGuard) 
 @Controller('leave')
 export class LeaveController {
   constructor(private readonly leaveService: LeaveService) {}
@@ -38,6 +44,8 @@ export class LeaveController {
       )
 
   @Post()
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh','Employee','Manager')
   async create(@Body() createLeaveDto: CreateLeaveDto, @Res() res,@UploadedFile()reasonFile: Express.Multer.File) {
    try {
       createLeaveDto.reasonFile = reasonFile?.filename
@@ -57,6 +65,9 @@ export class LeaveController {
     }
     
    }
+   @Post()
+   @UseGuards( RolesGuard)
+   @Roles('Admin','Rh','Employee','Manager')
    @Get('/findLeaveByUserId/:user')
    async findLeaveByUserId(@Param('user') user: string, @Res() res) {
   try {
@@ -79,7 +90,8 @@ export class LeaveController {
   } 
   }
   
-
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh','Employee','Manager')
   @Get()
   async findAll(@Res() res) {
     try {
@@ -102,6 +114,8 @@ export class LeaveController {
   } 
 
   @Get(':id')
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh','Employee','Manager')
   async findOne(@Param('id') id: string, @Res() res) {
    try {
       const leave = await this.leaveService.findOne(id);
@@ -150,6 +164,8 @@ export class LeaveController {
   
 
   @Patch(':id')
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh','Employee','Manager')
   async update(@Param('id') id: string, @Body() updateLeaveDto: UpdateLeaveDto , @Res() res,@UploadedFile()reasonFile: Express.Multer.File) {
     try {
       updateLeaveDto.reasonFile = reasonFile?.filename
@@ -172,6 +188,8 @@ export class LeaveController {
   }
 
   @Delete(':id')
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh','Employee','Manager')
   async remove(@Param('id') id: string,@Res() res) {
     try {
       const leave = await this.leaveService.remove(id);

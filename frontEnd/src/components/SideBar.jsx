@@ -16,8 +16,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { Box, Typography, IconButton, Divider } from "@mui/material";
 import { useSelector } from "react-redux";
 
-const SidebarPro = () => {
-  const [collapsed, setCollapsed] = useState(false);
+const SidebarPro = ({ collapsed, setCollapsed }) => {
 
   const { t } = useTranslation();
   const location = useLocation();
