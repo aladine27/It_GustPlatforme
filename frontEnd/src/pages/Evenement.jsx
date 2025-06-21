@@ -246,12 +246,12 @@ const hasRoomConflict = (eventData) => {
   const handleNavigate = (date) => setCurrentDate(date);
   //fonction pour Edittype et deletetype
   const handleEditType = async (typeId, newName) => {
-    await dispatch(updateEventType({ id: typeId, updateData: { name: newName } }));
+    dispatch(updateEventType({ id: typeId, updateData: { name: newName } }));
     dispatch(fetchEventTypes());
   };
   
   const handleDeleteType = async (typeId) => {
-    await dispatch(deleteEventType(typeId));
+    dispatch(deleteEventType(typeId));
     dispatch(fetchEventTypes());
   };
   
@@ -430,7 +430,6 @@ const hasRoomConflict = (eventData) => {
   value={newTypeName}
   onChange={setNewTypeName}
   onCreate={handleAddType}
-  // AJOUTE LES 3 LIGNES CI-DESSOUS :
   eventTypes={eventTypes}
   onEditType={handleEditType}
   onDeleteType={handleDeleteType}
