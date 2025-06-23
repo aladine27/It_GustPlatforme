@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import './App.css';
 import Login from './pages/Login';
 import Home from './pages/Home';
@@ -24,7 +23,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import CongeIndex from './pages/CongeIndex';
 import CongeHistory from './pages/CongeHistory';
 import CongeEmploye from './pages/CongeEmploye';
-
+import "react-toastify/dist/ReactToastify.css";
 function App() {
   const { CurrentUser } = useSelector((state) => state.user);
   const role = CurrentUser?.role || CurrentUser?.user?.role;

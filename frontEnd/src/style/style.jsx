@@ -46,7 +46,7 @@ export const StyledButton = styled(Button)(({ theme }) => ({
   background: theme.palette.primary.main,
   color: "#fff",
   padding: "10px 22px",
-  boxShadow: '0 2px 6px rgba(25,118,210,0.13)',
+  boxShadow: 'none',
   '&:hover': {
     background: theme.palette.primary.dark
   }

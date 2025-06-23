@@ -69,7 +69,27 @@ const resources = {
       'Enregistrer': 'Save',
       'invité': 'guest',
       'Modifier un événement': 'Edit event',
-      'Ajouter un événement': 'Add event'
+      'Ajouter un événement': 'Add event',
+      'Ajouter un nouveau type': 'Add new type',
+      "Who's on leave?": "Who's on leave?",
+      'Tous': 'All',
+      'Vacances': 'Vacation',
+      'Maladie': 'Sick',
+      'Maternité': 'Maternity',
+      'Autre': 'Other',
+      'Depuis': 'Since',
+      'Jour(s)': 'Day(s)',
+      'Aucun congé trouvé pour ce type.': 'No leave found for this type.',
+      'Jours d\'absence': 'Days off',
+      'Demandes en attente': 'Pending Requests',
+      'Détails': 'Details',
+      'Valider': 'Approve',
+      'Rejeter': 'Reject',
+      'En attente': 'pending',
+      'Accepté': 'approved',
+      'Refusé': 'rejected',
+      'Nombre de jours': 'Days',
+      'Voir': 'View'
     }
   },
   fr: {
@@ -138,7 +158,27 @@ const resources = {
       'Enregistrer': 'Enregistrer',
       'invité': 'invité',
       'Modifier un événement': 'Modifier un événement',
-      'Ajouter un événement': 'Ajouter un événement'
+      'Ajouter un événement': 'Ajouter un événement',
+      'Ajouter un nouveau type': 'Ajouter un nouveau type',
+      "Who's on leave?": "Qui est en congé ?",
+      'Tous': 'Tous',
+      'Vacances': 'Vacances',
+      'Maladie': 'Maladie',
+      'Maternité': 'Maternité',
+      'Autre': 'Autre',
+      'Depuis': 'Depuis',
+      'Jour(s)': 'Jour(s)',
+      'Aucun congé trouvé pour ce type.': 'Aucun congé trouvé pour ce type.',
+      'Jours d\'absence': 'Jours d\'absence',
+      'Demandes en attente': 'Demandes en attente',
+      'Détails': 'Détails',
+      'Valider': 'Valider',
+      'Rejeter': 'Rejeter',
+      'En attente': 'En attente',
+      'Accepté': 'Accepté',
+      'Refusé': 'Refusé',
+      'Nombre de jours': 'Nombre de jours',
+      'Voir': 'Voir'
     }
   }
 };

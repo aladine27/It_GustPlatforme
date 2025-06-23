@@ -16,7 +16,7 @@ export class LeaveTypeService {
   }
 
  async findAll():Promise<IleaveType[]> {
-    const leaveTypes = await this.leaveTypeModel.find()
+    const leaveTypes = await this.leaveTypeModel.find();
     if(!leaveTypes || leaveTypes.length === 0){ 
       throw new NotFoundException('No user found')
     }
@@ -24,7 +24,7 @@ export class LeaveTypeService {
   }
 
   async findOne(id: string):Promise<IleaveType>  {
-    const leaveType = await this.leaveTypeModel.findById(id)
+    const leaveType = await this.leaveTypeModel.findById(id);
     if(!leaveType){
       throw new NotFoundException('No user found')
     }

@@ -23,23 +23,19 @@ export class LeaveService {
   }
   async findLeaveByUserId(user: string):Promise<Ileave[]> {
     const leaveUser = await this.leaveModel.find({user}).populate('user')
-    if(!leaveUser){ 
-        throw new NotFoundException('No leave found')
-      }
+  
       return leaveUser;
     }
    
   async findAll(): Promise<Ileave[]> {
-    const leaves = await this.leaveModel.find();
-    if (!leaves || leaves.length === 0) {
-      throw new NotFoundException('No leaves found');
-    }
+    const leaves = await this.leaveModel.find().populate('user').populate('leaveType');
+ 
     return leaves;
     
   }
 
   async findOne(id: string):Promise<Ileave> {
-    const leave = await this.leaveModel.findById(id);
+    const leave = await this.leaveModel.findById(id).populate('user').populate('leaveType');
     if (!leave) {
       throw new NotFoundException('No leave found');
     }

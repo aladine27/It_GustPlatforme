@@ -9,4 +9,12 @@ export class CreateLeaveTypeDto {
        @IsString()
        @IsNotEmpty()
        name: string;
+       @ApiProperty({
+        type: String,
+        description: 'The name of the leave type'
+    })
+       @IsString()
+       @IsNotEmpty()
+       limitDuration: string;
+       
 }

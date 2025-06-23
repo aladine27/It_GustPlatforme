@@ -3,32 +3,34 @@ import axios from "axios";
 
 
 
-// =======================
-// ===== LEAVE CRUD ======
-// =======================
+
 
 // Fetch all leaves
 export const fetchAllLeaves = createAsyncThunk(
   "leave/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
       const res = await axios.get("http://localhost:3000/leave", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log("----- [Frontend] Leaves récupérés depuis API -----");
+      console.log(res.data.data);
       return res.data.data;
     } catch (err) {
+      console.log("Erreur fetchAllLeaves", err?.response?.data || err.message);
       return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
+
 
 // Fetch one leave by ID
 export const fetchLeaveById = createAsyncThunk(
   "leave/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
       const res = await axios.get(`http://localhost:3000/leave/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -44,7 +46,7 @@ export const fetchLeavesByUser = createAsyncThunk(
   "leave/fetchByUser",
   async (userId, { rejectWithValue }) => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
       const res = await axios.get(
         `http://localhost:3000/leave/findLeaveByUserId/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -61,7 +63,7 @@ export const createLeave = createAsyncThunk(
   "leave/create",
   async (leaveData, { rejectWithValue }) => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
       // leaveData doit être un FormData si tu veux envoyer un fichier !
       const res = await axios.post(
         "http://localhost:3000/leave",
@@ -85,7 +87,7 @@ export const updateLeave = createAsyncThunk(
   "leave/update",
   async ({ id, updateData }, { rejectWithValue }) => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
       // updateData doit être un FormData si tu veux envoyer un fichier !
       const res = await axios.patch(
         `http://localhost:3000/leave/${id}`,
@@ -109,7 +111,7 @@ export const deleteLeave = createAsyncThunk(
   "leave/delete",
   async (id, { rejectWithValue }) => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
       const res = await axios.delete(`http://localhost:3000/leave/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -120,16 +122,12 @@ export const deleteLeave = createAsyncThunk(
   }
 );
 
-// ===========================
-// ==== LEAVE TYPES CRUD =====
-// ===========================
-
 // Fetch all leave types
 export const fetchAllLeaveTypes = createAsyncThunk(
   "leaveType/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
       const res = await axios.get("http://localhost:3000/leave-type", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -145,7 +143,7 @@ export const fetchLeaveTypeById = createAsyncThunk(
   "leaveType/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
       const res = await axios.get(`http://localhost:3000/leave-type/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -161,7 +159,7 @@ export const createLeaveType = createAsyncThunk(
   "leaveType/create",
   async (leaveTypeData, { rejectWithValue }) => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
       const res = await axios.post(
         "http://localhost:3000/leave-type",
         leaveTypeData,
@@ -179,7 +177,7 @@ export const updateLeaveType = createAsyncThunk(
   "leaveType/update",
   async ({ id, updateData }, { rejectWithValue }) => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
       const res = await axios.patch(
         `http://localhost:3000/leave-type/${id}`,
         updateData,
@@ -197,7 +195,7 @@ export const deleteLeaveType = createAsyncThunk(
   "leaveType/delete",
   async (id, { rejectWithValue }) => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
       const res = await axios.delete(
         `http://localhost:3000/leave-type/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }

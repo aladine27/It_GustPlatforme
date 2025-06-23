@@ -7,15 +7,16 @@ const style = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: '90%',
-  maxWidth: 480,
-  bgcolor: '#ffffff',
-  borderRadius: 4,
+  width: '95vw',
+  maxWidth: 900,
+  bgcolor: '#fff',
+  borderRadius: 5,
   boxShadow: 24,
   p: 4,
-  maxHeight: '80vh',            
-  overflowY: 'auto',             
+  maxHeight: '90vh',
+  overflowY: 'auto'
 };
+
 
 const ModelComponent = ({ open, handleClose, title, children, icon }) => {
   return (

@@ -15,10 +15,13 @@ export class Leave {
         endDate: Date;
          @Prop({required: true})
         reason: String;
-        @Prop({required: true})
+        @Prop()
         reasonFile: string;
         @Prop({ type: SchemaTypes.ObjectId, ref: 'users', required: true })
-       user: Types.ObjectId;
+        user: Types.ObjectId;
+        @Prop({ type: SchemaTypes.ObjectId, ref: 'leaveTypes', required: true })
+        leaveType: Types.ObjectId;
+
                
     
     

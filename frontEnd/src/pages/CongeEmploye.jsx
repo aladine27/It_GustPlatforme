@@ -1,38 +1,117 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
-  Box,
-  Paper,
-  Divider,
-  Button,
-  Typography,
-  Stack,
-  Fade,
-  Card,
-  CardContent
+  Box, Divider, Typography, Button, Stack
 } from "@mui/material";
-import HistoryIcon from "@mui/icons-material/History";
+import { toast } from "react-toastify";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import HistoryIcon from "@mui/icons-material/History";
 import { StyledPaper } from "../style/style";
-// Tu créeras ce composant modal ou form
+import DemandeCongeFormModal from "../components/Conge/DemandeCongeFormModal";
+import {
+  fetchLeavesByUser,
+  createLeave
+} from "../redux/actions/LeaveAction";
+import { clearLeaveMessages } from "../redux/slices/LeaveSlice";
+import TableComponent from "../components/Global/TableComponent";
 
+export default function CongeEmploye() {
+  const dispatch = useDispatch();
+  const { CurrentUser } = useSelector((state) => state.user);
+  const userId = CurrentUser?.user?._id || CurrentUser?._id;
 
-import DemandeCongeFormModal from "../components/Conge/DemandeCongeFormeModal";
+  // État d'ouverture du modal
+  const [openModal, setOpenModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Nouveau state pour tracker la soumission
 
-const CongeEmploye = () => {
-  // Onglet actuel (demander / historique)
   const [view, setView] = useState("demande");
-  // Modal pour ouvrir le formulaire de demande de congé
-  const [openDemandeModal, setOpenDemandeModal] = useState(false);
-  const handleDemandeSubmit = (data) => {
-    // Ici tu traites la demande (envoi API, affichage toast, etc.)
-    console.log('Nouvelle demande reçue :', data);
-    setOpenDemandeModal(false); // referme le modal après soumission
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const { leaves, loading, error, success } = useSelector((state) => state.leave);
+
+  const itemsPerPage = 6;
+  const paginatedRows = leaves.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.ceil(leaves.length / itemsPerPage);
+
+  const columns = [
+    { id: "title", label: "Type", align: "left" },
+    { id: "duration", label: "Durée", align: "center" },
+    { id: "startDate", label: "Début", align: "center" },
+    { id: "endDate", label: "Fin", align: "center" },
+    { id: "status", label: "Statut", align: "center" },
+    { id: "reason", label: "Motif", align: "left" },
+    {
+      id: "reasonFile",
+      label: "Justificatif",
+      align: "center",
+      render: (row) =>
+        row.reasonFile ? (
+          <a
+            href={`http://localhost:3000/uploads/leaves/${row.reasonFile}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Voir
+          </a>
+        ) : (
+          "-"
+        ),
+    },
+  ];
+
+  useEffect(() => {
+    if (view === "history" && userId) {
+      dispatch(fetchLeavesByUser(userId));
+    }
+  }, [view, userId, dispatch]);
+
+  // Ferme le modal si on change de vue
+  useEffect(() => {
+    setOpenModal(false);
+    setIsSubmitting(false); // Reset le flag de soumission
+  }, [view]);
+
+  // Gestion du succès uniquement pendant la soumission
+  useEffect(() => {
+    if (success && isSubmitting && openModal) {
+      toast.success(success); 
+      toast.success(success);
+      setOpenModal(false);
+      setIsSubmitting(false);
+      dispatch(fetchLeavesByUser(userId));
+      setView("history");
+      
+      // Vider les messages de succès/erreur du store
+      dispatch(clearLeaveMessages());
+    }
+    if (error && isSubmitting) {
+      toast.error(error);
+      setIsSubmitting(false);
+      dispatch(clearLeaveMessages());
+    }
+  }, [success, error, isSubmitting, openModal, dispatch, userId]);
+
+  const handleDemandeSubmit = (formData) => {
+    setIsSubmitting(true); // Marquer qu'on est en train de soumettre
+    dispatch(createLeave(formData));
   };
-  
+
+  const handleOpenModal = () => {
+    console.log("Clique sur nouvelle demande !");
+    // Vider les anciens messages avant d'ouvrir le modal
+    dispatch(clearLeaveMessages());
+    setIsSubmitting(false);
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    console.log("Fermeture du modal !");
+    setOpenModal(false);
+    setIsSubmitting(false); // Reset le flag
+  };
 
   return (
     <StyledPaper>
-      {/* Barre de navigation locale */}
       <Stack direction="row" alignItems="center" spacing={2} mb={2}>
         <Button
           startIcon={<AddCircleOutlineIcon />}
@@ -40,7 +119,7 @@ const CongeEmploye = () => {
             textTransform: "none",
             fontWeight: 600,
             color: view === "demande" ? "primary.main" : "#666",
-            bgcolor: view === "demande" ? "#f2f7fe" : "transparent"
+            bgcolor: view === "demande" ? "#f2f7fe" : "transparent",
           }}
           onClick={() => setView("demande")}
         >
@@ -52,7 +131,7 @@ const CongeEmploye = () => {
             textTransform: "none",
             fontWeight: 600,
             color: view === "history" ? "primary.main" : "#666",
-            bgcolor: view === "history" ? "#f2f7fe" : "transparent"
+            bgcolor: view === "history" ? "#f2f7fe" : "transparent",
           }}
           onClick={() => setView("history")}
         >
@@ -61,44 +140,64 @@ const CongeEmploye = () => {
       </Stack>
       <Divider sx={{ mb: 3 }} />
 
-      {/* Section principale selon l’onglet */}
-      <Box>
-        {/* 1. Faire une demande (ouvre le formulaire) */}
-        {view === "demande" && (
-          <Fade in>
-            <Box textAlign="center" py={4}>
-              <Typography variant="h5" fontWeight={700} mb={3}>
-                Déposer une nouvelle demande de congé
-              </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                size="large"
-                startIcon={<AddCircleOutlineIcon />}
-                onClick={() => setOpenDemandeModal(true)}
-                sx={{ fontWeight: 700, borderRadius: 3 }}
-              >
-                Nouvelle demande
-              </Button>
-              {/* Ici, le formulaire s’ouvre en modal */}
-              <DemandeCongeFormModal
-                open={openDemandeModal}
-                onClose={() => setOpenDemandeModal(false)}
-              />
+      {/* Faire une demande */}
+      {view === "demande" && (
+        <Box textAlign="center" py={4}>
+          <Typography variant="h5" fontWeight={700} mb={3}>
+            Déposer une nouvelle demande de congé
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            startIcon={<AddCircleOutlineIcon />}
+            onClick={handleOpenModal}
+            sx={{ fontWeight: 700, borderRadius: 3 }}
+          >
+            Nouvelle demande
+          </Button>
+          <DemandeCongeFormModal
+            open={openModal}
+            handleClose={handleCloseModal}
+            onSubmit={handleDemandeSubmit}
+            userId={userId}
+          />
+        </Box>
+      )}
+
+      {/* Historique */}
+      {view === "history" && (
+        <Box py={2}>
+          <Typography variant="h5" fontWeight={700} mb={3}>
+            Mes demandes de congé
+          </Typography>
+          {loading ? (
+            <Box textAlign="center" py={3}>
+              <Typography color="text.secondary">Chargement...</Typography>
             </Box>
-          </Fade>
-        )}
-
-      </Box>
-      <DemandeCongeFormModal
-  open={openDemandeModal}
-  handleClose={() => setOpenDemandeModal(false)}
-  onSubmit={handleDemandeSubmit} // fonction qui reçoit la demande créée
-/>
-
+          ) : error ? (
+            <Typography color="error">{error}</Typography>
+          ) : (
+            <TableComponent columns={columns} rows={paginatedRows} />
+          )}
+          {totalPages > 1 && (
+            <Box mt={2} display="flex" justifyContent="center">
+              {[...Array(totalPages)].map((_, idx) => (
+                <Button
+                  key={idx}
+                  size="small"
+                  color={currentPage === idx + 1 ? "primary" : "inherit"}
+                  variant={currentPage === idx + 1 ? "contained" : "outlined"}
+                  sx={{ mx: 0.5, minWidth: 32 }}
+                  onClick={() => setCurrentPage(idx + 1)}
+                >
+                  {idx + 1}
+                </Button>
+              ))}
+            </Box>
+          )}
+        </Box>
+      )}
     </StyledPaper>
-    
   );
-};
-
-export default CongeEmploye;
+}

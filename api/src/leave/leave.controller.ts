@@ -16,56 +16,67 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 export class LeaveController {
   constructor(private readonly leaveService: LeaveService) {}
       //config swager for file
+      @Post()
+      @ApiConsumes('multipart/form-data')
       @ApiBody({
-        schema: { 
+        schema: {
           type: 'object',
           properties: {
-          title:{ type: 'string'},
-          duration:{type: 'string'},
-          status:{type: 'string'},
-          startDate:{type: 'Date'},
-          endDate:{type: 'Date'},
-          user:{type: 'string'},
-          reason:{type: 'string'},
-          reasonFile:{type: 'string', format: 'binary'},
-          }
+            title:       { type: 'string', description: 'The title of the leave' },
+            duration:    { type: 'string', description: 'The duration of the leave' },
+            status:      { type: 'string', description: 'The status of the leave' },
+            startDate:   { type: 'string', format: 'date-time', description: 'The start date of the leave' },
+            endDate:     { type: 'string', format: 'date-time', description: 'The end date of the leave' },
+            user:        { type: 'string', description: 'The user of the leave' },
+            reason:      { type: 'string', description: 'The reason of the leave' },
+            leaveType:   { type: 'string', description: 'The type of the leave' },
+            reasonFile:  { type: 'string', format: 'binary', description: 'The reason file of the leave (optional)' },
+          },
+          required: [
+            'title',
+            'duration',
+            'status',
+            'startDate',
+            'endDate',
+            'user',
+            'reason',
+            'leaveType'
+            // NE PAS inclure reasonFile ici !
+          ]
         }
       })
-      @ApiConsumes('multipart/form-data')
-      //filConfig
       @UseInterceptors(
         FileInterceptor('reasonFile', {
-            storage: diskStorage({
+          storage: diskStorage({
             destination: './uploads/leaves',
-            filename: (_request,reasonFile, callback) => 
-            callback(null, `${new Date().getTime()}-${reasonFile.originalname}`)
-            })
+            filename: (_request, file, callback) =>
+              callback(null, `${new Date().getTime()}-${file.originalname}`)
+          })
         })
       )
-
-  @Post()
-  @UseGuards( RolesGuard)
-  @Roles('Admin','Rh','Employee','Manager')
-  async create(@Body() createLeaveDto: CreateLeaveDto, @Res() res,@UploadedFile()reasonFile: Express.Multer.File) {
-   try {
-      createLeaveDto.reasonFile = reasonFile?.filename
-      const newLeave = await this.leaveService.create(createLeaveDto);
-      return res.status(HttpStatus.CREATED).json({
-        message: 'Leave created successfully',
-        status: HttpStatus.CREATED,
-        data: newLeave,
-      });
-    
-   } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
-        data: null,
-        status: HttpStatus.BAD_REQUEST,
-        message: error.message,
-      });
-    }
-    
-   }
-   @Post()
+      @UseGuards(RolesGuard)
+      @Roles('Admin', 'Rh', 'Employee', 'Manager')
+      async create(
+        @Body() createLeaveDto: CreateLeaveDto,
+        @Res() res,
+        @UploadedFile() reasonFile: Express.Multer.File
+      ) {
+        try {
+          createLeaveDto.reasonFile = reasonFile?.filename;
+          const newLeave = await this.leaveService.create(createLeaveDto);
+          return res.status(HttpStatus.CREATED).json({
+            message: 'Leave created successfully',
+            status: HttpStatus.CREATED,
+            data: newLeave,
+          });
+        } catch (error) {
+          return res.status(HttpStatus.BAD_REQUEST).json({
+            data: null,
+            status: HttpStatus.BAD_REQUEST,
+            message: error.message,
+          });
+        }
+      }
    @UseGuards( RolesGuard)
    @Roles('Admin','Rh','Employee','Manager')
    @Get('/findLeaveByUserId/:user')
@@ -89,7 +100,6 @@ export class LeaveController {
     
   } 
   }
-  
   @UseGuards( RolesGuard)
   @Roles('Admin','Rh','Employee','Manager')
   @Get()

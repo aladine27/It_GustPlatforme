@@ -35,7 +35,7 @@ export class LeaveTypeController {
 
   @Get()
   @UseGuards( RolesGuard)
-  @Roles('Admin','Rh')
+  @Roles('Admin','Rh','Employee','Manager')
   async findAll( @Res() res) {
     try {
       const leaveTypes = await this.leaveTypeService.findAll();
@@ -55,7 +55,7 @@ export class LeaveTypeController {
 
   @Get(':id')
   @UseGuards( RolesGuard)
-  @Roles('Admin','Rh')
+  @Roles('Admin','Rh','Employee','Manager')
   async findOne(@Param('id') id: string, @Res() res) {
     try {
       const leaveType = await this.leaveTypeService.findOne(id);
