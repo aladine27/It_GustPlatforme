@@ -10,6 +10,8 @@ import {
   Chip,
   Stack,
   Badge,
+  Card,
+  CardActions,
 } from "@mui/material";
 import {
   CalendarToday as CalendarIcon,
@@ -89,28 +91,37 @@ const Conge = () => {
   }, [selectedType]);
 
   // Listes dynamiques
+  const today = new Date();
+
+  // FILTRE pour les congés EN COURS
   const filteredLeaves =
     selectedType === "all"
-      ? leaves.filter((l) => l.status === "approved")
+      ? leaves.filter(
+          (l) =>
+            l.status === "approved" &&
+            new Date(l.startDate) <= today &&
+            new Date(l.endDate) >= today
+        )
       : leaves.filter(
           (l) =>
             l.status === "approved" &&
-            (l.leaveType?._id === selectedType || l.leaveType === selectedType)
+            (l.leaveType?._id === selectedType || l.leaveType === selectedType) &&
+            new Date(l.startDate) <= today &&
+            new Date(l.endDate) >= today
         );
+
+  // --- ICI la pagination qui manquait !
   const paginatedLeaves = filteredLeaves.slice(
     (pageWho - 1) * pageSizeWho,
     pageWho * pageSizeWho
   );
 
+  // Filtre demandes en attente (inchangé)
   const pendingRequests = leaves.filter((l) => l.status === "pending");
   const paginatedPending = pendingRequests.slice(
     (pagePending - 1) * pageSizePending,
     pagePending * pageSizePending
   );
-  leaves.forEach(l => console.log("leave:", l));
-  console.log("leaveType:", leaves.leaveType);
-
-
 
   // CRUD Type de congé
   const handleCreateType = async (typeName) => {
@@ -234,92 +245,119 @@ const Conge = () => {
         <CardContent sx={{ p: 0 }}>
           {paginatedLeaves.map((person, index) => (
             <React.Fragment key={person._id}>
-              <Box
+            <Card
+      elevation={2}
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 2,
+        mb: 2.5,
+        px: 2,
+        py: 1.5,
+        borderRadius: 3,
+        bgcolor: "#f8fbff",
+        boxShadow: "0 2px 8px 0 rgba(25, 118, 210, 0.06)",
+        borderLeft: "5px solid #1976d2",
+        minHeight: 90,
+        "&:hover": {
+          boxShadow: "0 6px 24px 0 rgba(25, 118, 210, 0.09)",
+        },
+      }}
+    >
+      <Avatar
+        src={person.user?.image ? `http://localhost:3000/uploads/users/${person.user.image}` : undefined}
+        alt={person.user?.fullName || "Employé"}
+        sx={{
+          bgcolor: "#e3f2fd",
+          color: "#1976d2",
+          width: 60,
+          height: 60,
+          fontWeight: 700,
+          fontSize: 26,
+          border: "2.5px solid #bbdefb",
+        }}
+      >
+        {person.user?.fullName?.[0]?.toUpperCase() || "?"}
+      </Avatar>
+
+      <CardContent sx={{ flex: 1, py: 1, px: 0 }}>
+        <Stack spacing={0.6}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: "#164493", textTransform: "capitalize", fontSize: "1.17rem", lineHeight: 1.18 }}>
+            {person.user?.fullName || "Employé"}
+          </Typography>
+          <Stack direction="row" spacing={1}>
+            {person.user?.role && (
+              <Chip
+                label={person.user.role}
+                size="small"
                 sx={{
-                  p: 3,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 3,
-                  borderLeft: "7px solid #1976d2",
-                  bgcolor: "#fff",
+                  bgcolor: "#e3f2fd",
+                  color: "#1565c0",
+                  fontWeight: 700,
+                  textTransform: "capitalize"
                 }}
-              >
-                <Avatar
-                  sx={{
-                    bgcolor: "#e3f2fd",
-                    color: "#1976d2",
-                    width: 64,
-                    height: 64,
-                    fontWeight: 700,
-                    fontSize: 30,
-                    border: "2.5px solid #bbdefb",
-                    mr: 2,
-                  }}
-                  src={person.user?.image ? `http://localhost:3000/uploads/users/${person.user.image}` : undefined}
-                  alt={person.user?.fullName || "Employé"}
-                >
-                  {person.user?.fullName?.[0]?.toUpperCase() || "?"}
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      mb: 0.1,
-                      color: "#232323",
-                      textTransform: "capitalize",
-                      fontSize: "1.25rem",
-                    }}
-                  >
-                    {person.user?.fullName || "Employé"}
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: "#505050",
-                      fontWeight: 500,
-                      mb: 0.5,
-                      fontSize: "1.08rem",
-                    }}
-                  >
-                    {person.title}{" "}
-                    <Chip
-                      size="small"
-                      label={person.leaveType?.name || "-"}
-                      sx={{ ml: 1, bgcolor: "#e3f2fd", color: "#1976d2" }}
-                    />
-                  </Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <CalendarIcon sx={{ fontSize: 17, color: "#666" }} />
-                    <Typography variant="body2" sx={{ color: "#666" }}>
-                      {t("Depuis")} {person.startDate}
-                    </Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ ml: 3, minWidth: 100, textAlign: "center" }}>
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      color: "#1976d2",
-                      fontWeight: 800,
-                      lineHeight: 1.1,
-                      fontSize: "2rem",
-                    }}
-                  >
-                    {person.duration}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#333",
-                      fontWeight: 600,
-                      letterSpacing: 0.3,
-                    }}
-                  >
-                    {t("Jours d'absence")}
-                  </Typography>
-                </Box>
-              </Box>
+              />
+            )}
+            {person.leaveType?.name && (
+              <Chip
+                label={person.leaveType.name}
+                size="small"
+                sx={{
+                  bgcolor: "#bbdefb",
+                  color: "#1565c0",
+                  fontWeight: 600
+                }}
+              />
+            )}
+          </Stack>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "#555",
+              fontWeight: 500,
+              mt: 0.3,
+              fontSize: "1rem",
+              textTransform: "capitalize",
+            }}
+          >
+            {person.title}
+          </Typography>
+          <Stack direction="row" alignItems="center" spacing={0.6} sx={{ mt: 0.5 }}>
+            <CalendarIcon sx={{ fontSize: 17, color: "#888" }} />
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              Depuis {new Date(person.startDate).toLocaleDateString()}
+            </Typography>
+          </Stack>
+        </Stack>
+      </CardContent>
+
+      <CardActions sx={{ flexDirection: "column", minWidth: 80, py: 0 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            color: "#1976d2",
+            fontWeight: 800,
+            fontSize: "1.8rem",
+            lineHeight: 1.1,
+            textAlign: "center",
+            mb: -0.5,
+          }}
+        >
+          {person.duration}
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "#333",
+            fontWeight: 600,
+            letterSpacing: 0.2,
+            textAlign: "center",
+          }}
+        >
+          Jours restants
+        </Typography>
+      </CardActions>
+    </Card>
               {index < paginatedLeaves.length - 1 && <Divider />}
             </React.Fragment>
           ))}
@@ -468,9 +506,9 @@ const Conge = () => {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         typesConge={leaveTypes}
-        onCreate={handleCreateType}
+        onCreate={(payload) => dispatch(createLeaveType(payload))}
         onDeleteType={handleDeleteType}
-        onEditType={handleEditType}
+        onEditType={(id, payload) => dispatch(updateLeaveType({ id, updateData: payload }))}
       />
 
       {/* Modal détail demande */}

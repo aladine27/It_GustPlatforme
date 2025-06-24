@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Divider,
@@ -25,7 +25,7 @@ const CongeIndex = () => {
     (userRole.toLowerCase() === "admin" || userRole.toLowerCase() === "rh");
 
   // Si user n’est pas RH/Admin, forcer la vue employé
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isRhOrAdmin && view !== "employe") {
       setView("employe");
     }
@@ -33,7 +33,10 @@ const CongeIndex = () => {
 
   return (
     <StyledPaper>
+
       {/* NAVBAR */}
+      {isRhOrAdmin && (
+        <>
       <Stack direction="row" alignItems="center" mb={2}>
         <Button
           sx={{
@@ -46,11 +49,11 @@ const CongeIndex = () => {
           startIcon={<AddCircleOutlineIcon />}
           onClick={() => setView("employe")}
         >
-          Mes demandes de congé
+         Demande de Congé employé
         </Button>
 
-        {isRhOrAdmin && (
-          <>
+        
+         
             <Button
               sx={{
                 mr: 2,
@@ -77,9 +80,10 @@ const CongeIndex = () => {
             >
               History
             </Button>
-          </>
-        )}
+         
       </Stack>
+      </>
+    )}
       <Divider sx={{ mb: 2, mx: 2 }} />
 
       {/* Affichage du contenu */}

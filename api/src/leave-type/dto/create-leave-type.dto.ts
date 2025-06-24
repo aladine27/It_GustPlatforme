@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateLeaveTypeDto {
         @ApiProperty({
@@ -9,12 +9,14 @@ export class CreateLeaveTypeDto {
        @IsString()
        @IsNotEmpty()
        name: string;
-       @ApiProperty({
-        type: String,
-        description: 'The name of the leave type'
-    })
-       @IsString()
-       @IsNotEmpty()
-       limitDuration: string;
+      
+  @ApiProperty({
+    type: String,
+    description: "Limit duration (optional)",
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  limitDuration?: string;
        
 }

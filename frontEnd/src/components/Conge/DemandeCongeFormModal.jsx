@@ -17,6 +17,7 @@ import { ButtonComponent } from "../Global/ButtonComponent";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+
 // Validation schema
 const validationSchema = Yup.object({
   leaveType: Yup.string().required("Le type de congé est requis"),
@@ -27,7 +28,6 @@ const validationSchema = Yup.object({
     .typeError("Date invalide")
     .required("La date de fin est requise")
     .min(Yup.ref("startDate"), "Date de fin après la date de début"),
-  // On ne valide plus duration ici
   reason: Yup.string().required("Le motif est requis"),
   reasonfile: Yup.mixed()
     .test(
@@ -60,6 +60,12 @@ export default function DemandeCongeFormModal({
   const [errors, setErrors] = useState({});
   const [fileName, setFileName] = useState(null);
 
+  // -- GET le type sélectionné & sa limite --
+  const selectedType = leaveTypes.find((t) => t._id === form.leaveType);
+  const limitDuration = selectedType?.limitDuration
+    ? parseInt(selectedType.limitDuration)
+    : null;
+
   // Récupérer les types au chargement modal
   useEffect(() => {
     if (open) {
@@ -67,25 +73,28 @@ export default function DemandeCongeFormModal({
     }
   }, [open, dispatch]);
 
-  // Calcule durée dès que dates changent
+  // Si on change de type ou de date de début ET qu'il y a une limite, calcule la date de fin auto
   useEffect(() => {
-    if (form.startDate && form.endDate) {
-      const start = new Date(form.startDate);
-      const end = new Date(form.endDate);
-      // Calcul : différence en millisecondes / ms par jour + 1 (jour inclus)
-      const diff =
-        (end - start) / (1000 * 60 * 60 * 24);
+    if (form.startDate && limitDuration) {
+      const start = dayjs(form.startDate);
+      const end = start.add(limitDuration - 1, "day"); // Limite en jours, jour inclus
       setForm((prev) => ({
         ...prev,
-        duration: diff >= 0 ? diff + 1 : "",
+        endDate: end.format("YYYY-MM-DD"),
+        duration: limitDuration,
       }));
-    } else {
+    } else if (!limitDuration) {
+      // Si pas de limite, ne rien toucher
       setForm((prev) => ({
         ...prev,
-        duration: "",
+        // endDate reste libre
+        duration:
+          prev.startDate && prev.endDate
+            ? dayjs(prev.endDate).diff(dayjs(prev.startDate), "day") + 1
+            : "",
       }));
     }
-  }, [form.startDate, form.endDate]);
+  }, [form.startDate, form.leaveType, leaveTypes, limitDuration, form.endDate]);
 
   // Reset form
   const resetForm = () => {
@@ -116,6 +125,14 @@ export default function DemandeCongeFormModal({
     if (field === "reasonfile" && e.target.files[0]) {
       setFileName(e.target.files[0].name);
     }
+    // Si l'utilisateur change de type ou de date, reset la date de fin si type sans limite
+    if ((field === "leaveType" || field === "startDate") && !limitDuration) {
+      setForm((prev) => ({
+        ...prev,
+        endDate: "",
+        duration: "",
+      }));
+    }
   };
 
   // Soumission
@@ -124,7 +141,6 @@ export default function DemandeCongeFormModal({
     try {
       await validationSchema.validate(form, { abortEarly: false });
 
-      // Vérifier que la durée calculée est valide
       if (!form.duration || Number(form.duration) < 1) {
         setErrors((prev) => ({
           ...prev,
@@ -202,51 +218,55 @@ export default function DemandeCongeFormModal({
           {(leaveTypes || []).map((t) => (
             <MenuItem key={t._id} value={t._id}>
               {t.name}
+              {t.limitDuration ? ` (limite: ${t.limitDuration}j)` : ""}
             </MenuItem>
           ))}
         </TextField>
 
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-  <Grid container spacing={2}>
-    <Grid item xs={6}>
-      <DatePicker
-        label="Date de début *"
-        value={form.startDate ? dayjs(form.startDate) : null}
-        onChange={(value) => {
-          const date = value ? value.format("YYYY-MM-DD") : "";
-          handleChange("startDate")({ target: { value: date } });
-        }}
-        slotProps={{
-          textField: {
-            error: !!errors.startDate,
-            helperText: errors.startDate,
-            fullWidth: true,
-            InputLabelProps: { shrink: true },
-          },
-        }}
-      />
-    </Grid>
-    <Grid item xs={6}>
-      <DatePicker
-        label="Date de fin *"
-        value={form.endDate ? dayjs(form.endDate) : null}
-        onChange={(value) => {
-          const date = value ? value.format("YYYY-MM-DD") : "";
-          handleChange("endDate")({ target: { value: date } });
-        }}
-        slotProps={{
-          textField: {
-            error: !!errors.endDate,
-            helperText: errors.endDate,
-            fullWidth: true,
-            InputLabelProps: { shrink: true },
-          },
-        }}
-      />
-    </Grid>
-  </Grid>
-</LocalizationProvider>
-
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <DatePicker
+                label="Date de début *"
+                value={form.startDate ? dayjs(form.startDate) : null}
+                onChange={(value) => {
+                  const date = value ? value.format("YYYY-MM-DD") : "";
+                  handleChange("startDate")({ target: { value: date } });
+                }}
+                slotProps={{
+                  textField: {
+                    error: !!errors.startDate,
+                    helperText: errors.startDate,
+                    fullWidth: true,
+                    InputLabelProps: { shrink: true },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <DatePicker
+                label="Date de fin *"
+                value={form.endDate ? dayjs(form.endDate) : null}
+                onChange={(value) => {
+                  if (!limitDuration) {
+                    const date = value ? value.format("YYYY-MM-DD") : "";
+                    handleChange("endDate")({ target: { value: date } });
+                  }
+                }}
+                slotProps={{
+                  textField: {
+                    error: !!errors.endDate,
+                    helperText: errors.endDate,
+                    fullWidth: true,
+                    InputLabelProps: { shrink: true },
+                    disabled: !!limitDuration, // désactive si limité
+                    readOnly: !!limitDuration,
+                  },
+                }}
+              />
+            </Grid>
+          </Grid>
+        </LocalizationProvider>
 
         <TextField
           label="Durée (en jours)"

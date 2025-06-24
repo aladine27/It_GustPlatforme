@@ -5,7 +5,7 @@ import { SchemaTypes, Types } from "mongoose";
 export class LeaveType {
      @Prop({required: true})
      name: string;
-     @Prop({required: true})
+     @Prop({})
      limitDuration: string;
      @Prop([{type:SchemaTypes.ObjectId, ref: 'leaves'}])
      leaves: Types.ObjectId[];

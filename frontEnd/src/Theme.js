@@ -140,7 +140,7 @@ let theme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: {
-          borderRadius: 18
+          borderRadius: 9
         }
       }
     },

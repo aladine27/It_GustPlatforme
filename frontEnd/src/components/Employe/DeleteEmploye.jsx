@@ -11,9 +11,7 @@ const DeleteEmploye = ({
   cancelText = "Annuler",
   confirmText = "Supprimer"
 }) => {
-  // DEBUG : on log à chaque rendu
-  console.log('DeleteEmploye rendered');
-  console.log('employeName:', employeName);
+
 
   return (
     <ModelComponent
