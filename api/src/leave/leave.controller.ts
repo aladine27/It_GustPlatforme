@@ -219,4 +219,23 @@ export class LeaveController {
       
     }
   }
+  @UseGuards(RolesGuard)
+  @Roles('Admin', 'Rh', 'Employee', 'Manager')
+  @Get('/leave-balance/:userId')
+  async getLeaveBalance(@Param('userId') userId: string, @Res() res) {
+    try {
+      const balance = await this.leaveService.getLeaveBalanceForUser(userId);
+      return res.status(HttpStatus.OK).json({
+        message: 'Leave balance retrieved successfully',
+        status: HttpStatus.OK,
+        data: balance,
+      });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        data: null,
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
+    }
+  }
 }

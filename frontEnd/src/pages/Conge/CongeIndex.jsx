@@ -12,7 +12,7 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import Conge from "./Conge";
 import CongeHistory from "./CongeHistory";
 import CongeEmploye from "./CongeEmploye";
-import { StyledPaper } from "../style/style";
+import { StyledPaper } from "../../style/style";
 import { useSelector } from "react-redux";
 
 const CongeIndex = () => {

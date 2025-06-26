@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Card, Typography, Box, Stack, Link } from "@mui/material";
+import { StyledCard } from "../../style/style";
 
 const CongeWidget = () => {
   const [holidays, setHolidays] = useState([]);
@@ -30,7 +31,7 @@ const CongeWidget = () => {
   }, []);
 
   return (
-    <Card sx={{ p: 2, borderRadius: 3, bgcolor: "#f5f7fa" }}>
+    <StyledCard sx={{ p: 2, borderRadius: 3, bgcolor:  "#e3f2fd"}}>
       <Typography variant="h6" fontWeight={700} mb={2}>
         Jours fériés à venir
       </Typography>
@@ -68,7 +69,7 @@ const CongeWidget = () => {
           Voir tous
         </Link>
       </Box>
-    </Card>
+    </StyledCard>
   );
 };
 

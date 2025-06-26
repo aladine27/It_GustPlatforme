@@ -206,3 +206,20 @@ export const deleteLeaveType = createAsyncThunk(
     }
   }
 );
+
+export const fetchLeaveBalance = createAsyncThunk(
+  "leave/fetchLeaveBalance", // nom de l'action
+  async (userId, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `http://localhost:3000/leave/leave-balance/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // res.data.data doit être { soldeInitial, soldeRestant }
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);

@@ -1,9 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import {
-  CloseOutlined,
-  Edit as EditIcon,
-  PhotoCamera,
-} from '@mui/icons-material';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
@@ -11,9 +6,10 @@ import {
   TextField,
   Avatar,
   Button,
-} from '@mui/material';
-import ModelComponent from '../Global/ModelComponent'; // ajustez selon votre projet
-import { ButtonComponent } from '../Global/ButtonComponent';
+} from "@mui/material";
+import { PhotoCamera, Edit as EditIcon } from "@mui/icons-material";
+import ModelComponent from "../Global/ModelComponent";
+import { ButtonComponent } from "../Global/ButtonComponent";
 
 export default function EditProfileModal({
   open,
@@ -22,14 +18,14 @@ export default function EditProfileModal({
   setUserData,
   onSave,
 }) {
-  const [previewUrl, setPreviewUrl] = useState('');
+  const [previewUrl, setPreviewUrl] = useState("");
 
   useEffect(() => {
     if (open) {
       if (userData.image instanceof File) {
         setPreviewUrl(URL.createObjectURL(userData.image));
       } else {
-        setPreviewUrl(userData.image || '');
+        setPreviewUrl(userData.image || "");
       }
     }
     return () => {
@@ -62,119 +58,99 @@ export default function EditProfileModal({
       title="Modifier Profil"
       icon={<EditIcon />}
     >
-      <Box sx={{ mt: 1, p: 1 }}>
-        <Grid container spacing={2}>
-          {/* Avatar + bouton photo */}
-          <Grid item xs={12} sx={{ textAlign: 'center', mb: 1 }}>
-            <Avatar
-              src={previewUrl}
-              alt={userData.fullName || 'Avatar'}
-              sx={{
-                width: 80,
-                height: 80,
-                mx: 'auto',
-                mb: 1,
-                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-              }}
-            />
-            <Button
-              variant="contained"
-              component="label"
-              startIcon={<PhotoCamera />}
-              size="small"
-              sx={{
-                textTransform: 'none',
-                fontSize: 13,
-                borderRadius: 2,
-                bgcolor: '#6b48ff',
-                color: '#fff',
-                '&:hover': {
-                  bgcolor: '#5a3dd3',
-                },
-              }}
-            >
-              Changer la photo
-              <input type="file" hidden accept="image/*" onChange={handleFileChange} />
-            </Button>
-          </Grid>
-
-          {/* Champs texte en deux colonnes */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Nom Complet"
-              name="fullName"
-              value={userData.fullName || ''}
-              onChange={handleChange}
-              variant="outlined"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Email"
-              name="email"
-              value={userData.email || ''}
-              onChange={handleChange}
-              variant="outlined"
-              type="email"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Téléphone"
-              name="phone"
-              value={userData.phone || ''}
-              onChange={handleChange}
-              variant="outlined"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Adresse"
-              name="address"
-              value={userData.address || ''}
-              onChange={handleChange}
-              variant="outlined"
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Domaine"
-              name="domain"
-              value={userData.domain || ''}
-              onChange={handleChange}
-              variant="outlined"
-            />
-          </Grid>
-
-          {/* Boutons */}
-          <Grid
-            item
-            xs={12}
+      <Box sx={{ mt: 2, p: 1 }}>
+        {/* Partie Avatar et nom */}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 3 }}>
+          <Avatar
+            src={previewUrl}
+            alt={userData.fullName || "Avatar"}
             sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: 2,
-              mt: 1,
+              width: 80,
+              height: 80,
+              boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+            }}
+          />
+          <TextField
+            label="Nom Complet"
+            name="fullName"
+            value={userData.fullName || ""}
+            onChange={handleChange}
+            variant="outlined"
+            size="small"
+            sx={{ flex: 1 }}
+          />
+          <Button
+            variant="contained"
+            component="label"
+            startIcon={<PhotoCamera />}
+            size="small"
+            sx={{
+              textTransform: "none",
+              fontSize: 13,
+              borderRadius: 2,
+              bgcolor: "#6b48ff",
+              color: "#fff",
+              "&:hover": {
+                bgcolor: "#5a3dd3",
+              },
+              ml: 2,
+              px: 2,
+              py: 1,
             }}
           >
-           
-            <ButtonComponent
-              text="Enregistrer"
-              icon={<EditIcon />}
-              onClick={onSave}
-            />
-          </Grid>
-        </Grid>
+            Changer la photo
+            <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+          </Button>
+        </Box>
+        {/* Champs un par un */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Email"
+            name="email"
+            value={userData.email || ""}
+            onChange={handleChange}
+            variant="outlined"
+            type="email"
+          />
+          <TextField
+            fullWidth
+            size="small"
+            label="Téléphone"
+            name="phone"
+            value={userData.phone || ""}
+            onChange={handleChange}
+            variant="outlined"
+          />
+          <TextField
+            fullWidth
+            size="small"
+            label="Adresse"
+            name="address"
+            value={userData.address || ""}
+            onChange={handleChange}
+            variant="outlined"
+          />
+          <TextField
+            fullWidth
+            size="small"
+            label="Domaine"
+            name="domain"
+            value={userData.domain || ""}
+            onChange={handleChange}
+            variant="outlined"
+          />
+        </Box>
+
+        {/* Bouton aligné à droite */}
+        <Box display="flex" justifyContent="flex-end" mt={4}>
+          <ButtonComponent
+            text="Enregistrer"
+            icon={<EditIcon />}
+            onClick={onSave}
+          />
+        </Box>
       </Box>
     </ModelComponent>
   );

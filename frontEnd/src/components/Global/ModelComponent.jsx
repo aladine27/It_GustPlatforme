@@ -10,12 +10,13 @@ const style = {
   width: '95vw',
   maxWidth: 900,
   bgcolor: '#fff',
-  borderRadius: 5,
+  borderRadius: 1,
   boxShadow: 24,
   p: 4,
   maxHeight: '90vh',
   overflowY: 'auto'
 };
+
 
 
 const ModelComponent = ({ open, handleClose, title, children, icon }) => {

@@ -202,7 +202,7 @@ export default function Profile() {
     <ProfileContainer>
       <ToastContainer position="bottom-right" autoClose={3000} />
       <Container>
-        <ProfilePaper elevation={3}>
+        <ProfilePaper elevation={5}>
           <Grid container spacing={4}>
             <Grid item xs={12} md={4} sx={{ textAlign: 'center' }}>
               <UserAvatar src={avatarSrc} alt={userData.fullName} sx={{ mb: 2 }} />

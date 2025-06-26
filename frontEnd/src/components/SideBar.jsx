@@ -42,28 +42,25 @@ const SidebarPro = ({ collapsed, setCollapsed }) => {
   const SIDEBAR_WIDTH = collapsed ? 72 : 270;
 
   return (
-    <Sidebar width={`${SIDEBAR_WIDTH}px`} showProfile={false} style={{ padding: 0 }}>
+    <Sidebar width={`${SIDEBAR_WIDTH}px`} showProfile={false} style={{ padding: 0 ,display:"flex",flexDirection:"row"}}>
       {/* Header / Toggle button */}
       <Box sx={{
         display: "flex",
         alignItems: "center",
-        justifyContent: collapsed ? "center" : "space-between",
+        justifyContent: "flex-end",
         px: 2,
         py: 2,
         minHeight: 64
+        
       }}>
-        {!collapsed && (
-          <Typography variant="h6" fontWeight="bold" color="primary">
-            Dashboard
-          </Typography>
-        )}
+       
         <IconButton
           size="small"
           onClick={() => setCollapsed((c) => !c)}
           sx={{
             color: "primary.main",
             bgcolor: "#e3f2fd",
-            ml: collapsed ? 0 : 1,
+           
             transition: "all 0.2s",
             "&:hover": { bgcolor: "#bbdefb" }
           }}
@@ -71,7 +68,7 @@ const SidebarPro = ({ collapsed, setCollapsed }) => {
           {collapsed ? <MenuIcon /> : <ChevronLeftIcon />}
         </IconButton>
       </Box>
-      <Divider sx={{ mb: 1 }} />
+      
       <Menu subHeading={t("")}>
         {filteredMenuItems.map((item) => {
           const isActive = location.pathname.startsWith(item.path);

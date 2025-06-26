@@ -8,7 +8,7 @@ import Evenement from './pages/Evenement';
 import Projet from './pages/Projet';
 import Tache from './pages/Tache';
 import Document from './pages/Document';
-import Conge from './pages/Conge';
+
 import Recrutement from './pages/Recrutement';
 import Frais from './pages/Frais';
 import Profile from './pages/Profile';
@@ -20,10 +20,12 @@ import GoogleRedirect from './pages/GoogleRedirect';
 import PrivateRoute from './components/PrivateRoute';
 import { useSelector } from 'react-redux';
 import AdminDashboard from './pages/AdminDashboard';
-import CongeIndex from './pages/CongeIndex';
-import CongeHistory from './pages/CongeHistory';
-import CongeEmploye from './pages/CongeEmploye';
+
 import "react-toastify/dist/ReactToastify.css";
+import Conge from './pages/Conge/Conge';
+import CongeIndex from './pages/Conge/CongeIndex';
+import CongeEmploye from './pages/Conge/CongeEmploye';
+import CongeHistory from './pages/Conge/CongeHistory';
 function App() {
   const { CurrentUser } = useSelector((state) => state.user);
   const role = CurrentUser?.role || CurrentUser?.user?.role;

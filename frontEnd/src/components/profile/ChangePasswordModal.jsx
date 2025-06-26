@@ -30,7 +30,15 @@ export default function ChangePasswordModal({ open, handleClose, onSavePassword 
         <TextField label="Nouveau mot de passe" type={showNew?'text':'password'} placeholder="••••••••"
           {...register('newPassword')} error={!!errors.newPassword} helperText={errors.newPassword?.message} fullWidth
           InputProps={{ endAdornment:(<InputAdornment position="end"><IconButton onClick={()=>setShowNew(v=>!v)} edge="end">{showNew?<VisibilityOff/>:<Visibility/>}</IconButton></InputAdornment>) }} />
-        <ButtonComponent text="Confirmer" type="submit" disabled={isSubmitting} />
+       <Box display="flex" justifyContent="flex-end" mt={2}>
+          <ButtonComponent
+            text="Confirmer"
+            type="submit"
+            disabled={isSubmitting}
+            sx={{ minWidth: 170, borderRadius: 10 }} // ajuste le minWidth selon besoin
+          />
+      </Box>  
+
       </Box>
     </ModelComponent>
   );

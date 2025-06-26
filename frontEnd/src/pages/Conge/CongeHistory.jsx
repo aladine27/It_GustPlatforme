@@ -1,32 +1,18 @@
 import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Grid,
-  TextField,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
-  InputAdornment,
-  Button,
-  Chip,
-  Avatar,
-  Divider,
+  Box, Typography, Card, CardContent, Grid, TextField, MenuItem,
+  FormControl, InputLabel, Select, InputAdornment, Button, Chip, Avatar, Divider,
 } from "@mui/material";
 import {
-  CheckCircle,
-  Cancel,
-  FilterList as FilterIcon,
-  Search as SearchIcon,
-  TrendingUp as TrendingUpIcon,
-  Visibility as VisibilityIcon,
+  CheckCircle, Cancel, FilterList as FilterIcon, Search as SearchIcon,
+  TrendingUp as TrendingUpIcon, Visibility as VisibilityIcon,
 } from "@mui/icons-material";
-import TableComponent from "../components/Global/TableComponent";
+import TableComponent from "../../components/Global/TableComponent";
+import PaginationComponent from "../../components/Global/PaginationComponent";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllLeaves, fetchAllLeaveTypes } from "../redux/actions/LeaveAction";
+import { fetchAllLeaves, fetchAllLeaveTypes } from "../../redux/actions/LeaveAction";
+import ModelComponent from "../../components/Global/ModelComponent";
+import LeaveDetailModal from "../../components/Conge/HistoryAdminDetailModal";
 
 const getStatusChip = (status) => {
   const statusConfig = {
@@ -60,12 +46,22 @@ const CongeHistory = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
 
+  // Modal detail
+  const [openDetail, setOpenDetail] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState(null);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6; // ou 5, à toi de choisir
+
   useEffect(() => {
     dispatch(fetchAllLeaves());
     dispatch(fetchAllLeaveTypes());
   }, [dispatch]);
 
-  // Statistiques
+  // Reset page quand on filtre/recherche
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, statusFilter, typeFilter]);
+
   const filteredRaw = leaves.filter(l => l.status !== "pending");
 
   const stats = {
@@ -77,35 +73,46 @@ const CongeHistory = () => {
   // Table columns
   const columns = [
     {
-      id: "avatar",
+      id: "employee",
       label: "Employé",
-      align: "center",
-      render: (row) => (
-        <Avatar sx={{
-          bgcolor: "#e3f2fd",
-          color: "#1976d2",
-          width: 44,
-          height: 44,
-          fontWeight: 700,
-          fontSize: 19
-        }}>
-          {row.user?.fullName
-            ? row.user.fullName.split(" ").map((n) => n[0]).join("").toUpperCase()
-            : "?"}
-        </Avatar>
-      ),
-    },
-    {
-      id: "name",
-      label: "Nom",
       align: "left",
-      render: (row) => row.user?.fullName || "—",
-    },
-    {
-      id: "type",
-      label: "Type",
-      align: "center",
-      render: (row) => row.leaveType?.name || "—",
+      render: (row) => {
+        const img = row.user?.image || "";
+        const role = row.user?.role || "—";
+        const fullName = row.user?.fullName || "—";
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar
+              sx={{
+                bgcolor: "#e3f2fd",
+                color: "#1976d2",
+                width: 44,
+                height: 44,
+                fontWeight: 700,
+                fontSize: 19,
+                border: '2px solid #1976d2',
+              }}
+              src={
+                img
+                  ? `http://localhost:3000/uploads/users/${encodeURIComponent(img)}?t=${Date.now()}`
+                  : undefined
+              }
+            >
+              {(!img && fullName !== "—")
+                ? fullName.split(" ").map((n) => n[0]).join("").toUpperCase()
+                : ""}
+            </Avatar>
+            <Box>
+              <Typography fontWeight={700} fontSize={15} sx={{ color: "#0d2852" }}>
+                {fullName}
+              </Typography>
+              <Typography color="text.secondary" fontSize={14}>
+                {role}
+              </Typography>
+            </Box>
+          </Box>
+        );
+      }
     },
     {
       id: "periode",
@@ -123,29 +130,6 @@ const CongeHistory = () => {
       ),
     },
     {
-      id: "days",
-      label: "Jours",
-      align: "center",
-      render: (row) => (
-        <Chip
-          label={row.duration}
-          size="medium"
-          sx={{
-            bgcolor: "#e3f2fd",
-            color: "#1976d2",
-            fontWeight: 700,
-            fontSize: 16,
-            borderRadius: "50%",
-            width: 36,
-            height: 36,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        />
-      ),
-    },
-    {
       id: "status",
       label: "Statut",
       align: "center",
@@ -158,7 +142,11 @@ const CongeHistory = () => {
     {
       tooltip: "Voir détails",
       icon: <VisibilityIcon fontSize="small" color="primary" />,
-      onClick: (row) => alert(JSON.stringify(row, null, 2)),
+      onClick: (row) => {
+        setSelectedLeave(row);
+        setOpenDetail(true);
+        console.log("Modal ouvert, selectedLeave :", row);
+      },
     },
   ];
 
@@ -171,9 +159,20 @@ const CongeHistory = () => {
     const matchesType =
       typeFilter === "all" ||
       (leave.leaveType?._id === typeFilter) ||
-      (leave.leaveType === typeFilter); // fallback in cas de leaveType en string
+      (leave.leaveType === typeFilter);
     return matchesSearch && matchesStatus && matchesType;
   });
+
+  // Pagination logique
+  const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
+  const paginatedLeaves = filteredLeaves.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (_event, value) => {
+    setCurrentPage(value);
+  };
 
   // Stat card
   const StatCard = ({ title, value, icon, color, bgColor }) => (
@@ -321,16 +320,27 @@ const CongeHistory = () => {
             </Grid>
           </Grid>
         </CardContent>
-
-        {/* Le divider entre filtres et tableau */}
         <Divider sx={{ mb: 3 }} />
 
         <Box sx={{ px: 3, pb: 3 }}>
           <TableComponent
             columns={columns}
-            rows={filteredLeaves}
+            rows={paginatedLeaves}     
             actions={actions}
           />
+          {/* Pagination */}
+          <PaginationComponent
+            count={totalPages}
+            page={currentPage}
+            onChange={handlePageChange}
+          />
+          {/* Modal */}
+          <ModelComponent
+            open={openDetail}
+            handleClose={() => setOpenDetail(false)}
+          >
+            <LeaveDetailModal leave={selectedLeave} />
+          </ModelComponent>
         </Box>
       </Card>
     </Box>

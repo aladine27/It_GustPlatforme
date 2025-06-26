@@ -8,7 +8,7 @@ const SIDEBAR_WIDTH_EXPANDED = 280;
 const SIDEBAR_WIDTH_COLLAPSED = 72;
 const NAVBAR_HEIGHT = 64;
 
-function Dashboard() {
+function Dashboard({ darkMode, onToggleDarkMode }) {
   const theme = useTheme();
   // Sidebar collapsed state (partagé entre Dashboard et SidebarPro)
   const [collapsed, setCollapsed] = useState(false);
@@ -31,7 +31,7 @@ function Dashboard() {
           boxShadow: '0 2px 8px 0 rgba(25,118,210,0.07)'
         }}
       >
-        <Navbar />
+         <Navbar darkMode={darkMode} onToggleDarkMode={onToggleDarkMode} />
       </Box>
       {/* Layout principal */}
       <Box
@@ -48,8 +48,7 @@ function Dashboard() {
             width: sidebarWidth,
             minWidth: sidebarWidth,
             height: '100%',
-            bgcolor: theme.palette.background.paper,
-            boxShadow: '2px 0 14px 0 rgba(25,118,210,0.08)',
+         
             borderRight: `1.5px solid ${theme.palette.divider}`,
             zIndex: 1,
             transition: "width 0.22s cubic-bezier(.4,0,.2,1)",

@@ -1,20 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Box, Divider, Typography, Button, Stack, Grid, Card
+  Box, Divider, Typography, Button, Stack, Grid, Card,
+  Chip
 } from "@mui/material";
 import { toast } from "react-toastify";
+import {
+  Visibility as VisibilityIcon,
+} from "@mui/icons-material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import HistoryIcon from "@mui/icons-material/History";
-import DemandeCongeFormModal from "../components/Conge/DemandeCongeFormModal";
+import DemandeCongeFormModal from "../../components/Conge/DemandeCongeFormModal";
 import {
   fetchLeavesByUser,
-  createLeave
-} from "../redux/actions/LeaveAction";
-import { clearLeaveMessages } from "../redux/slices/leaveSlice";
-import TableComponent from "../components/Global/TableComponent";
-import PaginationComponent from "../components/Global/PaginationComponent";
-import CongeWidget from "../components/Conge/CongeWidget";
+  createLeave,
+  fetchLeaveBalance
+} from "../../redux/actions/LeaveAction";
+import { clearLeaveMessages } from "../../redux/slices/leaveSlice";
+import TableComponent from "../../components/Global/TableComponent";
+import PaginationComponent from "../../components/Global/PaginationComponent";
+import CongeWidget from "../../components/Conge/CongeWidget";
+
+// === Import recharts ===
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { Cancel, CheckCircle } from "@mui/icons-material";
+import CalendarWidget from "../../components/Conge/CalenderWidget";
 
 export default function CongeEmploye() {
   const dispatch = useDispatch();
@@ -25,18 +35,39 @@ export default function CongeEmploye() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [view, setView] = useState("demande");
   const [currentPage, setCurrentPage] = useState(1);
-
+  const { leaveBalance, loading: leaveLoading } = useSelector((state) => state.leave);
   const { leaves, loading, error, success } = useSelector((state) => state.leave);
   const itemsPerPage = 6;
   const paginatedRows = leaves.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const totalPages = Math.ceil(leaves.length / itemsPerPage);
+  const getStatusChip = (status) => {
+    const statusConfig = {
+      approved: { color: "#4caf50", label: "Approuvé", icon: <CheckCircle sx={{ fontSize: 16 }} /> },
+      rejected: { color: "#f44336", label: "Rejeté", icon: <Cancel sx={{ fontSize: 16 }} /> },
+      pending: { color: "#ff9800", label: "En attente", icon: <Cancel sx={{ fontSize: 16 }} /> }
+    };
+    const config = statusConfig[status] || { color: "#666", label: status };
+    return (
+      <Chip
+        icon={config.icon}
+        label={config.label}
+        sx={{
+          bgcolor: config.color,
+          color: "#fff",
+          fontWeight: 600,
+          "& .MuiChip-icon": { color: "#fff" },
+        }}
+        size="small"
+      />
+    );
+  };
 
   const columns = [
     { id: "title", label: "Type", align: "left" },
     { id: "duration", label: "Durée", align: "center" },
     { id: "startDate", label: "Début", align: "center" },
     { id: "endDate", label: "Fin", align: "center" },
-    { id: "status", label: "Statut", align: "center" },
+    { id: "status", label: "Statut", align: "center", render: (row) => getStatusChip(row.status) },
     { id: "reason", label: "Motif", align: "left" },
     {
       id: "reasonFile",
@@ -49,7 +80,7 @@ export default function CongeEmploye() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Voir
+            <VisibilityIcon/>
           </a>
         ) : (
           "-"
@@ -90,6 +121,14 @@ export default function CongeEmploye() {
   };
 
   const handleOpenModal = () => {
+    if (leaveLoading) {
+      toast.info("Chargement du solde de congé...");
+      return;
+    }
+    if (leaveBalance && leaveBalance.soldeRestant <= 0) {
+      toast.error("Vous n'avez plus de solde de congé disponible pour cette année.");
+      return;
+    }
     dispatch(clearLeaveMessages());
     setIsSubmitting(false);
     setOpenModal(true);
@@ -99,6 +138,24 @@ export default function CongeEmploye() {
     setOpenModal(false);
     setIsSubmitting(false);
   };
+
+  useEffect(() => {
+    if (view === "demande" && userId) {
+      dispatch(fetchLeaveBalance(userId));
+    }
+  }, [view, userId, dispatch]);
+
+  // ==== Début ajout du cercle Recharts ====
+  const COLORS = ["#9c6fe4", "#e5e6f3"]; // Violet, gris clair pour la zone restante
+
+  // Données pour PieChart
+  const chartData = leaveBalance
+    ? [
+        { name: "Solde restant", value: leaveBalance.soldeRestant },
+        { name: "Pris", value: leaveBalance.soldeInitial - leaveBalance.soldeRestant },
+      ]
+    : [];
+  // ==== Fin ajout du cercle Recharts ====
 
   return (
     <>
@@ -129,6 +186,7 @@ export default function CongeEmploye() {
         </Button>
       </Stack>
       <Divider sx={{ mb: 3 }} />
+      
 
       {/* DEMANDE DE CONGÉ */}
       {view === "demande" && (
@@ -136,6 +194,52 @@ export default function CongeEmploye() {
           <Typography variant="h5" fontWeight={700} mb={3}>
             Déposer une nouvelle demande de congé
           </Typography>
+        {/* Cercle de solde restant avec recharts */}
+        {leaveBalance && (
+            <Box sx={{ width: 160, mx: "auto", my: 3 }}>
+              <ResponsiveContainer width="100%" height={140}>
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    innerRadius={48}
+                    outerRadius={65}
+                    paddingAngle={0}
+                    dataKey="value"
+                    startAngle={90}
+                    endAngle={-270}
+                    stroke="none"
+                  >
+                    <Cell key="solde" fill={COLORS[0]} />
+                    <Cell key="pris" fill={COLORS[1]} />
+                  </Pie>
+                  {/* Label central personnalisé */}
+                  <foreignObject x="35" y="50" width="80" height="50">
+                    <Box
+                      sx={{
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}
+                    >
+                      <Typography variant="body2" sx={{ color: "#1976d2", fontWeight: 700, lineHeight: 1 }}>
+                        Disponible
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 900, color: "#1976d2", lineHeight: 1 }}>
+                        {String(leaveBalance.soldeRestant).padStart(2, "0")}
+                        <span style={{ color: "#ccc", fontSize: 16 }}>/ {leaveBalance.soldeInitial}</span>
+                      </Typography>
+                    </Box>
+                  </foreignObject>
+                </PieChart>
+              </ResponsiveContainer>
+              <Typography align="center" sx={{ fontWeight: 600, color: "#484848", mt: 1 }}>
+                Congé Annuel
+              </Typography>
+            </Box>
+          )}
           <Button
             variant="contained"
             color="primary"
@@ -146,11 +250,14 @@ export default function CongeEmploye() {
           >
             Nouvelle demande
           </Button>
+
+        
           <DemandeCongeFormModal
             open={openModal}
             handleClose={handleCloseModal}
             onSubmit={handleDemandeSubmit}
             userId={userId}
+            leaveBalance={leaveBalance}
           />
         </Box>
       )}
@@ -161,12 +268,7 @@ export default function CongeEmploye() {
           <Grid container spacing={3}>
             <Grid item xs={12} md={8}>
               {/* Leave Balance Placeholder */}
-              <Card sx={{ p: 3, mb: 3, minHeight: 140, borderRadius: 3, bgcolor: "#fefefe" }}>
-                <Typography variant="h6" fontWeight={700}>
-                  Statistiques de congés (à venir)
-                </Typography>
-                {/* À remplir avec les stats (circular progress etc.) */}
-              </Card>
+           
 
               {/* TABLEAU */}
               <Typography variant="h5" fontWeight={700} mb={2}>
@@ -191,9 +293,12 @@ export default function CongeEmploye() {
             </Grid>
 
             <Grid item xs={12} md={4}>
-              {/* Widget à droite */}
-              <CongeWidget />
+              <Stack spacing={2}>
+                <CongeWidget />
+                <CalendarWidget leaves={leaves} />
+              </Stack>
             </Grid>
+
           </Grid>
         </Box>
       )}

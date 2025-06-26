@@ -59,4 +59,45 @@ export class LeaveService {
     await this.leaveTypeModel.updateOne({ _id: leave.leaveType }, { $push: { leaves: leave._id } });
     return leave;
   }
+  async getLeaveBalanceForUser(userId: string): Promise<{ soldeInitial: number; soldeRestant: number }> {
+    const soldeInitial = 30; 
+
+    // 1. Récupère les types de congé qui N'ONT PAS de limitDuration
+    const typesSansLimite = await this.leaveTypeModel.find({
+      $or: [
+        { limitDuration: { $exists: false } },
+        { limitDuration: null },
+        { limitDuration: "" },
+      ],
+    });
+
+    // On extrait seulement leurs IDs
+    const typeIds = typesSansLimite.map(type => type._id);
+
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), 0, 1); // 1er janvier
+    const lastDay = new Date(now.getFullYear(), 11, 31); // 31 décembre
+
+    const leaves = await this.leaveModel.find({
+      user: userId,
+      status: "approved",
+      leaveType: { $in: typeIds },
+      startDate: { $gte: firstDay, $lte: lastDay },
+    });
+
+    // 3. Additionne la durée totale prise
+    let totalPris = 0;
+    leaves.forEach(l => {
+      totalPris += parseInt(l.duration, 10) || 0;
+    });
+
+    let soldeRestant = soldeInitial - totalPris;
+    if (soldeRestant < 0) soldeRestant = 0;
+
+    return {
+      soldeInitial,
+      soldeRestant,
+    };
+  }
+
 }

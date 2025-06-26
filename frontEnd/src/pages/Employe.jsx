@@ -184,7 +184,7 @@ const Employe = () => {
                 onClick={() => setOpenExport(true)}
                 text={t('Export')}
                 icon={<CloudDownload />}
-                color="primary"
+                color="#1273BA"
               />
             </Grid>
             <Grid item>
@@ -240,13 +240,19 @@ const Employe = () => {
 
       {openDelete && selectedEmploye && (
         <DeleteEmploye
-          open={true}
+          open={openDelete}
           handleClose={handleCloseDelete}
-          handleConfirm={handleConfirmDelete}
-          employeName={selectedEmploye.fullName || ""}
-          cancelText={t('Annuler')}
-          confirmText={t('Supprimer')}
-        />
+          icon={<DeleteIcon />}
+          title={t('supprimer')}
+          
+      > 
+      <Typography sx={{marginTop:"20px"}}>
+      {t("Êtes-vous sûr de vouloir supprimer" ) }+{selectedEmploye.fullName }
+      <Box sx={{marginTop:"25px",display:"flex",justifyContent:"center"}}>
+      <ButtonComponent  onClick={handleConfirmDelete} text={t('supprimer')} icon={<DeleteIcon />  } color="#E1000F"/>
+</Box>
+      </Typography>
+      </DeleteEmploye>
       )}
 
       <ExportModal

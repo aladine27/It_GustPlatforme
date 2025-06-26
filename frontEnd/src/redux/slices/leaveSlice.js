@@ -10,13 +10,15 @@ import {
   fetchLeaveTypeById,
   createLeaveType,
   updateLeaveType,
-  deleteLeaveType
+  deleteLeaveType,
+  fetchLeaveBalance
 } from "../actions/LeaveAction";
 
 // --- LEAVES ---
 const leaveInitialState = {
   leaves: [],
   selectedLeave: null,
+  leaveBalance: null,
   loading: false,
   error: null,
   success: null,
@@ -130,6 +132,18 @@ export const leaveSlice = createSlice({
       .addCase(deleteLeave.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Erreur lors de la suppression du congé.";
+      })
+      .addCase(fetchLeaveBalance.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchLeaveBalance.fulfilled, (state, action) => {
+        state.loading = false;
+        state.leaveBalance = action.payload;
+      })
+      .addCase(fetchLeaveBalance.rejected, (state, action) => {
+        state.loading = false;
+        state.leaveBalance = null;
+        state.error = action.payload || "Erreur lors du chargement du solde de congé.";
       });
   }
 });

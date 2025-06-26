@@ -45,6 +45,7 @@ export default function DemandeCongeFormModal({
   handleClose,
   onSubmit,
   userId,
+  leaveBalance,
 }) {
   const dispatch = useDispatch();
   const { leaveTypes, loading } = useSelector((state) => state.leaveType);
@@ -151,6 +152,19 @@ export default function DemandeCongeFormModal({
       }
 
       const typeObj = leaveTypes.find((lt) => lt._id === form.leaveType);
+      if (!typeObj?.limitDuration && leaveBalance) {
+        if (Number(form.duration) > Number(leaveBalance.soldeRestant)) {
+          setErrors((prev) => ({
+            ...prev,
+            duration: `Votre solde restant est insuffisant (${leaveBalance.soldeRestant} jours) pour cette demande.`,
+          }));
+          toast.error(
+            `Votre solde restant (${leaveBalance.soldeRestant} jours) est insuffisant pour une demande de ${form.duration} jours !`
+          );
+          return;
+        }
+      }
+      
       const formData = new FormData();
       formData.append("title", typeObj?.name || "");
       formData.append("leaveType", form.leaveType);
@@ -186,6 +200,7 @@ export default function DemandeCongeFormModal({
     resetForm();
     handleClose();
   };
+  
 
   // Render
   return (
