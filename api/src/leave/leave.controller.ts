@@ -55,7 +55,7 @@ export class LeaveController {
         })
       )
       @UseGuards(RolesGuard)
-      @Roles('Admin', 'Rh', 'Employee', 'Manager')
+      @Roles('Admin', 'Rh', 'Employe', 'Manager')
       async create(
         @Body() createLeaveDto: CreateLeaveDto,
         @Res() res,
@@ -78,7 +78,7 @@ export class LeaveController {
         }
       }
    @UseGuards( RolesGuard)
-   @Roles('Admin','Rh','Employee','Manager')
+   @Roles('Admin','Rh','Employe','Manager')
    @Get('/findLeaveByUserId/:user')
    async findLeaveByUserId(@Param('user') user: string, @Res() res) {
   try {
@@ -101,7 +101,7 @@ export class LeaveController {
   } 
   }
   @UseGuards( RolesGuard)
-  @Roles('Admin','Rh','Employee','Manager')
+  @Roles('Admin','Rh','Employe','Manager')
   @Get()
   async findAll(@Res() res) {
     try {
@@ -125,7 +125,7 @@ export class LeaveController {
 
   @Get(':id')
   @UseGuards( RolesGuard)
-  @Roles('Admin','Rh','Employee','Manager')
+  @Roles('Admin','Rh','Employe','Manager')
   async findOne(@Param('id') id: string, @Res() res) {
    try {
       const leave = await this.leaveService.findOne(id);
@@ -175,7 +175,7 @@ export class LeaveController {
 
   @Patch(':id')
   @UseGuards( RolesGuard)
-  @Roles('Admin','Rh','Employee','Manager')
+  @Roles('Admin','Rh','Employe','Manager')
   async update(@Param('id') id: string, @Body() updateLeaveDto: UpdateLeaveDto , @Res() res,@UploadedFile()reasonFile: Express.Multer.File) {
     try {
       updateLeaveDto.reasonFile = reasonFile?.filename
@@ -199,7 +199,7 @@ export class LeaveController {
 
   @Delete(':id')
   @UseGuards( RolesGuard)
-  @Roles('Admin','Rh','Employee','Manager')
+  @Roles('Admin','Rh','Employe','Manager')
   async remove(@Param('id') id: string,@Res() res) {
     try {
       const leave = await this.leaveService.remove(id);
@@ -220,7 +220,7 @@ export class LeaveController {
     }
   }
   @UseGuards(RolesGuard)
-  @Roles('Admin', 'Rh', 'Employee', 'Manager')
+  @Roles('Admin', 'Rh', 'Employe', 'Manager')
   @Get('/leave-balance/:userId')
   async getLeaveBalance(@Param('userId') userId: string, @Res() res) {
     try {

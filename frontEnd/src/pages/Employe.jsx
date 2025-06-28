@@ -17,11 +17,12 @@ import TableComponent from '../components/Global/TableComponent';
 import PaginationComponent from '../components/Global/PaginationComponent';
 import { ButtonComponent } from '../components/Global/ButtonComponent';
 import AddEmployeModal from '../components/Employe/AddEmploye';
-import DeleteEmploye from '../components/Employe/DeleteEmploye';
+
 import ExportModal from '../components/ExportModal';
 import { toast } from 'react-toastify';
 import { StyledPaper } from '../style/style';
 import axios from 'axios';
+import CustomDeleteForm from '../components/Global/CustomDeleteForm';
 
 const Employe = () => {
   const { t } = useTranslation();
@@ -239,7 +240,7 @@ const Employe = () => {
       />
 
       {openDelete && selectedEmploye && (
-        <DeleteEmploye
+        <CustomDeleteForm
           open={openDelete}
           handleClose={handleCloseDelete}
           icon={<DeleteIcon />}
@@ -252,7 +253,7 @@ const Employe = () => {
       <ButtonComponent  onClick={handleConfirmDelete} text={t('supprimer')} icon={<DeleteIcon />  } color="#E1000F"/>
 </Box>
       </Typography>
-      </DeleteEmploye>
+      </CustomDeleteForm>
       )}
 
       <ExportModal

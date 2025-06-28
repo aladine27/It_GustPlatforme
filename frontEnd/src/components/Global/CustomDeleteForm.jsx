@@ -1,9 +1,9 @@
 import { CloseOutlined, DeleteOutline } from "@mui/icons-material";
-import ModelComponent from "../Global/ModelComponent";
+import ModelComponent from "./ModelComponent";
 import { Box, Grid, IconButton, Modal, Typography } from "@mui/material";
-import { ButtonComponent } from '../../components/Global/ButtonComponent';
+import { ButtonComponent } from './ButtonComponent';
 
-const DeleteEmploye = ({
+const CustomDeleteForm = ({
   open,
   handleClose,
   title,
@@ -35,4 +35,4 @@ icon
   );
 };
 
-export default DeleteEmploye;
+export default CustomDeleteForm;

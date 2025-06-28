@@ -4,7 +4,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import {
-  Box, Paper, Typography, Button, Divider
+  Box, Typography, Button, Divider
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { ButtonComponent } from '../components/Global/ButtonComponent';
@@ -26,11 +26,11 @@ import { FetchEmployesAction } from '../redux/actions/employeAction';
 import '../components/Event/calendrier.css';
 import CustomToolbar from '../components/Event/CustomToolbar';
 
-// --- IMPORT MODALS ---
 import EventFormModal from '../components/Event/EventFormModal';
 import TypeFormModal from '../components/Event/TypeFormModal';
-import EventDetailsModal from '../components/Event/EventDetailModal.jsx'; // Ajoute ce composant !
+import EventDetailsModal from '../components/Event/EventDetailModal.jsx';
 import { StyledPaper } from '../style/style.jsx';
+import { toast } from 'react-toastify';
 
 const localizer = momentLocalizer(moment);
 
@@ -41,63 +41,39 @@ export default function Evenement() {
   const userId = CurrentUser?.user?._id || CurrentUser?._id;
   const userRole = CurrentUser?.user?.role || CurrentUser?.role || "";
 
-  // Récupération des données du Redux store
   const { eventTypes } = useSelector(state => state.eventType);
   const { events } = useSelector(state => state.event);
   const { list: employes, loading: employesLoading } = useSelector(state => state.employe);
 
-  // States d'UI
   const [modalOpen, setModalOpen] = useState(false);
   const [typeModalOpen, setTypeModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [newTypeName, setNewTypeName] = useState('');
-  const [currentView, setCurrentView] = useState('month');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, SetView] = useState('week');
+  const [view, setView] = useState('week');
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
-  // Pour changer la langue des dates du calendrier selon la langue de l'app
   useMomentLocale(t);
 
-  // Gère le changement de vue (mois/semaine/jour)
-  const handleViewChange = (newView) => {
-    SetView(newView);
-    setCurrentView(newView);
-  };
-
-  // Charge les données au montage du composant
   useEffect(() => {
     dispatch(fetchAllEvents());
     dispatch(fetchEventTypes());
     dispatch(FetchEmployesAction());
   }, [dispatch]);
 
-  // Ajout d'un type d'événement
-  const handleAddType = async (name) => {
-    try {
-      await dispatch(createEventType({ name }));
-      // Facultatif : ferme le modal seulement si tu veux (sinon, l'utilisateur peut enchaîner d'autres ajouts)
-      setTypeModalOpen(false);
-      setNewTypeName(''); // utile si tu gères la valeur en state global, sinon RHF gère
-      dispatch(fetchEventTypes());
-      // Pas besoin de toast ici, il est déjà dans le modal
-    } catch (e) {
-      // Le toast d'erreur sera déjà affiché dans le modal en cas d'échec
-    }
-  };
-  
-
-  // --- Création d'un event via sélection d'un créneau dans le calendrier ---
   const handleSelectSlot = ({ start, end }) => {
     setSelectedEvent({ startDate: start, endDate: end, invited: [] });
     setModalOpen(true);
   };
 
-  // --- Clic sur un event pour afficher ses détails ---
   const handleSelectEvent = (calEvent) => {
     const ext = calEvent.extendedProps;
-
-    // Reconstruit les invités à partir des IDs si besoin
+    let mappedTypes = [];
+    if (Array.isArray(ext.types)) {
+      mappedTypes = ext.types
+        .map(t => (typeof t === "object" && t !== null && t.name) ? t : eventTypes.find(et => et._id === (t._id || t)))
+        .filter(Boolean);
+    }
     let invitedFullObjects = ext.invited;
     if (Array.isArray(ext.invited) && employes?.length) {
       if (typeof ext.invited[0] === "string" || typeof ext.invited[0] === "number") {
@@ -106,8 +82,6 @@ export default function Evenement() {
           .filter(Boolean);
       }
     }
-
-    // Construit l'objet complet pour la modale
     const fullEvent = {
       _id: calEvent._id,
       id: calEvent._id,
@@ -117,53 +91,61 @@ export default function Evenement() {
       duration: ext.duration,
       location: ext.location,
       status: ext.status,
-      types: Array.isArray(ext.types) ? ext.types : [],
+      types: mappedTypes,
       invited: invitedFullObjects,
     };
-
     setSelectedEvent(fullEvent);
     setDetailsModalOpen(true);
   };
 
-  // Ouvre la modale d'édition depuis la modale de détail
   const handleEditEvent = () => {
     setDetailsModalOpen(false);
     setModalOpen(true);
   };
-  // Vérifie si une autre réservation existe dans la même salle au même créneau
-const hasRoomConflict = (eventData) => {
-  return calendarEvents.some(ev => {
-    // Ignore si ce n'est pas la même salle
-    if (ev.extendedProps.location.trim().toLowerCase() !== eventData.location.trim().toLowerCase()) return false;
-    // Ignore si c'est le même event (en édition)
-    if ((eventData.id || eventData._id) && ev.id === (eventData.id || eventData._id)) return false;
 
-    // Périodes à comparer
-    const start1 = new Date(ev.start);
-    const end1 = new Date(ev.end);
-    const start2 = new Date(eventData.startDate);
-    // Durée de l'event à valider
-    let totalMin = 0;
-    const hMatch = eventData.duration?.match(/(\d+)h/);
-    const mMatch = eventData.duration?.match(/(\d+)min/);
-    if (hMatch) totalMin += parseInt(hMatch[1], 10) * 60;
-    if (mMatch) totalMin += parseInt(mMatch[1], 10);
-    const end2 = new Date(start2.getTime() + totalMin * 60000);
+  // Conflit de salle (bloque SEULEMENT lors de la création)
+  const hasRoomConflict = (eventData) => {
+    console.log("[RoomConflict] Checking for:", eventData);
+    return calendarEvents.some(ev => {
+      if (
+        !ev.extendedProps.location ||
+        !eventData.location ||
+        ev.extendedProps.location.trim().toLowerCase() !== eventData.location.trim().toLowerCase()
+      ) return false;
+      const eventDataId = String(eventData.id || eventData._id || '');
+      const evId = String(ev.id || ev._id || '');
+      if (eventDataId && evId && evId === eventDataId) return false;
 
-    // Teste le chevauchement de créneaux
-    return start1 < end2 && start2 < end1;
-  });
-};
+      const start1 = new Date(ev.start);
+      const end1 = new Date(ev.end);
+      const start2 = new Date(eventData.startDate);
+      let totalMin = 0;
+      const hMatch = eventData.duration?.match(/(\d+)h/);
+      const mMatch = eventData.duration?.match(/(\d+)min/);
+      if (hMatch) totalMin += parseInt(hMatch[1], 10) * 60;
+      if (mMatch) totalMin += parseInt(mMatch[1], 10);
+      const end2 = new Date(start2.getTime() + totalMin * 60000);
 
+      // Log de chaque case
+      console.log("[RoomConflict] VS", {
+        evId, eventDataId,
+        start1: start1.toISOString(), end1: end1.toISOString(),
+        start2: start2.toISOString(), end2: end2.toISOString(),
+        overlap: start1 < end2 && start2 < end1
+      });
+      return start1 < end2 && start2 < end1;
+    });
+  };
 
-
-  // Enregistre (ajoute ou met à jour) un événement
   const handleSaveEvent = async (eventData) => {
-    if (eventData.location && hasRoomConflict(eventData)) {
-      alert("Conflit de salle : cette salle est déjà réservée sur ce créneau. Merci de choisir un autre créneau ou une autre salle.");
+    const isEditMode = !!eventData.id || !!eventData._id;
+    console.log("[SaveEvent] Payload envoyé:", { eventData, isEditMode });
+
+    // Test conflit de salle uniquement à la création
+    if (!isEditMode && eventData.location && hasRoomConflict(eventData)) {
+      toast.error("Conflit de salle : cette salle est déjà réservée...");
       return;
     }
-    
     const eventTypeId = eventData.types?.[0]?._id || eventData.types?._id || eventData.eventType?._id;
     const payload = {
       title: eventData.title,
@@ -176,7 +158,7 @@ const hasRoomConflict = (eventData) => {
       user: userId,
       invited: eventData.invited?.map(emp => emp._id) || []
     };
-    if (eventData.id || eventData._id) {
+    if (isEditMode) {
       dispatch(updateEvent({ id: eventData.id || eventData._id, updateData: payload }));
     } else {
       dispatch(createEvent(payload));
@@ -186,7 +168,6 @@ const hasRoomConflict = (eventData) => {
     setSelectedEvent(null);
   };
 
-  // Supprime un event
   const handleDeleteEvent = async (id) => {
     dispatch(deleteEvent(id));
     dispatch(fetchAllEvents());
@@ -195,7 +176,6 @@ const hasRoomConflict = (eventData) => {
     setSelectedEvent(null);
   };
 
-  // Transforme la durée texte ("1h30min") en millisecondes pour l'affichage
   const parseDurationToMs = (durationStr) => {
     let totalMin = 0;
     const hMatch = durationStr?.match(/(\d+)h/);
@@ -205,7 +185,6 @@ const hasRoomConflict = (eventData) => {
     return totalMin * 60000;
   };
 
-  // Mapping des events pour react-big-calendar (avec extendedProps pour custom rendering)
   const calendarEvents = (events || []).map((e) => ({
     ...e,
     id: e._id,
@@ -222,7 +201,6 @@ const hasRoomConflict = (eventData) => {
     }
   }));
 
-  // Traduction des labels du calendrier
   const calendarMessages = {
     date: t('date'),
     time: t('time'),
@@ -241,202 +219,188 @@ const hasRoomConflict = (eventData) => {
     noEventsInRange: t('noEventsInRange')
   };
 
-  // Pour affichage de la date du jour
   const today = moment().format('dddd DD MMMM YYYY');
   const handleNavigate = (date) => setCurrentDate(date);
-  //fonction pour Edittype et deletetype
+
   const handleEditType = async (typeId, newName) => {
     dispatch(updateEventType({ id: typeId, updateData: { name: newName } }));
     dispatch(fetchEventTypes());
   };
-  
+
   const handleDeleteType = async (typeId) => {
     dispatch(deleteEventType(typeId));
     dispatch(fetchEventTypes());
   };
-  
+  const handleAddType = async (name) => {
+    try {
+      dispatch(createEventType({ name }));
+      setTypeModalOpen(false);
+      setNewTypeName('');
+      dispatch(fetchEventTypes());
+    } catch (e) {}
+  };
 
   return (
-  
-      <StyledPaper elevation={3} sx={{ p: 0, borderRadius: 3, overflow: 'hidden' }}>
-      
-        <Divider sx={{ mb: 3, mx: 4 }} />
-        <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 4, mb: 2 }}>
-          <Typography sx={{
-            fontSize: '1.04rem',
-            color: '#1976d2',
-            fontWeight: 500,
-            letterSpacing: 0.2,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1
-          }}>
-            <span role="img" aria-label="calendar" style={{ fontSize: 22 }}>📅</span>
-            {t('Aujourd\'hui')}: {today}
-          </Typography>
-        </Box>
-        {/* --- Boutons d'ajout visibles seulement pour Admin/RH --- */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, px: 4 }}>
-          {["Admin", "RH"].includes(userRole) && (
-            <>
-              <Button
-                onClick={() => setTypeModalOpen(true)}
-                variant="outlined"
-                color="secondary"
-                startIcon={<AddCircleOutlineIcon />}
-                sx={{ mr: 2 }}
-              >
-                {t('Créer un type d\'événement')}
-              </Button>
-              <ButtonComponent
-                onClick={() => {
-                  setSelectedEvent(null);
-                  setModalOpen(true);
-                }}
-                text={t('Ajouter un évènement')}
-                icon={<AddCircleOutlineIcon />}
-              />
-            </>
-          )}
-        </Box>
-        {/* --- Affichage du calendrier principal --- */}
-        <Box className="CalendarContainer">
-          <Calendar
-            messages={calendarMessages}
-            localizer={localizer}
-            events={calendarEvents}
-            culture={i18n.language}
-            startAccessor="start"
-            endAccessor="end"
-            selectable
-            style={{ height: '85vh', minHeight: 470, background: 'transparent' }}
-            // Affiche le calendrier uniquement de 8h à 18h (jours de travail)
-            min={new Date(1970, 0, 1, 6, 0)}  // 8h00 (Janvier, car mois = 0)
-            max={new Date(1970, 0, 1, 22, 0)} // 18h00
-            onSelectSlot={["Admin", "RH"].includes(userRole) ? handleSelectSlot : undefined}
-            onSelectEvent={handleSelectEvent}
-            views={['month', 'week', 'day', 'agenda']}
-            view={view}
-            onView={handleViewChange}
-            date={currentDate}
-            onNavigate={handleNavigate}
-            defaultView="week"
-
-            // Personnalisation de l'apparence des events (couleurs, ombres, arrondi, etc.)
-            eventPropGetter={(event) => ({
-              style: {
-                backgroundColor:
-                  event.extendedProps.status === 'Terminé' ? '#4caf50'
-                    : event.extendedProps.status === 'Annulé' ? '#f44336'
-                      : event.extendedProps.status === 'En cours' ? '#ff9800'
-                        : '#1976d2',
-                borderRadius: '10px',
-                color: 'white',
-                fontWeight: 600,
-                fontSize: '0.98rem',
-                boxShadow: '0 2px 8px rgba(30,40,120,0.07)',
-                minHeight: '44px',
-                margin: '4px 0',
-                padding: '10px 14px',
-                borderLeft: '5px solid #FFF', // Ligne décorative à gauche
-                transition: 'all 0.12s'
-              }
-            })}
-            // Custom render pour chaque événement (UX : infos claires et bien présentées)
-            components={{
-              event: ({ event }) => {
-                const ext = event.extendedProps;
-                return (
-                  <Box sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    height: '100%',
-                    p: 0,
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      opacity: 0.88,
-                      filter: 'brightness(1.08) contrast(1.03)',
-                      boxShadow: '0 4px 16px rgba(0,0,0,0.13)'
-                    }
+    <StyledPaper elevation={3} sx={{ p: 0, borderRadius: 3, overflow: 'hidden' }}>
+      <Divider sx={{ mb: 3, mx: 4 }} />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 4, mb: 2 }}>
+        <Typography sx={{
+          fontSize: '1.04rem',
+          color: '#1976d2',
+          fontWeight: 500,
+          letterSpacing: 0.2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}>
+          <span role="img" aria-label="calendar" style={{ fontSize: 22 }}>📅</span>
+          {t('Aujourd\'hui')}: {today}
+        </Typography>
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, px: 4 }}>
+        {["Admin", "RH"].includes(userRole) && (
+          <>
+            <Button
+              onClick={() => setTypeModalOpen(true)}
+              variant="outlined"
+              color="secondary"
+              startIcon={<AddCircleOutlineIcon />}
+              sx={{ mr: 2 }}
+            >
+              {t('Créer un type d\'événement')}
+            </Button>
+            <ButtonComponent
+              onClick={() => {
+                setSelectedEvent(null);
+                setModalOpen(true);
+              }}
+              text={t('Ajouter un évènement')}
+              icon={<AddCircleOutlineIcon />}
+            />
+          </>
+        )}
+      </Box>
+      <Box className="CalendarContainer">
+        <Calendar
+          messages={calendarMessages}
+          localizer={localizer}
+          events={calendarEvents}
+          culture={i18n.language}
+          startAccessor="start"
+          endAccessor="end"
+          selectable
+          style={{ height: '85vh', minHeight: 470, background: 'transparent' }}
+          min={new Date(1970, 0, 1, 6, 0)}
+          max={new Date(1970, 0, 1, 22, 0)}
+          onSelectSlot={["Admin", "RH"].includes(userRole) ? handleSelectSlot : undefined}
+          onSelectEvent={handleSelectEvent}
+          views={['month', 'week', 'day', 'agenda']}
+          view={view}
+          onView={setView}
+          date={currentDate}
+          onNavigate={handleNavigate}
+          defaultView="week"
+          eventPropGetter={(event) => ({
+            style: {
+              backgroundColor:
+                event.extendedProps.status === 'Terminé' ? '#4caf50'
+                  : event.extendedProps.status === 'Annulé' ? '#f44336'
+                    : event.extendedProps.status === 'En cours' ? '#ff9800'
+                      : '#1976d2',
+              borderRadius: '10px',
+              color: 'white',
+              fontWeight: 600,
+              fontSize: '0.98rem',
+              boxShadow: '0 2px 8px rgba(30,40,120,0.07)',
+              minHeight: '44px',
+              margin: '4px 0',
+              padding: '10px 14px',
+              borderLeft: '5px solid #FFF',
+              transition: 'all 0.12s'
+            }
+          })}
+          components={{
+            event: ({ event }) => {
+              const ext = event.extendedProps;
+              return (
+                <Box sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  height: '100%',
+                  p: 0,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    opacity: 0.88,
+                    filter: 'brightness(1.08) contrast(1.03)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.13)'
+                  }
+                }}>
+                  <span style={{
+                    fontSize: '0.82em',
+                    color: '#ffc107',
+                    fontWeight: 700,
+                    display: 'block'
                   }}>
-                    {/* Heure de début/fin */}
-                    <span style={{
-                      fontSize: '0.82em',
-                      color: '#ffc107',
-                      fontWeight: 700,
-                      display: 'block'
-                    }}>
-                      {moment(event.start).format('HH:mm')} - {moment(event.end).format('HH:mm')}
-                    </span>
-                    {/* Titre et type */}
-                    <span style={{ fontWeight: 700, fontSize: '1rem' }}>
-                      {event.title}
-                      {ext.types && ext.types[0]?.name && (
-                        <span style={{
-                          fontSize: '0.79em',
-                          color: '#fff',
-                          background: '#607d8b',
-                          borderRadius: 5,
-                          padding: '1px 6px',
-                          marginLeft: 8,
-                          fontWeight: 500
-                        }}>
-                          {ext.types[0]?.name}
-                        </span>
-                      )}
-                    </span>
-                    {/* Emplacement */}
-                    <span style={{ fontSize: '0.85em', opacity: 0.88 }}>
-                      {ext.location && <>📍 {ext.location}</>}
-                    </span>
-                    {/* Durée */}
-                    <span style={{ fontSize: '0.80em', opacity: 0.72 }}>
-                      {ext.duration && <>⏱️ {ext.duration}</>}
-                    </span>
-                    {/* Nombre d'invités */}
-                    {(ext.invited?.length > 0) && (
-                      <span style={{ fontSize: '0.79em', color: '#ffd54f', fontWeight: 600 }}>
-                        👥 {ext.invited.length} invité{ext.invited.length > 1 ? 's' : ''}
-                      </span>
-                    )}
-                    {/* Description */}
-                    {ext.description && (
+                    {moment(event.start).format('HH:mm')} - {moment(event.end).format('HH:mm')}
+                  </span>
+                  <span style={{ fontWeight: 700, fontSize: '1rem' }}>
+                    {event.title}
+                    {ext.types && ext.types[0]?.name && (
                       <span style={{
-                        fontSize: '0.75em',
-                        opacity: 0.78,
-                        whiteSpace: 'nowrap',
-                        textOverflow: 'ellipsis',
-                        overflow: 'hidden',
-                        marginTop: 2
+                        fontSize: '0.79em',
+                        color: '#fff',
+                        background: '#607d8b',
+                        borderRadius: 5,
+                        padding: '1px 6px',
+                        marginLeft: 8,
+                        fontWeight: 500
                       }}>
-                        {ext.description}
+                        {ext.types[0]?.name}
                       </span>
                     )}
-                  </Box>
-                );
-              },
-              toolbar: CustomToolbar,
-            }}
-          />
-    </Box>
-      
-
-      {/* --- MODALES EXTERNES --- */}
+                  </span>
+                  <span style={{ fontSize: '0.85em', opacity: 0.88 }}>
+                    {ext.location && <>📍 {ext.location}</>}
+                  </span>
+                  <span style={{ fontSize: '0.80em', opacity: 0.72 }}>
+                    {ext.duration && <>⏱️ {ext.duration}</>}
+                  </span>
+                  {(ext.invited?.length > 0) && (
+                    <span style={{ fontSize: '0.79em', color: '#ffd54f', fontWeight: 600 }}>
+                      👥 {ext.invited.length} invité{ext.invited.length > 1 ? 's' : ''}
+                    </span>
+                  )}
+                  {ext.description && (
+                    <span style={{
+                      fontSize: '0.75em',
+                      opacity: 0.78,
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                      marginTop: 2
+                    }}>
+                      {ext.description}
+                    </span>
+                  )}
+                </Box>
+              );
+            },
+            toolbar: CustomToolbar,
+          }}
+        />
+      </Box>
       <TypeFormModal
-  open={typeModalOpen}
-  onClose={() => setTypeModalOpen(false)}
-  value={newTypeName}
-  onChange={setNewTypeName}
-  onCreate={handleAddType}
-  eventTypes={eventTypes}
-  onEditType={handleEditType}
-  onDeleteType={handleDeleteType}
-/>
-
-
-      {/* --- MODALE DETAIL --- */}
+        open={typeModalOpen}
+        onClose={() => setTypeModalOpen(false)}
+        value={newTypeName}
+        onChange={setNewTypeName}
+        onCreate={handleAddType}
+        eventTypes={eventTypes}
+        onEditType={handleEditType}
+        onDeleteType={handleDeleteType}
+      />
       <EventDetailsModal
         open={detailsModalOpen}
         handleClose={() => setDetailsModalOpen(false)}
@@ -446,7 +410,6 @@ const hasRoomConflict = (eventData) => {
         onDelete={handleDeleteEvent}
         userRole={userRole}
       />
-
       <EventFormModal
         open={modalOpen}
         onClose={() => {
@@ -460,8 +423,9 @@ const hasRoomConflict = (eventData) => {
         employes={employes}
         loadingEmployes={employesLoading}
         userRole={userRole}
+        isEditMode={!!selectedEvent}  // C'EST CE QUI BLOQUE L'EDITION
+        currentUserId={userId}
       />
-  </StyledPaper>
-    
+    </StyledPaper>
   );
 }

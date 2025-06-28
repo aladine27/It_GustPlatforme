@@ -43,6 +43,8 @@ export default function EditProfileModal({
     }));
   };
 
+  // Désactivé le changement de la photo donc ce handler est inutile,
+  // mais on le laisse si jamais tu veux réactiver plus tard.
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -74,7 +76,7 @@ export default function EditProfileModal({
             label="Nom Complet"
             name="fullName"
             value={userData.fullName || ""}
-            onChange={handleChange}
+            disabled // Blocage édition nom
             variant="outlined"
             size="small"
             sx={{ flex: 1 }}
@@ -88,18 +90,21 @@ export default function EditProfileModal({
               textTransform: "none",
               fontSize: 13,
               borderRadius: 2,
-              bgcolor: "#6b48ff",
+              bgcolor: "#bcbcbc",
               color: "#fff",
               "&:hover": {
-                bgcolor: "#5a3dd3",
+                bgcolor: "#bcbcbc",
               },
               ml: 2,
               px: 2,
               py: 1,
+              pointerEvents: "none", // important
+              opacity: 0.6,
             }}
+            disabled
           >
             Changer la photo
-            <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+            <input type="file" hidden accept="image/*" onChange={handleFileChange} disabled />
           </Button>
         </Box>
         {/* Champs un par un */}
@@ -110,7 +115,7 @@ export default function EditProfileModal({
             label="Email"
             name="email"
             value={userData.email || ""}
-            onChange={handleChange}
+            disabled // Blocage édition email
             variant="outlined"
             type="email"
           />
@@ -138,7 +143,7 @@ export default function EditProfileModal({
             label="Domaine"
             name="domain"
             value={userData.domain || ""}
-            onChange={handleChange}
+            disabled // Blocage édition domaine
             variant="outlined"
           />
         </Box>

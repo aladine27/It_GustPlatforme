@@ -54,17 +54,32 @@ export const createEvent = createAsyncThunk(
   async (eventData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
+
+      // ←—— AJOUTE CE LOG
+      console.log("🚀 [createEvent] payload envoyé au backend :", eventData);
+
       const res = await axios.post(
         "http://localhost:3000/event",
         eventData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      // ←—— ET CE LOG
+      console.log("✅ [createEvent] réponse reçue :", res.status, res.data);
+
       return res.data.data;
     } catch (err) {
+      // ←—— ET LÀ AUSSI
+      console.error("❌ [createEvent] erreur axios :", {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message
+      });
       return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
+
 
 export const updateEvent = createAsyncThunk(
   "event/update",

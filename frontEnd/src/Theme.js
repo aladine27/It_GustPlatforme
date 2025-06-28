@@ -71,7 +71,12 @@ let theme = createTheme({
         variant: 'outlined',
         size: 'medium',
         fullWidth: true
-      }
+      },
+    styleOverrides: {
+    root: {
+      marginBottom: 18, // Espace entre chaque champ
+    },
+  },
     },
     MuiTableCell: {
       styleOverrides: {
@@ -338,7 +343,27 @@ let theme = createTheme({
         }
       }
     },
-    // Breadcrumbs
+    MuiFormControl: {
+  styleOverrides: {
+    root: {
+      width: '100%', // Les Select/FormControl/Autocomplete aussi
+    },
+  },
+},
+},
+MuiAutocomplete: {
+  styleOverrides: {
+    root: {
+      width: '100%',
+    },
+  },
+MuiSelect: {
+  styleOverrides: {
+    root: {
+      width: '100%',
+    },
+  },
+},
     MuiBreadcrumbs: {
       styleOverrides: {
         root: {
@@ -352,6 +377,25 @@ let theme = createTheme({
         }
       }
     },
+ MuiFormHelperText: {
+  styleOverrides: {
+    root: {
+      minHeight: '18px',
+      fontSize: '0.95rem',
+      marginLeft: 2,
+      color: '#d32f2f',
+      width: '100%',
+      overflow: 'hidden',
+      display: 'block',
+      lineHeight: 1.2,
+      paddingBottom: 0,
+      boxSizing: 'border-box',
+    },
+  },
+},
+
+
+
   }
 });
 
