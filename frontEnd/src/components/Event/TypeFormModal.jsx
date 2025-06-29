@@ -29,12 +29,12 @@ import CancelIcon from "@mui/icons-material/Cancel"
 import EventIcon from "@mui/icons-material/Event"
 import WarningIcon from "@mui/icons-material/Warning"
 
-// 🎯 Ajout pour validation + toasts :
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm, Controller } from "react-hook-form";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useTranslation } from 'react-i18next';
 
 export default function TypeFormModal({
   open,
@@ -46,20 +46,20 @@ export default function TypeFormModal({
   onDeleteType,
   onEditType,
 }) {
-  // -- STATES locaux
   const [editId, setEditId] = useState(null)
   const [editValue, setEditValue] = useState("")
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [typeToDelete, setTypeToDelete] = useState(null)
   const [createError, setCreateError] = useState("")
 
-  // ----- VALIDATION (Yup + RHF) -----
+  const { t } = useTranslation();
+
   const schema = Yup.object().shape({
     eventType: Yup.string()
       .trim()
-      .required("Le nom du type est requis")
-      .max(40, "40 caractères max")
-      .test("unique", "Ce nom de type existe déjà", (value) => {
+      .required(t("Le nom du type est requis"))
+      .max(40, t("40 caractères max"))
+      .test("unique", t("Ce nom de type existe déjà"), (value) => {
         if (!value) return true;
         return !eventTypes.some((type) => type.name.trim().toLowerCase() === value.trim().toLowerCase());
       }),
@@ -76,24 +76,21 @@ export default function TypeFormModal({
     resolver: yupResolver(schema),
   });
 
-  // Reset form à l'ouverture ou fermeture du modal
   useEffect(() => {
     reset({ eventType: value || "" });
     setCreateError("");
   }, [open, value, reset]);
 
-  // ---- Création avec toast ----
   const onSubmit = async (data) => {
     try {
-      await onCreate(data.eventType); // <- doit accepter le nom en paramètre côté parent !
-      toast.success("Type créé avec succès !");
+      await onCreate(data.eventType);
+      toast.success(t("Type créé avec succès !"));
       reset({ eventType: "" });
     } catch (e) {
-      toast.error("Erreur lors de la création du type");
+      toast.error(t("Erreur lors de la création du type"));
     }
   };
 
-  // ---- Edition inline avec validation + toast ----
   const startEdit = (type) => {
     setEditId(type._id)
     setEditValue(type.name)
@@ -103,28 +100,28 @@ export default function TypeFormModal({
   const saveEdit = () => {
     const value = editValue.trim();
     if (!value) {
-      setCreateError("Le nom du type est requis");
-      toast.error("Le nom du type est requis");
+      setCreateError(t("Le nom du type est requis"));
+      toast.error(t("Le nom du type est requis"));
       return;
     }
     if (value.length > 40) {
-      setCreateError("40 caractères max");
-      toast.error("40 caractères max");
+      setCreateError(t("40 caractères max"));
+      toast.error(t("40 caractères max"));
       return;
     }
     const nameExists = eventTypes.some(
       (type) => type.name.toLowerCase() === value.toLowerCase() && type._id !== editId
     );
     if (nameExists) {
-      setCreateError("Ce nom de type existe déjà");
-      toast.error("Ce nom de type existe déjà");
+      setCreateError(t("Ce nom de type existe déjà"));
+      toast.error(t("Ce nom de type existe déjà"));
       return;
     }
     onEditType(editId, value);
     setEditId(null);
     setEditValue("");
     setCreateError("");
-    toast.success("Type modifié !");
+    toast.success(t("Type modifié !"));
   };
 
   const cancelEdit = () => {
@@ -133,7 +130,6 @@ export default function TypeFormModal({
     setCreateError("")
   }
 
-  // ---- Suppression avec toast
   const handleDeleteClick = (type) => {
     setTypeToDelete(type)
     setDeleteConfirmOpen(true)
@@ -143,7 +139,7 @@ export default function TypeFormModal({
       onDeleteType(typeToDelete._id)
       setDeleteConfirmOpen(false)
       setTypeToDelete(null)
-      toast.success("Type supprimé !");
+      toast.success(t("Type supprimé !"));
     }
   }
   const cancelDelete = () => {
@@ -156,7 +152,7 @@ export default function TypeFormModal({
       <ModelComponent
         open={open}
         handleClose={onClose}
-        title="Gestion des types d'événements"
+        title={t("Gestion des types d'événements")}
         icon={<EventIcon />}
         maxWidth="md"
       >
@@ -165,7 +161,7 @@ export default function TypeFormModal({
           <Paper elevation={1} sx={{ p: 3, mb: 3, bgcolor: "grey.50" }}>
             <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <AddCircleOutlineIcon color="primary" />
-              Créer un nouveau type
+              {t("Créer un nouveau type")}
             </Typography>
             <form onSubmit={handleSubmit(onSubmit)}>
               <Controller
@@ -174,25 +170,24 @@ export default function TypeFormModal({
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Nom du type d'événement"
+                    label={t("Nom du type d'événement")}
                     fullWidth
                     error={!!errors.eventType}
                     helperText={errors.eventType?.message}
                     sx={{ mb: 2 }}
-                    placeholder="Ex: Conférence, Atelier, Séminaire..."
+                    placeholder={t("Ex: Conférence, Atelier, Séminaire...")}
                     disabled={isSubmitting}
                   />
                 )}
               />
               <Stack direction="row" spacing={2} justifyContent="flex-end">
-               
                 <Button
                   type="submit"
                   variant="contained"
                   startIcon={<AddCircleOutlineIcon />}
                   disabled={isSubmitting}
                 >
-                  Créer le type
+                  {t("Créer le type")}
                 </Button>
               </Stack>
             </form>
@@ -201,19 +196,29 @@ export default function TypeFormModal({
 
           {/* Section Types existants */}
           <Box>
-            <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: "#222",
+              }}
+            >
               <EventIcon color="primary" />
-              Types existants
+              {t("Liste des types d'événements")}
               <Chip label={eventTypes.length} size="small" color="primary" variant="outlined" />
             </Typography>
+
             {eventTypes.length === 0 ? (
               <Paper elevation={0} sx={{ p: 4, textAlign: "center", bgcolor: "grey.50" }}>
                 <EventIcon sx={{ fontSize: 48, color: "grey.400", mb: 2 }} />
                 <Typography variant="body1" color="text.secondary">
-                  Aucun type d'événement créé
+                  {t("Aucun type d'événement créé")}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Créez votre premier type ci-dessus
+                  {t("Créez votre premier type ci-dessus")}
                 </Typography>
               </Paper>
             ) : (
@@ -235,7 +240,6 @@ export default function TypeFormModal({
                         transition: "background-color 0.2s",
                       }}
                     >
-                      {/* Affiche TOUJOURS le nom */}
                       {editId === type._id ? (
                         <Box sx={{ display: "flex", alignItems: "center", width: "100%", gap: 1 }}>
                           <TextField
@@ -251,31 +255,30 @@ export default function TypeFormModal({
                               if (e.key === "Escape") cancelEdit();
                             }}
                           />
-                          <Tooltip title="Sauvegarder">
+                          <Tooltip title={t("Sauvegarder")}>
                             <IconButton color="primary" onClick={saveEdit} disabled={!editValue.trim()}>
                               <SaveIcon />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Annuler">
+                          <Tooltip title={t("Annuler")}>
                             <IconButton color="error" onClick={cancelEdit}>
                               <CancelIcon />
                             </IconButton>
                           </Tooltip>
                         </Box>
                       ) : (
-                        // Ce bloc DOIT TOUJOURS AFFICHER le nom
                         <>
                           <Typography sx={{ flex: 1, color: "#222", fontWeight: 500, fontSize: "1.1rem", textTransform: "capitalize" }}>
                             {type.name}
                           </Typography>
                           <ListItemSecondaryAction>
                             <Stack direction="row" spacing={1}>
-                              <Tooltip title="Modifier">
+                              <Tooltip title={t("Modifier")}>
                                 <IconButton edge="end" color="primary" onClick={() => startEdit(type)} size="small">
                                   <EditIcon />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title="Supprimer">
+                              <Tooltip title={t("Supprimer")}>
                                 <IconButton
                                   edge="end"
                                   color="error"
@@ -301,30 +304,28 @@ export default function TypeFormModal({
       <Dialog open={deleteConfirmOpen} onClose={cancelDelete} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <WarningIcon color="warning" />
-          Confirmer la suppression
+          {t("Confirmer la suppression")}
         </DialogTitle>
         <DialogContent>
           <Alert severity="warning" sx={{ mb: 2 }}>
-            Cette action est irréversible
+            {t("Cette action est irréversible")}
           </Alert>
           <Typography>
-            Êtes-vous sûr de vouloir supprimer le type d'événement <strong>"{typeToDelete?.name}"</strong> ?
+            {t("Êtes-vous sûr de vouloir supprimer le type d'événement")} <strong>"{typeToDelete?.name}"</strong> ?
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Tous les événements associés à ce type pourraient être affectés.
+            {t("Tous les événements associés à ce type pourraient être affectés.")}
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={cancelDelete} color="inherit">
-            Annuler
+            {t("Annuler")}
           </Button>
           <Button onClick={confirmDelete} color="error" variant="contained" startIcon={<DeleteIcon />}>
-            Supprimer
+            {t("Supprimer")}
           </Button>
         </DialogActions>
       </Dialog>
-      {/* Toaster global */}
-      <ToastContainer position="top-center" autoClose={2000} />
     </>
   )
 }

@@ -17,12 +17,14 @@ import TableComponent from '../components/Global/TableComponent';
 import PaginationComponent from '../components/Global/PaginationComponent';
 import { ButtonComponent } from '../components/Global/ButtonComponent';
 import AddEmployeModal from '../components/Employe/AddEmploye';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 import ExportModal from '../components/ExportModal';
 import { toast } from 'react-toastify';
 import { StyledPaper } from '../style/style';
 import axios from 'axios';
 import CustomDeleteForm from '../components/Global/CustomDeleteForm';
+import EmployeeDetailsModal from '../components/Employe/EmployDetailModal';
 
 const Employe = () => {
   const { t } = useTranslation();
@@ -34,6 +36,9 @@ const Employe = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const fileInputRef = useRef();
+  const [openDetail, setOpenDetail] = useState(false);
+
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -121,7 +126,15 @@ const Employe = () => {
   };
 
   const actions = [
-    { icon: <DeleteIcon />, tooltip: t('Supprimer'), onClick: handleOpenDelete }
+    { icon: <DeleteIcon />, tooltip: t('Supprimer'), onClick: handleOpenDelete },
+    {
+      icon: <VisibilityIcon sx={{ color: "#2563eb" }} />,
+      tooltip: t('Détails'),
+      onClick: (emp) => {
+        setSelectedEmploye(emp);
+        setOpenDetail(true);
+      }
+    },
   ];
   const handleImportClick = () => fileInputRef.current.click();
 
@@ -261,6 +274,12 @@ const Employe = () => {
         onClose={() => setOpenExport(false)}
         entity="employes"
       />
+      <EmployeeDetailsModal
+        open={openDetail}
+        handleClose={() => setOpenDetail(false)}
+        employe={selectedEmploye}
+      />
+
     </>
   );
 };

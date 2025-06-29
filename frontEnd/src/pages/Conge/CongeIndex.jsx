@@ -14,8 +14,10 @@ import CongeHistory from "./CongeHistory";
 import CongeEmploye from "./CongeEmploye";
 import { StyledPaper } from "../../style/style";
 import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 const CongeIndex = () => {
+  const { t } = useTranslation();
   const [view, setView] = useState("WhoIsOnLeave");
   const { CurrentUser } = useSelector((state) => state.user);
   const userRole = CurrentUser?.role || CurrentUser?.user?.role;
@@ -24,7 +26,7 @@ const CongeIndex = () => {
     userRole &&
     (userRole.toLowerCase() === "admin" || userRole.toLowerCase() === "rh");
 
-  // Si user n’est pas RH/Admin, forcer la vue employé
+  // Si l'utilisateur n'est pas RH/Admin, forcer la vue employé
   useEffect(() => {
     if (!isRhOrAdmin && view !== "employe") {
       setView("employe");
@@ -33,57 +35,51 @@ const CongeIndex = () => {
 
   return (
     <StyledPaper>
-
       {/* NAVBAR */}
       {isRhOrAdmin && (
-        <>
-      <Stack direction="row" alignItems="center" mb={2}>
-        <Button
-          sx={{
-            mr: 2,
-            textTransform: "none",
-            fontWeight: 600,
-            color: view === "employe" ? "primary.main" : "#666",
-            bgcolor: view === "employe" ? "#f2f7fe" : "transparent",
-          }}
-          startIcon={<AddCircleOutlineIcon />}
-          onClick={() => setView("employe")}
-        >
-         Demande de Congé employé
-        </Button>
+        <Stack direction="row" alignItems="center" mb={2}>
+          <Button
+            sx={{
+              mr: 2,
+              textTransform: "none",
+              fontWeight: 600,
+              color: view === "employe" ? "primary.main" : "#666",
+              bgcolor: view === "employe" ? "#f2f7fe" : "transparent",
+            }}
+            startIcon={<AddCircleOutlineIcon />}
+            onClick={() => setView("employe")}
+          >
+            {t("Demande de congé employé")}
+          </Button>
+          <Button
+            sx={{
+              mr: 2,
+              textTransform: "none",
+              fontWeight: 600,
+              color: view === "WhoIsOnLeave" ? "primary.main" : "#666",
+              bgcolor: view === "WhoIsOnLeave" ? "#f2f7fe" : "transparent",
+            }}
+            startIcon={<VisibilityIcon />}
+            onClick={() => setView("WhoIsOnLeave")}
+          >
+            {t("Who's on leave?")}
+          </Button>
+          <Button
+            sx={{
+              mr: 2,
+              textTransform: "none",
+              fontWeight: 600,
+              color: view === "table" ? "primary.main" : "#666",
+              bgcolor: view === "table" ? "#f2f7fe" : "transparent",
+            }}
+            startIcon={<HistoryIcon />}
+            onClick={() => setView("table")}
+          >
+            {t("Historique des congés")}
+          </Button>
+        </Stack>
+      )}
 
-        
-         
-            <Button
-              sx={{
-                mr: 2,
-                textTransform: "none",
-                fontWeight: 600,
-                color: view === "WhoIsOnLeave" ? "primary.main" : "#666",
-                bgcolor: view === "WhoIsOnLeave" ? "#f2f7fe" : "transparent",
-              }}
-              startIcon={<VisibilityIcon />}
-              onClick={() => setView("WhoIsOnLeave")}
-            >
-              Who's on leave?
-            </Button>
-            <Button
-              sx={{
-                mr: 2,
-                textTransform: "none",
-                fontWeight: 600,
-                color: view === "table" ? "primary.main" : "#666",
-                bgcolor: view === "table" ? "#f2f7fe" : "transparent",
-              }}
-              startIcon={<HistoryIcon />}
-              onClick={() => setView("table")}
-            >
-              History
-            </Button>
-         
-      </Stack>
-      </>
-    )}
       <Divider sx={{ mb: 2, mx: 2 }} />
 
       {/* Affichage du contenu */}
@@ -97,7 +93,7 @@ const CongeIndex = () => {
         // Message d’accès refusé si jamais un employé “bricole” l’URL
         <Box sx={{ mt: 8, textAlign: "center" }}>
           <Typography color="error" fontWeight={700} fontSize={22}>
-            Accès réservé aux administrateurs ou RH.
+            {t("Accès réservé aux administrateurs ou RH.")}
           </Typography>
         </Box>
       )}

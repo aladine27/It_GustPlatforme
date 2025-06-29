@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { toast } from "react-toastify";
-import {StyledButton} from "../../style/style";
+import { StyledButton } from "../../style/style";
 import WhoIsOnLeave from "./WhoisOnleave";
 import PendingRequests from "./PendingRequests";
 import TypeCongeFormModal from "../../components/Conge/TypeCongeFormModal";
@@ -15,12 +15,10 @@ import {
   deleteLeaveType,
   updateLeaveType
 } from "../../redux/actions/LeaveAction";
-
-
-// **Nouveaux composants découpés**
-
+import { useTranslation } from "react-i18next"; // ← Ajoute l'import
 
 const Conge = () => {
+  const { t } = useTranslation(); // ← Ajoute la traduction
   const dispatch = useDispatch();
   const { leaves } = useSelector((state) => state.leave);
   const { leaveTypes } = useSelector((state) => state.leaveType);
@@ -45,28 +43,28 @@ const Conge = () => {
   const handleCreateType = async (typeName) => {
     try {
       await dispatch(createLeaveType({ name: typeName })).unwrap();
-      toast.success("Type créé !");
+      toast.success(t("Type créé avec succès !"));
       dispatch(fetchAllLeaveTypes());
     } catch (err) {
-      toast.error(err?.toString() || "Erreur création type !");
+      toast.error(err?.toString() || t("Erreur lors de la création du type"));
     }
   };
   const handleDeleteType = async (typeId) => {
     try {
       await dispatch(deleteLeaveType(typeId)).unwrap();
-      toast.success("Type supprimé !");
+      toast.success(t("Type supprimé !"));
       dispatch(fetchAllLeaveTypes());
     } catch (err) {
-      toast.error(err?.toString() || "Erreur suppression type !");
+      toast.error(err?.toString() || t("Erreur lors de la suppression du type"));
     }
   };
   const handleEditType = async (typeId, newName) => {
     try {
       await dispatch(updateLeaveType({ id: typeId, updateData: { name: newName } })).unwrap();
-      toast.success("Type modifié !");
+      toast.success(t("Type modifié !"));
       dispatch(fetchAllLeaveTypes());
     } catch (err) {
-      toast.error(err?.toString() || "Erreur modification type !");
+      toast.error(err?.toString() || t("Erreur lors de la modification du type"));
     }
   };
 
@@ -84,21 +82,21 @@ const Conge = () => {
   const handleApprove = async (id) => {
     try {
       await dispatch(updateLeave({ id, updateData: { status: "approved" } })).unwrap();
-      toast.success("Demande approuvée !");
+      toast.success(t("Demande approuvée !"));
       handleCloseDetail();
       dispatch(fetchAllLeaves());
     } catch (err) {
-      toast.error("Erreur : " + err);
+      toast.error(t("Erreur") + " : " + err);
     }
   };
   const handleReject = async (id) => {
     try {
       await dispatch(updateLeave({ id, updateData: { status: "rejected" } })).unwrap();
-      toast.success("Demande refusée !");
+      toast.success(t("Demande refusée !"));
       handleCloseDetail();
       dispatch(fetchAllLeaves());
     } catch (err) {
-      toast.error("Erreur : " + err);
+      toast.error(t("Erreur") + " : " + err);
     }
   };
 
@@ -111,7 +109,7 @@ const Conge = () => {
           variant="contained"
           onClick={() => setModalOpen(true)}
         >
-          Ajouter un nouveau type
+          {t("Ajouter un nouveau type")}
         </StyledButton>
       </div>
 

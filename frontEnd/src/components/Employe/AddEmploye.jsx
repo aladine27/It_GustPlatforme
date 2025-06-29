@@ -313,7 +313,7 @@ const AddEmployeModal = ({ open, handleClose }) => {
     <ButtonComponent
       onClick={handleNext}
       text="Suivant"
-      icon={ <ArrowForward />} // ou une icône, ex: <ArrowForward />
+      icon={ <ArrowForward />}  // ou une icône, ex: <ArrowForward />
       color="primary"
     />
   ) : (

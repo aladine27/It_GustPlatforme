@@ -13,14 +13,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllLeaves, fetchAllLeaveTypes } from "../../redux/actions/LeaveAction";
 import ModelComponent from "../../components/Global/ModelComponent";
 import LeaveDetailModal from "../../components/Conge/HistoryAdminDetailModal";
+import { useTranslation } from "react-i18next"; // <-- Import
 
-const getStatusChip = (status) => {
+const getStatusChip = (status, t) => {
   const statusConfig = {
-    approved: { color: "#4caf50", label: "Approuvé", icon: <CheckCircle sx={{ fontSize: 16 }} /> },
-    rejected: { color: "#f44336", label: "Rejeté", icon: <Cancel sx={{ fontSize: 16 }} /> },
+    approved: { color: "#4caf50", label: t("Approuvé"), icon: <CheckCircle sx={{ fontSize: 16 }} /> },
+    rejected: { color: "#f44336", label: t("Rejeté"), icon: <Cancel sx={{ fontSize: 16 }} /> },
   };
   const config = statusConfig[status] || { color: "#666", label: status };
-
   return (
     <Chip
       icon={config.icon}
@@ -37,6 +37,7 @@ const getStatusChip = (status) => {
 };
 
 const CongeHistory = () => {
+  const { t } = useTranslation(); // <-- hook i18n
   const dispatch = useDispatch();
   const { leaves } = useSelector((state) => state.leave);
   const { leaveTypes } = useSelector((state) => state.leaveType);
@@ -52,7 +53,7 @@ const CongeHistory = () => {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6; // ou 5, à toi de choisir
+  const itemsPerPage = 6;
 
   useEffect(() => {
     dispatch(fetchAllLeaves());
@@ -70,11 +71,11 @@ const CongeHistory = () => {
     rejected: filteredRaw.filter((l) => l.status === "rejected").length,
   };
 
-  // Table columns
+  // Table columns (use t() for headers)
   const columns = [
     {
       id: "employee",
-      label: "Employé",
+      label: t("Employé"),
       align: "left",
       render: (row) => {
         const img = row.user?.image || "";
@@ -116,7 +117,7 @@ const CongeHistory = () => {
     },
     {
       id: "periode",
-      label: "Période",
+      label: t("Période"),
       align: "center",
       render: (row) => (
         <Box>
@@ -131,21 +132,20 @@ const CongeHistory = () => {
     },
     {
       id: "status",
-      label: "Statut",
+      label: t("Statut"),
       align: "center",
-      render: (row) => getStatusChip(row.status),
+      render: (row) => getStatusChip(row.status, t),
     },
   ];
 
   // Actions sur table
   const actions = [
     {
-      tooltip: "Voir détails",
+      tooltip: t("Voir détails"),
       icon: <VisibilityIcon fontSize="small" color="primary" />,
       onClick: (row) => {
         setSelectedLeave(row);
         setOpenDetail(true);
-        console.log("Modal ouvert, selectedLeave :", row);
       },
     },
   ];
@@ -219,7 +219,7 @@ const CongeHistory = () => {
       <Grid container spacing={3} mb={4}>
         <Grid item xs={12} md={4}>
           <StatCard
-            title="Total des demandes"
+            title={t("Total des demandes")}
             value={stats.total}
             icon={<TrendingUpIcon />}
             color="#1976d2"
@@ -228,7 +228,7 @@ const CongeHistory = () => {
         </Grid>
         <Grid item xs={12} md={4}>
           <StatCard
-            title="Approuvées"
+            title={t("Approuvées")}
             value={stats.approved}
             icon={<CheckCircle />}
             color="#388e3c"
@@ -236,7 +236,13 @@ const CongeHistory = () => {
           />
         </Grid>
         <Grid item xs={12} md={4}>
-          <StatCard title="Rejetées" value={stats.rejected} icon={<Cancel />} color="#d32f2f" bgColor="#ef5350" />
+          <StatCard
+            title={t("Rejetées")}
+            value={stats.rejected}
+            icon={<Cancel />}
+            color="#d32f2f"
+            bgColor="#ef5350"
+          />
         </Grid>
       </Grid>
 
@@ -248,7 +254,7 @@ const CongeHistory = () => {
               <TextField
                 fullWidth
                 variant="outlined"
-                label="Rechercher par employé ou type"
+                label={t("Rechercher par employé ou type")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 InputProps={{
@@ -267,29 +273,29 @@ const CongeHistory = () => {
             </Grid>
             <Grid item xs={12} md={3}>
               <FormControl fullWidth>
-                <InputLabel>Statut</InputLabel>
+                <InputLabel>{t("Statut")}</InputLabel>
                 <Select
                   value={statusFilter}
-                  label="Statut"
+                  label={t("Statut")}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   sx={{ borderRadius: 2 }}
                 >
-                  <MenuItem value="all">Tous les statuts</MenuItem>
-                  <MenuItem value="approved">Approuvé</MenuItem>
-                  <MenuItem value="rejected">Rejeté</MenuItem>
+                  <MenuItem value="all">{t("Tous les statuts")}</MenuItem>
+                  <MenuItem value="approved">{t("Approuvé")}</MenuItem>
+                  <MenuItem value="rejected">{t("Rejeté")}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} md={3}>
               <FormControl fullWidth>
-                <InputLabel>Type de congé</InputLabel>
+                <InputLabel>{t("Type de congé")}</InputLabel>
                 <Select
                   value={typeFilter}
-                  label="Type de congé"
+                  label={t("Type de congé")}
                   onChange={(e) => setTypeFilter(e.target.value)}
                   sx={{ borderRadius: 2 }}
                 >
-                  <MenuItem value="all">Tous les types</MenuItem>
+                  <MenuItem value="all">{t("Tous les types")}</MenuItem>
                   {leaveTypes.map((type) => (
                     <MenuItem key={type._id} value={type._id}>
                       {type.name}
@@ -315,7 +321,7 @@ const CongeHistory = () => {
                   py: 1.5,
                 }}
               >
-                Réinitialiser
+                {t("Réinitialiser")}
               </Button>
             </Grid>
           </Grid>
@@ -325,7 +331,7 @@ const CongeHistory = () => {
         <Box sx={{ px: 3, pb: 3 }}>
           <TableComponent
             columns={columns}
-            rows={paginatedLeaves}     
+            rows={paginatedLeaves}
             actions={actions}
           />
           {/* Pagination */}

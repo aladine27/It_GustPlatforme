@@ -11,9 +11,11 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm, Controller } from "react-hook-form";
 import { toast, ToastContainer } from "react-toastify";
 import Autocomplete from "@mui/material/Autocomplete";
-import { SaveOutlined } from "@mui/icons-material";
+import { ArrowBack, ArrowForward, SaveOutlined } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
+import { ButtonComponent } from "../Global/ButtonComponent";
 
-const steps = [
+const stepsKeys = [
   "Détails de l'événement",
   "Informations avancées",
   "Invités"
@@ -54,8 +56,8 @@ const eventStepSchemas = [
         fullName: Yup.string().required()
       })
     ).required("Au moins un invité est requis")
-     .min(1, "Au moins un invité est requis")
-     .test("no-duplicates", "Un même employé ne peut être invité plusieurs fois", arr => {
+      .min(1, "Au moins un invité est requis")
+      .test("no-duplicates", "Un même employé ne peut être invité plusieurs fois", arr => {
         if (!arr) return true;
         const ids = arr.map(e => e._id);
         return ids.length === new Set(ids).size;
@@ -84,10 +86,17 @@ function computeStatus(startDate, duration) {
 export default function EventFormModal({
   open, onClose, onSave, event, eventTypes, employes, currentUserId, isEditMode
 }) {
+  const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(0);
 
   const {
-    register, control, handleSubmit, reset, watch, formState: { errors }
+    register,
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+    trigger
   } = useForm({
     resolver: yupResolver(eventStepSchemas[activeStep], { context: { currentUserId } }),
     defaultValues: {
@@ -96,7 +105,6 @@ export default function EventFormModal({
     }
   });
 
-  // FIX ICI : reset uniquement à l'ouverture
   useEffect(() => {
     if (open) {
       let initialTypes = [];
@@ -116,33 +124,17 @@ export default function EventFormModal({
         invited:     initialInvited,
       });
       setActiveStep(0);
-      console.log("[Modal] RESET & OPEN - isEditMode:", isEditMode, "event:", event);
     }
-  }, [open, reset]); // PAS de event ni eventTypes ici
+  }, [open, reset, event, eventTypes]);
 
   const handleNext = async () => {
-    console.log("[handleNext] Etape actuelle:", activeStep, "isEditMode:", isEditMode);
-    try {
-      await eventStepSchemas[activeStep].validate(watch(), { abortEarly: false });
-      setActiveStep(s => {
-        console.log("[handleNext] Passe à l'étape:", s + 1);
-        return Math.min(s + 1, steps.length - 1);
-      });
-    } catch (e) {
-      if (e.inner) {
-        e.inner.forEach(err => {
-          console.warn("[handleNext] Validation error:", err.path, err.message);
-        });
-      }
+    const isValid = await trigger();
+    if (isValid) {
+      setActiveStep(s => Math.min(s + 1, stepsKeys.length - 1));
     }
   };
 
-  const handleBack = () => {
-    setActiveStep(s => {
-      console.log("[handleBack] Retour étape:", s - 1);
-      return Math.max(s - 1, 0);
-    });
-  };
+  const handleBack = () => setActiveStep(s => Math.max(s - 1, 0));
 
   const onFinalSubmit = data => {
     const status = computeStatus(data.startDate, data.duration);
@@ -151,7 +143,6 @@ export default function EventFormModal({
       payload._id = event._id || event.id;
       payload.id = event._id || event.id;
     }
-    console.log("[onFinalSubmit] SUBMIT! data:", data, "payload:", payload, "activeStep:", activeStep);
     onSave(payload);
     onClose();
   };
@@ -161,14 +152,23 @@ export default function EventFormModal({
       case 0: return (
         <>
           <TextField
-            label="Titre *" fullWidth {...register("title")}
-            error={!!errors.title} helperText={errors.title?.message}
+            label={t('Titre') + " *"}
+            fullWidth
+            {...register("title")}
+            error={!!errors.title}
+            helperText={errors.title?.message && t(errors.title?.message)}
             sx={{ mb: 2 }}
+            placeholder={t("Ex: Réunion trimestrielle, Conférence...")}
           />
           <TextField
-            label="Description *" fullWidth multiline minRows={3}
+            label={t('Description') + " *"}
+            fullWidth
+            multiline
+            minRows={3}
             {...register("description")}
-            error={!!errors.description} helperText={errors.description?.message}
+            error={!!errors.description}
+            helperText={errors.description?.message && t(errors.description?.message)}
+            placeholder={t("Ex: Réunion de suivi trimestriel, sujets à aborder...")}
           />
         </>
       );
@@ -177,36 +177,46 @@ export default function EventFormModal({
           <Controller name="startDate" control={control}
             render={({ field }) => (
               <DateTimePicker
-                label="Date de début *" {...field}
+                label={t('Date de début') + " *"}
+                {...field}
                 disabled={isEditMode}
                 slotProps={{
                   textField: {
                     fullWidth: true,
                     error: !!errors.startDate,
                     helperText: isEditMode
-                      ? "Modification de la date impossible lors de l'édition"
-                      : errors.startDate?.message,
-                    sx: { mb: 2 }
+                      ? t("Modification de la date impossible lors de l'édition")
+                      : (errors.startDate?.message && t(errors.startDate?.message)),
+                    sx: { mb: 2 },
+                    placeholder: t("Choisissez la date et l'heure de début")
                   }
                 }}
               />
             )}
           />
           <TextField
-            label="Durée *" fullWidth {...register("duration")}
-            error={!!errors.duration} helperText={isEditMode
-              ? "Modification de la durée impossible lors de l'édition"
-              : errors.duration?.message}
+            label={t('Durée') + " *"}
+            fullWidth
+            {...register("duration")}
+            error={!!errors.duration}
+            helperText={isEditMode
+              ? t("Modification de la durée impossible lors de l'édition")
+              : (errors.duration?.message && t(errors.duration?.message))}
             sx={{ mb: 2 }}
             disabled={isEditMode}
+            placeholder={t("Ex: 1h, 90min, 2h30min")}
           />
           <TextField
-            label="Emplacement *" fullWidth {...register("location")}
-            error={!!errors.location} helperText={isEditMode
-              ? "Modification de la salle impossible lors de l'édition"
-              : errors.location?.message}
+            label={t('Emplacement') + " *"}
+            fullWidth
+            {...register("location")}
+            error={!!errors.location}
+            helperText={isEditMode
+              ? t("Modification de la salle impossible lors de l'édition")
+              : (errors.location?.message && t(errors.location?.message))}
             sx={{ mb: 2 }}
             disabled={isEditMode}
+            placeholder={t("Ex: Salle 1, Auditorium...")}
           />
           <Controller
             name="types"
@@ -214,7 +224,7 @@ export default function EventFormModal({
             render={({ field }) => (
               <TextField
                 select
-                label="Type d'événement *"
+                label={t("Type d'événement") + " *"}
                 fullWidth
                 value={field.value[0]?._id || ""}
                 onChange={e => {
@@ -222,10 +232,11 @@ export default function EventFormModal({
                   field.onChange(selected ? [selected] : []);
                 }}
                 error={!!errors.types}
-                helperText={errors.types?.message || ""}
+                helperText={errors.types?.message && t(errors.types?.message)}
                 required
+                placeholder={t("Sélectionner un type")}
               >
-                <MenuItem value="" disabled />
+                <MenuItem value="" disabled>{t('Sélectionner')}</MenuItem>
                 {(eventTypes || []).map(t => (
                   <MenuItem key={t._id} value={t._id}>
                     {t.name}
@@ -239,14 +250,20 @@ export default function EventFormModal({
       case 2: return (
         <Controller name="invited" control={control}
           render={({ field }) => (
-            <Autocomplete multiple
+            <Autocomplete
+              multiple
               options={employes.filter(e => e._id !== currentUserId)}
               getOptionLabel={o => o.fullName}
               value={field.value}
               onChange={(_, v) => field.onChange(v)}
               renderInput={params => (
-                <TextField {...params} label="Invités *" fullWidth
-                  error={!!errors.invited} helperText={errors.invited?.message}
+                <TextField
+                  {...params}
+                  label={t('Invités') + " *"}
+                  fullWidth
+                  error={!!errors.invited}
+                  helperText={errors.invited?.message && t(errors.invited?.message)}
+                  placeholder={t("Sélectionner les invités")}
                 />
               )}
               filterSelectedOptions
@@ -262,32 +279,38 @@ export default function EventFormModal({
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <ToastContainer position="top-right" autoClose={3000} />
       <ModelComponent open={open} handleClose={onClose}
-        title={event?._id ? "Modifier un événement" : "Ajouter un événement"}
+        title={event?._id ? t("Modifier un événement") : t("Ajouter un événement")}
         icon={<SaveOutlined />}
       >
         <Box sx={{ my: 2 }}>
-          <StepperComponent steps={steps} activeStep={activeStep} />
+          <StepperComponent steps={stepsKeys.map(label => t(label))} activeStep={activeStep} />
         </Box>
         <form onSubmit={handleSubmit(onFinalSubmit)} noValidate>
           <Grid container spacing={2} direction="column">
             <Grid item>{getStepContent(activeStep)}</Grid>
           </Grid>
+          {t("Retour")}
           <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 3 }}>
-  {activeStep > 0 &&
-    <Button variant="outlined" color="primary" onClick={handleBack}>
-      Retour
-    </Button>
-  }
-  {activeStep < steps.length - 1
-    ? <Button variant="contained" color="primary" type="button" onClick={handleNext}>
-        Suivant
-      </Button>
-    : <Button variant="contained" color="primary" type="button" onClick={handleSubmit(onFinalSubmit)}>
-        Enregistrer
-      </Button>
-  }
-</Stack>
-
+            {activeStep > 0 &&
+             <ButtonComponent
+                   onClick={handleBack}
+                   text={t("Retour")}
+                   icon={<ArrowBack />} // ou une icône, ex: 
+                   
+                 />
+            }
+            {activeStep < stepsKeys.length - 1
+              ? <ButtonComponent
+      onClick={handleNext}
+      text=   {t("next")}
+      icon={ <ArrowForward />}  // ou une icône, ex: <ArrowForward />
+      color="primary"
+    />
+              : <Button variant="contained" color="primary" type="submit">
+                  {t("Enregistrer")}
+                </Button>
+            }
+          </Stack>
         </form>
       </ModelComponent>
     </LocalizationProvider>

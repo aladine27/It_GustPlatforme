@@ -20,13 +20,13 @@ import { clearLeaveMessages } from "../../redux/slices/leaveSlice";
 import TableComponent from "../../components/Global/TableComponent";
 import PaginationComponent from "../../components/Global/PaginationComponent";
 import CongeWidget from "../../components/Conge/CongeWidget";
-
-// === Import recharts ===
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Cancel, CheckCircle } from "@mui/icons-material";
 import CalendarWidget from "../../components/Conge/CalenderWidget";
+import { useTranslation } from "react-i18next"; // ← N'oublie pas
 
 export default function CongeEmploye() {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { CurrentUser } = useSelector((state) => state.user);
   const userId = CurrentUser?.user?._id || CurrentUser?._id;
@@ -40,11 +40,12 @@ export default function CongeEmploye() {
   const itemsPerPage = 6;
   const paginatedRows = leaves.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const totalPages = Math.ceil(leaves.length / itemsPerPage);
+
   const getStatusChip = (status) => {
     const statusConfig = {
-      approved: { color: "#4caf50", label: "Approuvé", icon: <CheckCircle sx={{ fontSize: 16 }} /> },
-      rejected: { color: "#f44336", label: "Rejeté", icon: <Cancel sx={{ fontSize: 16 }} /> },
-      pending: { color: "#ff9800", label: "En attente", icon: <Cancel sx={{ fontSize: 16 }} /> }
+      approved: { color: "#4caf50", label: t("Approuvé"), icon: <CheckCircle sx={{ fontSize: 16 }} /> },
+      rejected: { color: "#f44336", label: t("Rejeté"), icon: <Cancel sx={{ fontSize: 16 }} /> },
+      pending: { color: "#ff9800", label: t("En attente"), icon: <Cancel sx={{ fontSize: 16 }} /> }
     };
     const config = statusConfig[status] || { color: "#666", label: status };
     return (
@@ -63,15 +64,15 @@ export default function CongeEmploye() {
   };
 
   const columns = [
-    { id: "title", label: "Type", align: "left" },
-    { id: "duration", label: "Durée", align: "center" },
-    { id: "startDate", label: "Début", align: "center" },
-    { id: "endDate", label: "Fin", align: "center" },
-    { id: "status", label: "Statut", align: "center", render: (row) => getStatusChip(row.status) },
-    { id: "reason", label: "Motif", align: "left" },
+    { id: "title", label: t("Type"), align: "left" },
+    { id: "duration", label: t("Durée"), align: "center" },
+    { id: "startDate", label: t("Début"), align: "center" },
+    { id: "endDate", label: t("Fin"), align: "center" },
+    { id: "status", label: t("Statut"), align: "center", render: (row) => getStatusChip(row.status) },
+    { id: "reason", label: t("Motif"), align: "left" },
     {
       id: "reasonFile",
-      label: "Justificatif",
+      label: t("Justificatif"),
       align: "center",
       render: (row) =>
         row.reasonFile ? (
@@ -122,11 +123,11 @@ export default function CongeEmploye() {
 
   const handleOpenModal = () => {
     if (leaveLoading) {
-      toast.info("Chargement du solde de congé...");
+      toast.info(t("Chargement du solde de congé..."));
       return;
     }
     if (leaveBalance && leaveBalance.soldeRestant <= 0) {
-      toast.error("Vous n'avez plus de solde de congé disponible pour cette année.");
+      toast.error(t("Vous n'avez plus de solde de congé disponible pour cette année."));
       return;
     }
     dispatch(clearLeaveMessages());
@@ -147,12 +148,10 @@ export default function CongeEmploye() {
 
   // ==== Début ajout du cercle Recharts ====
   const COLORS = ["#9c6fe4", "#e5e6f3"]; // Violet, gris clair pour la zone restante
-
-  // Données pour PieChart
   const chartData = leaveBalance
     ? [
-        { name: "Solde restant", value: leaveBalance.soldeRestant },
-        { name: "Pris", value: leaveBalance.soldeInitial - leaveBalance.soldeRestant },
+        { name: t("Solde restant"), value: leaveBalance.soldeRestant },
+        { name: t("Pris"), value: leaveBalance.soldeInitial - leaveBalance.soldeRestant },
       ]
     : [];
   // ==== Fin ajout du cercle Recharts ====
@@ -170,7 +169,7 @@ export default function CongeEmploye() {
           }}
           onClick={() => setView("demande")}
         >
-          Faire une demande
+          {t("Faire une demande")}
         </Button>
         <Button
           startIcon={<HistoryIcon />}
@@ -182,20 +181,19 @@ export default function CongeEmploye() {
           }}
           onClick={() => setView("history")}
         >
-          Suivi de mes demandes
+          {t("Suivi de mes demandes")}
         </Button>
       </Stack>
       <Divider sx={{ mb: 3 }} />
-      
 
       {/* DEMANDE DE CONGÉ */}
       {view === "demande" && (
         <Box textAlign="center" py={4}>
           <Typography variant="h5" fontWeight={700} mb={3}>
-            Déposer une nouvelle demande de congé
+            {t("Déposer une nouvelle demande de congé")}
           </Typography>
-        {/* Cercle de solde restant avec recharts */}
-        {leaveBalance && (
+          {/* Cercle de solde restant avec recharts */}
+          {leaveBalance && (
             <Box sx={{ width: 160, mx: "auto", my: 3 }}>
               <ResponsiveContainer width="100%" height={140}>
                 <PieChart>
@@ -225,7 +223,7 @@ export default function CongeEmploye() {
                       }}
                     >
                       <Typography variant="body2" sx={{ color: "#1976d2", fontWeight: 700, lineHeight: 1 }}>
-                        Disponible
+                        {t("Disponible")}
                       </Typography>
                       <Typography variant="h5" sx={{ fontWeight: 900, color: "#1976d2", lineHeight: 1 }}>
                         {String(leaveBalance.soldeRestant).padStart(2, "0")}
@@ -236,7 +234,7 @@ export default function CongeEmploye() {
                 </PieChart>
               </ResponsiveContainer>
               <Typography align="center" sx={{ fontWeight: 600, color: "#484848", mt: 1 }}>
-                Congé Annuel
+                {t("Congé Annuel")}
               </Typography>
             </Box>
           )}
@@ -248,10 +246,9 @@ export default function CongeEmploye() {
             onClick={handleOpenModal}
             sx={{ fontWeight: 700, borderRadius: 3 }}
           >
-            Nouvelle demande
+            {t("Nouvelle demande")}
           </Button>
 
-        
           <DemandeCongeFormModal
             open={openModal}
             handleClose={handleCloseModal}
@@ -267,16 +264,12 @@ export default function CongeEmploye() {
         <Box py={2}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={8}>
-              {/* Leave Balance Placeholder */}
-           
-
-              {/* TABLEAU */}
               <Typography variant="h5" fontWeight={700} mb={2}>
-                Mes demandes de congé
+                {t("Mes demandes de congé")}
               </Typography>
               {loading ? (
                 <Box textAlign="center" py={3}>
-                  <Typography color="text.secondary">Chargement...</Typography>
+                  <Typography color="text.secondary">{t("Chargement...")}</Typography>
                 </Box>
               ) : error ? (
                 <Typography color="error">{error}</Typography>
@@ -298,7 +291,6 @@ export default function CongeEmploye() {
                 <CalendarWidget leaves={leaves} />
               </Stack>
             </Grid>
-
           </Grid>
         </Box>
       )}

@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { StyledPaper } from '../../style/style';
+import { useTranslation } from 'react-i18next';
 
 export default function EventDetailsModal({
   open,
@@ -24,14 +25,19 @@ export default function EventDetailsModal({
   onDelete,
   userRole
 }) {
+  const { t } = useTranslation();
+
   if (!event) return null;
 
   const getStatusColor = (status) => {
     switch (status) {
+      case t("Terminé"):
       case "Terminé":
         return "success";
+      case t("Annulé"):
       case "Annulé":
         return "error";
+      case t("En cours"):
       case "En cours":
         return "warning";
       default:
@@ -114,46 +120,46 @@ export default function EventDetailsModal({
 
       <DialogContent sx={{ px: { xs: 0, sm: 1 } }}>
         <Stack spacing={0.5}>
-          <DetailRow label="Description">
+          <DetailRow label={t("Description")}>
             <Typography>
-              {event.description || <span style={{ color: "#aaa" }}>Aucune description</span>}
+              {event.description || <span style={{ color: "#aaa" }}>{t("Aucune description")}</span>}
             </Typography>
           </DetailRow>
 
-          <DetailRow label="Date et heure de début">
+          <DetailRow label={t("Date et heure de début")}>
             <Typography>
               {event.startDate
-                ? new Date(event.startDate).toLocaleString('fr-FR')
-                : <span style={{ color: "#aaa" }}>N/A</span>}
+                ? new Date(event.startDate).toLocaleString(t('fr-FR')) // tu peux utiliser le code langue
+                : <span style={{ color: "#aaa" }}>{t("N/A")}</span>}
             </Typography>
           </DetailRow>
 
-          <DetailRow label="Durée">
-            <Typography>{event.duration || <span style={{ color: "#aaa" }}>N/A</span>}</Typography>
+          <DetailRow label={t("Durée")}>
+            <Typography>{event.duration || <span style={{ color: "#aaa" }}>{t("N/A")}</span>}</Typography>
           </DetailRow>
 
-          <DetailRow label="Emplacement">
-            <Typography>{event.location || <span style={{ color: "#aaa" }}>N/A</span>}</Typography>
+          <DetailRow label={t("Emplacement")}>
+            <Typography>{event.location || <span style={{ color: "#aaa" }}>{t("N/A")}</span>}</Typography>
           </DetailRow>
 
-          <DetailRow label="Statut">
+          <DetailRow label={t("Statut")}>
             <Chip
-              label={event.status || "N/A"}
+              label={event.status ? t(event.status) : t("N/A")}
               size="small"
               color={getStatusColor(event.status)}
               sx={{ fontWeight: 700, fontSize: 14, letterSpacing: 0.4 }}
             />
           </DetailRow>
 
-          <DetailRow label="Type d'événement">
+          <DetailRow label={t("Type d'événement")}>
             <Typography>
               {event.types && event.types.length > 0 && event.types[0]?.name
                 ? event.types[0].name
-                : <span style={{ color: "#aaa" }}>Non défini</span>}
+                : <span style={{ color: "#aaa" }}>{t("Non défini")}</span>}
             </Typography>
           </DetailRow>
 
-          <DetailRow label="Invités">
+          <DetailRow label={t("Invités")}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {Array.isArray(event.invited) && event.invited.length > 0
                 ? event.invited
@@ -161,13 +167,13 @@ export default function EventDetailsModal({
                     .map(user => (
                       <Chip
                         key={user._id || user.id || Math.random()}
-                        label={user.fullName || user.name || "Invité"}
+                        label={user.fullName || user.name || t("invité")}
                         size="small"
                         variant="outlined"
                         sx={{ fontWeight: 500, bgcolor: "#e3f2fd", color: "#227FBF" }}
                       />
                     ))
-                : <Typography variant="body2" color="text.secondary">Aucun invité</Typography>
+                : <Typography variant="body2" color="text.secondary">{t("Aucun invité")}</Typography>
               }
             </Box>
           </DetailRow>
@@ -184,7 +190,7 @@ export default function EventDetailsModal({
               onClick={onEdit}
               sx={{ borderRadius: 3, fontWeight: 700 }}
             >
-              MODIFIER
+              {t("Modifier")}
             </Button>
             <Button
               variant="contained"
@@ -192,7 +198,7 @@ export default function EventDetailsModal({
               onClick={() => onDelete(event._id)}
               sx={{ borderRadius: 3, fontWeight: 700 }}
             >
-              SUPPRIMER
+              {t("Supprimer")}
             </Button>
           </DialogActions>
         </>
