@@ -89,6 +89,9 @@ export default function EventFormModal({
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(0);
 
+  // LOG : rendu du composant
+  console.log("[EventFormModal] Render", { open, event, isEditMode, activeStep });
+
   const {
     register,
     control,
@@ -105,6 +108,12 @@ export default function EventFormModal({
     }
   });
 
+  // LOG : watch values
+  const watchedValues = watch();
+  useEffect(() => {
+    console.log("[EventFormModal] Watched values:", watchedValues);
+  });
+
   useEffect(() => {
     if (open) {
       let initialTypes = [];
@@ -114,6 +123,15 @@ export default function EventFormModal({
           .filter(Boolean);
       }
       let initialInvited = Array.isArray(event?.invited) ? event.invited : [];
+      console.log("[EventFormModal] Resetting form with", {
+        title: event?.title,
+        description: event?.description,
+        startDate: event?.startDate,
+        duration: event?.duration,
+        location: event?.location,
+        types: initialTypes,
+        invited: initialInvited,
+      });
       reset({
         title:       event?.title       || "",
         description: event?.description || "",
@@ -127,27 +145,52 @@ export default function EventFormModal({
     }
   }, [open, reset, event, eventTypes]);
 
+  // LOG : quand le step change
+  useEffect(() => {
+    console.log("[EventFormModal] Active step changed:", activeStep);
+  }, [activeStep]);
+
   const handleNext = async () => {
+    console.log("[handleNext] Clicked on Next! Step:", activeStep);
     const isValid = await trigger();
+    console.log("[handleNext] Validation result:", isValid);
+    if (!isValid) {
+      console.log("[handleNext] Form errors:", errors);
+      toast.error("Erreur de validation ! Voir la console.");
+    }
     if (isValid) {
-      setActiveStep(s => Math.min(s + 1, stepsKeys.length - 1));
+      setActiveStep(s => {
+        const nextStep = Math.min(s + 1, stepsKeys.length - 1);
+        console.log("[handleNext] Go to next step:", nextStep);
+        return nextStep;
+      });
     }
   };
 
-  const handleBack = () => setActiveStep(s => Math.max(s - 1, 0));
+  const handleBack = () => {
+    console.log("[handleBack] Back button clicked! Step:", activeStep);
+    setActiveStep(s => {
+      const prevStep = Math.max(s - 1, 0);
+      console.log("[handleBack] Go to prev step:", prevStep);
+      return prevStep;
+    });
+  };
 
   const onFinalSubmit = data => {
+    console.log("[onFinalSubmit] Submit data:", data);
     const status = computeStatus(data.startDate, data.duration);
     const payload = { ...data, status };
     if (isEditMode && event && (event._id || event.id)) {
       payload._id = event._id || event.id;
       payload.id = event._id || event.id;
     }
+    console.log("[onFinalSubmit] Final payload:", payload);
     onSave(payload);
     onClose();
   };
 
   const getStepContent = step => {
+    console.log("[getStepContent] Rendered for step:", step);
     switch (step) {
       case 0: return (
         <>
@@ -159,6 +202,8 @@ export default function EventFormModal({
             helperText={errors.title?.message && t(errors.title?.message)}
             sx={{ mb: 2 }}
             placeholder={t("Ex: Réunion trimestrielle, Conférence...")}
+            // LOG sur les changements
+            onChange={e => { console.log("[Step 0] title changed:", e.target.value); register("title").onChange(e); }}
           />
           <TextField
             label={t('Description') + " *"}
@@ -169,6 +214,7 @@ export default function EventFormModal({
             error={!!errors.description}
             helperText={errors.description?.message && t(errors.description?.message)}
             placeholder={t("Ex: Réunion de suivi trimestriel, sujets à aborder...")}
+            onChange={e => { console.log("[Step 0] description changed:", e.target.value); register("description").onChange(e); }}
           />
         </>
       );
@@ -191,6 +237,10 @@ export default function EventFormModal({
                     placeholder: t("Choisissez la date et l'heure de début")
                   }
                 }}
+                onChange={val => { 
+                  console.log("[Step 1] startDate changed:", val); 
+                  field.onChange(val); 
+                }}
               />
             )}
           />
@@ -205,6 +255,7 @@ export default function EventFormModal({
             sx={{ mb: 2 }}
             disabled={isEditMode}
             placeholder={t("Ex: 1h, 90min, 2h30min")}
+            onChange={e => { console.log("[Step 1] duration changed:", e.target.value); register("duration").onChange(e); }}
           />
           <TextField
             label={t('Emplacement') + " *"}
@@ -217,6 +268,7 @@ export default function EventFormModal({
             sx={{ mb: 2 }}
             disabled={isEditMode}
             placeholder={t("Ex: Salle 1, Auditorium...")}
+            onChange={e => { console.log("[Step 1] location changed:", e.target.value); register("location").onChange(e); }}
           />
           <Controller
             name="types"
@@ -228,6 +280,7 @@ export default function EventFormModal({
                 fullWidth
                 value={field.value[0]?._id || ""}
                 onChange={e => {
+                  console.log("[Step 1] types changed:", e.target.value);
                   const selected = eventTypes.find(t => t._id === e.target.value);
                   field.onChange(selected ? [selected] : []);
                 }}
@@ -255,7 +308,7 @@ export default function EventFormModal({
               options={employes.filter(e => e._id !== currentUserId)}
               getOptionLabel={o => o.fullName}
               value={field.value}
-              onChange={(_, v) => field.onChange(v)}
+              onChange={(_, v) => { console.log("[Step 2] invited changed:", v); field.onChange(v); }}
               renderInput={params => (
                 <TextField
                   {...params}
@@ -285,7 +338,9 @@ export default function EventFormModal({
         <Box sx={{ my: 2 }}>
           <StepperComponent steps={stepsKeys.map(label => t(label))} activeStep={activeStep} />
         </Box>
-        <form onSubmit={handleSubmit(onFinalSubmit)} noValidate>
+        <form onSubmit={(e)=> {e.preventDefault(); if(activeStep === stepsKeys.length - 1)
+        {handleSubmit(onFinalSubmit)(e);} else{handleNext()}}} noValidate>
+          
           <Grid container spacing={2} direction="column">
             <Grid item>{getStepContent(activeStep)}</Grid>
           </Grid>
@@ -293,19 +348,21 @@ export default function EventFormModal({
           <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 3 }}>
             {activeStep > 0 &&
              <ButtonComponent
-                   onClick={handleBack}
+                   onClick={() => {
+                     console.log("[Button] Retour Clicked");
+                     handleBack();
+                   }}
                    text={t("Retour")}
-                   icon={<ArrowBack />} // ou une icône, ex: 
-                   
+                   icon={<ArrowBack />}
                  />
             }
             {activeStep < stepsKeys.length - 1
               ? <ButtonComponent
-      onClick={handleNext}
-      text=   {t("next")}
-      icon={ <ArrowForward />}  // ou une icône, ex: <ArrowForward />
-      color="primary"
-    />
+               
+                  text={t("next")}
+                  icon={<ArrowForward />}
+                  color="primary"
+                />
               : <Button variant="contained" color="primary" type="submit">
                   {t("Enregistrer")}
                 </Button>

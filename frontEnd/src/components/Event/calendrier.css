@@ -135,14 +135,15 @@
 
 /* Grille, calendrier, conteneur */
 .CalendarContainer {
-    height: 85vh;
-    width: 100%;
-    max-width: 1400px;
+    overflow-x: hidden !important;
+    height:120vh;
+    width: 75vw;
+   
     margin: 0 auto;
     background: #FFFFFF;
     border-radius: 16px;
     box-shadow: 0 12px 36px -10px rgba(99, 102, 241, 0.09);
-    overflow: hidden;
+    overflow-y: hidden;
     border: 1px solid #E5E7EB;
     position: relative;
     padding: 0;

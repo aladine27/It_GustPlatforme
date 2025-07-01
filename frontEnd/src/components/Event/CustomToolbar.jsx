@@ -118,31 +118,9 @@ export default function CustomToolbar(props) {
           order: { xs: -1, md: 0 },
         }}
       >
-        <Typography
-          className="rbc-toolbar-label"
-          sx={{
-            fontWeight: 700,
-            fontSize: { xs: "1.5rem", md: "1.75rem" },
-            color: "#1e293b",
-            fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-            letterSpacing: "-0.025em",
-            lineHeight: 1.2,
-            mb: 0.5,
-          }}
-        >
-          {moment(props.date).locale(i18n.language).format("MMMM YYYY")}
-        </Typography>
+      
 
-        <Typography
-          sx={{
-            fontSize: "0.875rem",
-            color: "#64748b",
-            fontWeight: 500,
-            fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-          }}
-        >
-          {today}
-        </Typography>
+     
       </Box>
 
       {/* Droite : vue */}

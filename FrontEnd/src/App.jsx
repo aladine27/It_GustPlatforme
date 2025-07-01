@@ -7,7 +7,6 @@ import Employe from './pages/Employe';
 import Evenement from './pages/Evenement';
 import Projet from './pages/Projet';
 import Tache from './pages/Tache';
-import Document from './pages/Document';
 
 import Recrutement from './pages/Recrutement';
 import Frais from './pages/Frais';
@@ -26,6 +25,7 @@ import Conge from './pages/Conge/Conge';
 import CongeIndex from './pages/Conge/CongeIndex';
 import CongeEmploye from './pages/Conge/CongeEmploye';
 import CongeHistory from './pages/Conge/CongeHistory';
+import DocumentIndex from './pages/Documents/DocumentIndex';
 function App() {
   const { CurrentUser } = useSelector((state) => state.user);
   const role = CurrentUser?.role || CurrentUser?.user?.role;
@@ -85,7 +85,7 @@ function App() {
             {/* Événement, Document, Congé, Frais : Admin + Rh + Manager + Employe */}
             <Route element={<PrivateRoute rolesAllowed={["Admin", "Rh", "Manager", "Employe"]} />}>
               <Route path="evenement" element={<Evenement />} />
-              <Route path="document" element={<Document />} />
+              <Route path="document" element={<DocumentIndex />} />
               <Route path="congeIndex" element={<Conge />} />
               <Route path="conge" element={<CongeIndex />} />
               <Route path="employee/Conge" element={<CongeEmploye />} />

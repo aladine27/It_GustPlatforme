@@ -31,7 +31,7 @@ import TypeFormModal from '../components/Event/TypeFormModal';
 import EventDetailsModal from '../components/Event/EventDetailModal.jsx';
 import { StyledPaper } from '../style/style.jsx';
 import { toast } from 'react-toastify';
-
+import 'moment/locale/fr'
 const localizer = momentLocalizer(moment);
 
 export default function Evenement() {
@@ -52,8 +52,8 @@ export default function Evenement() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('week');
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-
-  useMomentLocale(t);
+moment.locale(i18n.language);
+  useMomentLocale(i18n);
 
   useEffect(() => {
     dispatch(fetchAllEvents());
@@ -218,6 +218,11 @@ export default function Evenement() {
     agenda: t('agenda'),
     noEventsInRange: t('noEventsInRange')
   };
+moment.updateLocale('fr', {
+  week: {
+    dow: 1,
+  }
+});
 
   const today = moment().format('dddd DD MMMM YYYY');
   const handleNavigate = (date) => setCurrentDate(date);
@@ -285,12 +290,12 @@ export default function Evenement() {
           messages={calendarMessages}
           localizer={localizer}
           events={calendarEvents}
-          culture={i18n.language}
+          culture={i18n.language.startsWith('fr') ? 'fr' : 'en'}
           startAccessor="start"
           endAccessor="end"
           selectable
-          style={{ height: '85vh', minHeight: 470, background: 'transparent' }}
-          min={new Date(1970, 0, 1, 6, 0)}
+          style={{ height: '85vh', minHeight: 470, background: 'transparent' ,width:'100%'}}
+          min={new Date(1970, 0, 1, 7, 0)}
           max={new Date(1970, 0, 1, 22, 0)}
           onSelectSlot={["Admin", "RH"].includes(userRole) ? handleSelectSlot : undefined}
           onSelectEvent={handleSelectEvent}
@@ -304,7 +309,7 @@ export default function Evenement() {
             style: {
               backgroundColor:
                 event.extendedProps.status === 'Terminé' ? '#4caf50'
-                  : event.extendedProps.status === 'Annulé' ? '#f44336'
+                  : event.extendedProps.status === 'Planifié' ? '#f44336'
                     : event.extendedProps.status === 'En cours' ? '#ff9800'
                       : '#1976d2',
               borderRadius: '10px',
@@ -423,7 +428,7 @@ export default function Evenement() {
         employes={employes}
         loadingEmployes={employesLoading}
         userRole={userRole}
-        isEditMode={!!selectedEvent}  // C'EST CE QUI BLOQUE L'EDITION
+        isEditMode={!!selectedEvent} 
         currentUserId={userId}
       />
     </StyledPaper>

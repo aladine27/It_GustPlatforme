@@ -66,8 +66,24 @@ export default function CongeEmploye() {
   const columns = [
     { id: "title", label: t("Type"), align: "left" },
     { id: "duration", label: t("Durée"), align: "center" },
-    { id: "startDate", label: t("Début"), align: "center" },
-    { id: "endDate", label: t("Fin"), align: "center" },
+    {
+      id: "startDate",
+      label: t("Début"),
+      align: "center",
+      render: (row) =>
+        row.startDate
+          ? new Date(row.startDate).toLocaleDateString("fr-FR")
+          : "-"
+    },
+    {
+      id: "endDate",
+      label: t("Fin"),
+      align: "center",
+      render: (row) =>
+        row.endDate
+          ? new Date(row.endDate).toLocaleDateString("fr-FR")
+          : "-"
+    },
     { id: "status", label: t("Statut"), align: "center", render: (row) => getStatusChip(row.status) },
     { id: "reason", label: t("Motif"), align: "left" },
     {
@@ -261,38 +277,48 @@ export default function CongeEmploye() {
 
       {/* HISTORIQUE AVEC CARDS */}
       {view === "history" && (
-        <Box py={2}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
-              <Typography variant="h5" fontWeight={700} mb={2}>
-                {t("Mes demandes de congé")}
-              </Typography>
-              {loading ? (
-                <Box textAlign="center" py={3}>
-                  <Typography color="text.secondary">{t("Chargement...")}</Typography>
-                </Box>
-              ) : error ? (
-                <Typography color="error">{error}</Typography>
-              ) : (
-                <TableComponent columns={columns} rows={paginatedRows} />
-              )}
-              {totalPages > 1 && (
-                <PaginationComponent
-                  count={totalPages}
-                  page={currentPage}
-                  onChange={(_, value) => setCurrentPage(value)}
-                />
-              )}
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <Stack spacing={2}>
-                <CongeWidget />
-                <CalendarWidget leaves={leaves} />
-              </Stack>
-            </Grid>
-          </Grid>
+        <Box py={2} sx={{ width: "100%" }}>
+  <Box sx={{ display: { xs: "block", md: "flex" }, gap: 3, width: "100%", alignItems: "flex-start" }}>
+    {/* Colonne principale : Tableau */}
+    <Box sx={{ flex: 2, minWidth: 0 }}>
+      <Typography variant="h5" fontWeight={700} mb={2}>
+        {t("Mes demandes de congé")}
+      </Typography>
+      {loading ? (
+        <Box textAlign="center" py={3}>
+          <Typography color="text.secondary">{t("Chargement...")}</Typography>
         </Box>
+      ) : error ? (
+        <Typography color="error">{error}</Typography>
+      ) : (
+        <TableComponent columns={columns} rows={paginatedRows} />
+      )}
+      {totalPages > 1 && (
+        <PaginationComponent
+          count={totalPages}
+          page={currentPage}
+          onChange={(_, value) => setCurrentPage(value)}
+        />
+      )}
+    </Box>
+
+    {/* Colonne widgets */}
+    <Box
+      sx={{
+        flex: 1,
+        minWidth: { xs: "100%", md: 290 },
+        maxWidth: { xs: "100%", md: 390 },
+        mt: { xs: 4, md: 0 },
+      }}
+    >
+      <Stack spacing={2}>
+        <CongeWidget />
+        <CalendarWidget leaves={leaves} />
+      </Stack>
+    </Box>
+  </Box>
+</Box>
+
       )}
     </>
   );

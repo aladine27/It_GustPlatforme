@@ -83,39 +83,56 @@ export default function ExportModal({ open, onClose, entity }) {
     <>
       <ToastContainer position="bottom-right" autoClose={4000} />
       <ModelComponent open={open} handleClose={onClose} title={title} icon={null}>
-        <Box sx={{ width: 400, p: 2 }}>
-          <Typography variant="body2" color="text.secondary" align="center" mb={2}>
-            {subtitle}
-          </Typography>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <Stack spacing={2}>
-              <DatePicker
-                label="Date de début"
-                value={startDate}
-                onChange={setStartDate}
-                renderInput={(params) => <TextField {...params} />}
-              />
-              <DatePicker
-                label="Date de fin"
-                value={endDate}
-                onChange={setEndDate}
-                renderInput={(params) => <TextField {...params} />}
-              />
-              <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
-                <ButtonComponent
-                  text="Export PDF"
-                  onClick={() => handleExport("PDF")}
-                  disabled={exportLoading}
-                />
-                <ButtonComponent
-                  text="Export Excel"
-                  onClick={() => handleExport("Excel")}
-                  disabled={exportLoading}
-                />
-              </Stack>
-            </Stack>
-          </LocalizationProvider>
-        </Box>
+      <Box
+  sx={{
+    width: 400,
+    p: 2,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    mx: "auto", // pour être sûr d'être centré horizontalement
+  }}
+>
+  <Typography
+    variant="body2"
+    color="text.secondary"
+    align="center"
+    mb={2}
+    sx={{ width: "100%" }}
+  >
+    {subtitle}
+  </Typography>
+  <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <Stack spacing={2} sx={{ width: "100%" }}>
+      <DatePicker
+        label="Date de début"
+        value={startDate}
+        onChange={setStartDate}
+        slotProps={{ textField: { fullWidth: true } }}
+      />
+      <DatePicker
+        label="Date de fin"
+        value={endDate}
+        onChange={setEndDate}
+        slotProps={{ textField: { fullWidth: true } }}
+      />
+      <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
+        <ButtonComponent
+          text="Export PDF"
+          onClick={() => handleExport("PDF")}
+          disabled={exportLoading}
+        />
+        <ButtonComponent
+          text="Export Excel"
+          onClick={() => handleExport("Excel")}
+          disabled={exportLoading}
+        />
+      </Stack>
+    </Stack>
+  </LocalizationProvider>
+</Box>
+
       </ModelComponent>
     </>
   );

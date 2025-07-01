@@ -6,9 +6,9 @@ import { timestamp } from "rxjs";
 export class Document {
     @Prop({required: true})
     title:string;
-    @Prop({required: true})
+    @Prop({})
     delevryDate:Date;
-    @Prop({required: true})
+    @Prop()
     traitementDateLimite:Date;
      @Prop({required: true})
     status:string;
@@ -16,6 +16,10 @@ export class Document {
     reason:string;
     @Prop({ type: SchemaTypes.ObjectId, ref: 'users', required: true })
     user: Types.ObjectId;
+    @Prop({ required: false, default: null })
+    file: string;
+    
+ 
     
 }
 export const documentSchema = SchemaFactory.createForClass(Document);

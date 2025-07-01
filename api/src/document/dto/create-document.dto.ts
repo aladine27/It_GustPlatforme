@@ -1,5 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsDate, IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsDate, IsEmail, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateDocumentDto {
        @ApiProperty({
@@ -15,6 +15,7 @@ export class CreateDocumentDto {
     })
      @IsDate() 
      @IsNotEmpty()
+     @IsOptional()
      delevryDate: Date;
      @ApiProperty({
         type: Date,
@@ -45,6 +46,9 @@ export class CreateDocumentDto {
     @IsString() 
     @IsNotEmpty()
     user: string;
+    @ApiPropertyOptional({ type: String, description: 'Generated file (optional at creation)' })
+    @IsOptional()
+    file: string;
 
 
 

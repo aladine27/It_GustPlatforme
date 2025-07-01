@@ -7,6 +7,7 @@ import { AccessTokenGuard } from 'src/guards/accessToken.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Response } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Employe } from 'src/employe/entities/employe.entity';
 
 @ApiBearerAuth("access-token")
 @UseGuards(AccessTokenGuard) 
@@ -38,7 +39,7 @@ export class EventController {
     
   }
   @UseGuards( RolesGuard)
-  @Roles('Admin','Rh')
+   @Roles('Admin','Rh','Employe','Manager')
   @Get('/geteventbyUserID/:user')
   async findEventByUser(@Param('user') user: string, @Res() res) {
     try {
@@ -58,7 +59,7 @@ export class EventController {
     }
   }
   @UseGuards( RolesGuard)
-  @Roles('Admin','Rh')
+  @Roles('Admin','Rh','Employe','Manager')
   @Get()
   async findAll(@Req() req, @Res() res) {
    
@@ -81,7 +82,7 @@ export class EventController {
   }
 
   @UseGuards( RolesGuard)
-  @Roles('Admin','Rh')
+  @Roles('Admin','Rh','Employe','Manager')
   @Get(':id')
   async findOne(@Param('id') id: string,@Res() res) {
     try {

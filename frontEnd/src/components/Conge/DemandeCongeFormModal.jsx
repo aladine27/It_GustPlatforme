@@ -17,28 +17,7 @@ import { ButtonComponent } from "../Global/ButtonComponent";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
-
-// Validation schema
-const validationSchema = Yup.object({
-  leaveType: Yup.string().required("Le type de congé est requis"),
-  startDate: Yup.date()
-    .typeError("Date invalide")
-    .required("La date de début est requise"),
-  endDate: Yup.date()
-    .typeError("Date invalide")
-    .required("La date de fin est requise")
-    .min(Yup.ref("startDate"), "Date de fin après la date de début"),
-  reason: Yup.string().required("Le motif est requis"),
-  reasonfile: Yup.mixed()
-    .test(
-      "fileFormat",
-      "Formats acceptés : pdf, jpg, png, jpeg",
-      (file) =>
-        !file ||
-        ["application/pdf", "image/jpeg", "image/png", "image/jpg"].includes(file.type)
-    )
-    .nullable(),
-});
+import { useTranslation } from "react-i18next"; // <-- Ajout
 
 export default function DemandeCongeFormModal({
   open,
@@ -47,8 +26,32 @@ export default function DemandeCongeFormModal({
   userId,
   leaveBalance,
 }) {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { leaveTypes, loading } = useSelector((state) => state.leaveType);
+
+  // --- Validation schema avec t()
+  const validationSchema = Yup.object({
+    leaveType: Yup.string().required(t("Type de congé requis")),
+    startDate: Yup.date()
+      .typeError(t("Date invalide"))
+      .required(t("La date de début est requise"))
+      .min(dayjs().startOf("day").toDate(), t("Impossible de choisir une date passée")),
+    endDate: Yup.date()
+      .typeError(t("Date invalide"))
+      .required(t("La date de fin est requise"))
+      .min(Yup.ref("startDate"), t("Date de fin après la date de début")),
+    reason: Yup.string().required(t("Le motif est requis")),
+    reasonfile: Yup.mixed()
+      .test(
+        "fileFormat",
+        t("Formats acceptés : pdf, jpg, png, jpeg"),
+        (file) =>
+          !file ||
+          ["application/pdf", "image/jpeg", "image/png", "image/jpg"].includes(file.type)
+      )
+      .nullable(),
+  });
 
   const [form, setForm] = useState({
     leaveType: "",
@@ -78,17 +81,15 @@ export default function DemandeCongeFormModal({
   useEffect(() => {
     if (form.startDate && limitDuration) {
       const start = dayjs(form.startDate);
-      const end = start.add(limitDuration - 1, "day"); // Limite en jours, jour inclus
+      const end = start.add(limitDuration - 1, "day");
       setForm((prev) => ({
         ...prev,
         endDate: end.format("YYYY-MM-DD"),
         duration: limitDuration,
       }));
     } else if (!limitDuration) {
-      // Si pas de limite, ne rien toucher
       setForm((prev) => ({
         ...prev,
-        // endDate reste libre
         duration:
           prev.startDate && prev.endDate
             ? dayjs(prev.endDate).diff(dayjs(prev.startDate), "day") + 1
@@ -126,7 +127,6 @@ export default function DemandeCongeFormModal({
     if (field === "reasonfile" && e.target.files[0]) {
       setFileName(e.target.files[0].name);
     }
-    // Si l'utilisateur change de type ou de date, reset la date de fin si type sans limite
     if ((field === "leaveType" || field === "startDate") && !limitDuration) {
       setForm((prev) => ({
         ...prev,
@@ -145,9 +145,9 @@ export default function DemandeCongeFormModal({
       if (!form.duration || Number(form.duration) < 1) {
         setErrors((prev) => ({
           ...prev,
-          duration: "La durée doit être supérieure ou égale à 1 jour.",
+          duration: t("La durée doit être supérieure ou égale à 1 jour."),
         }));
-        toast.error("La durée doit être supérieure ou égale à 1 jour.");
+        toast.error(t("La durée doit être supérieure ou égale à 1 jour."));
         return;
       }
 
@@ -156,15 +156,18 @@ export default function DemandeCongeFormModal({
         if (Number(form.duration) > Number(leaveBalance.soldeRestant)) {
           setErrors((prev) => ({
             ...prev,
-            duration: `Votre solde restant est insuffisant (${leaveBalance.soldeRestant} jours) pour cette demande.`,
+            duration: t("Votre solde restant est insuffisant ({solde} jours) pour cette demande.", { solde: leaveBalance.soldeRestant }),
           }));
           toast.error(
-            `Votre solde restant (${leaveBalance.soldeRestant} jours) est insuffisant pour une demande de ${form.duration} jours !`
+            t("Votre solde restant ({solde} jours) est insuffisant pour une demande de {durée} jours !", {
+              solde: leaveBalance.soldeRestant,
+              durée: form.duration,
+            })
           );
           return;
         }
       }
-      
+
       const formData = new FormData();
       formData.append("title", typeObj?.name || "");
       formData.append("leaveType", form.leaveType);
@@ -180,7 +183,7 @@ export default function DemandeCongeFormModal({
 
       resetForm();
       handleClose();
-      toast.success("Demande de congé envoyée avec succès !");
+      toast.success(t("Demande de congé envoyée avec succès !"));
     } catch (validationErr) {
       if (validationErr.inner) {
         const newErrors = {};
@@ -190,7 +193,7 @@ export default function DemandeCongeFormModal({
         setErrors(newErrors);
         toast.error(validationErr.errors[0]);
       } else {
-        toast.error("Erreur lors de la validation ou de la soumission !");
+        toast.error(t("Erreur lors de la validation ou de la soumission !"));
       }
     }
   };
@@ -200,14 +203,16 @@ export default function DemandeCongeFormModal({
     resetForm();
     handleClose();
   };
-  
+
+  // Date du jour au format dayjs
+  const todayDayjs = dayjs().startOf("day");
 
   // Render
   return (
     <ModelComponent
       open={open}
       handleClose={handleCloseAndReset}
-      title="Demande de Congé"
+      title={t("Demande de congé employé")}
       icon={<EventNote />}
       maxWidth="sm"
     >
@@ -219,7 +224,7 @@ export default function DemandeCongeFormModal({
       >
         <TextField
           select
-          label="Type de congé *"
+          label={t("Type de congé") + " *"}
           name="leaveType"
           value={form.leaveType}
           onChange={handleChange("leaveType")}
@@ -228,12 +233,12 @@ export default function DemandeCongeFormModal({
           disabled={loading}
         >
           <MenuItem value="" disabled>
-            Sélectionner un type
+            {t("Sélectionner un type")}
           </MenuItem>
-          {(leaveTypes || []).map((t) => (
-            <MenuItem key={t._id} value={t._id}>
-              {t.name}
-              {t.limitDuration ? ` (limite: ${t.limitDuration}j)` : ""}
+          {(leaveTypes || []).map((tType) => (
+            <MenuItem key={tType._id} value={tType._id}>
+              {tType.name}
+              {tType.limitDuration ? ` (${t("limite")}: ${tType.limitDuration}${t("Jour(s)")})` : ""}
             </MenuItem>
           ))}
         </TextField>
@@ -242,8 +247,9 @@ export default function DemandeCongeFormModal({
           <Grid container spacing={2}>
             <Grid item xs={6}>
               <DatePicker
-                label="Date de début *"
+                label={t("Date de début") + " *"}
                 value={form.startDate ? dayjs(form.startDate) : null}
+                minDate={todayDayjs}
                 onChange={(value) => {
                   const date = value ? value.format("YYYY-MM-DD") : "";
                   handleChange("startDate")({ target: { value: date } });
@@ -260,8 +266,9 @@ export default function DemandeCongeFormModal({
             </Grid>
             <Grid item xs={6}>
               <DatePicker
-                label="Date de fin *"
+                label={t("Date de fin") + " *"}
                 value={form.endDate ? dayjs(form.endDate) : null}
+                minDate={form.startDate ? dayjs(form.startDate) : todayDayjs}
                 onChange={(value) => {
                   if (!limitDuration) {
                     const date = value ? value.format("YYYY-MM-DD") : "";
@@ -274,7 +281,7 @@ export default function DemandeCongeFormModal({
                     helperText: errors.endDate,
                     fullWidth: true,
                     InputLabelProps: { shrink: true },
-                    disabled: !!limitDuration, // désactive si limité
+                    disabled: !!limitDuration,
                     readOnly: !!limitDuration,
                   },
                 }}
@@ -284,7 +291,7 @@ export default function DemandeCongeFormModal({
         </LocalizationProvider>
 
         <TextField
-          label="Durée (en jours)"
+          label={t("Durée (en jours)")}
           name="duration"
           type="number"
           value={form.duration}
@@ -296,7 +303,7 @@ export default function DemandeCongeFormModal({
         />
 
         <TextField
-          label="Motif *"
+          label={t("Motif") + " *"}
           name="reason"
           multiline
           minRows={2}
@@ -312,7 +319,7 @@ export default function DemandeCongeFormModal({
           fullWidth
           sx={{ mb: 1 }}
         >
-          Joindre un justificatif (pdf, jpg, png, jpeg)
+          {t("Joindre un justificatif (pdf, jpg, png, jpeg)")}
           <input
             type="file"
             hidden
@@ -327,20 +334,14 @@ export default function DemandeCongeFormModal({
         )}
         {fileName && (
           <Typography variant="caption" color="text.secondary">
-            Fichier sélectionné : {fileName}
+            {t("Fichier sélectionné")} : {fileName}
           </Typography>
         )}
 
         <Box display="flex" justifyContent="flex-end" gap={1}>
           <ButtonComponent
-            type="button"
-            text="Annuler"
-            color="secondary"
-            onClick={handleCloseAndReset}
-          />
-          <ButtonComponent
             type="submit"
-            text="Envoyer"
+            text={t("Envoyer")}
           />
         </Box>
       </Box>
