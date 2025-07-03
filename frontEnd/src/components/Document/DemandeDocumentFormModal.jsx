@@ -12,11 +12,13 @@ import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { EventNote } from "@mui/icons-material";
 
-// Types de documents
+// 5 Types de documents les plus demandés
 const documentTypes = [
   { value: "Attestation de travail", label: "Attestation de travail" },
-  { value: "Fiche de paie", label: "Fiche de paie" },
+  { value: "Bulletin de paie", label: "Bulletin de paie" },
   { value: "Attestation de salaire", label: "Attestation de salaire" },
+  { value: "Attestation de présence", label: "Attestation de présence" },
+  { value: "Certificat de non-salaire", label: "Certificat de non-salaire" },
 ];
 
 export default function DemandeDocumentFormModal({
@@ -58,7 +60,6 @@ export default function DemandeDocumentFormModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log("[DemandeDocModal] Tentative d’envoi du formulaire :", form);
       await validationSchema.validate(form, { abortEarly: false });
 
       // Prépare le FormData
@@ -71,16 +72,13 @@ export default function DemandeDocumentFormModal({
       formData.append("file", ""); // pas de fichier ici
 
       if (onSubmit) {
-        console.log("[DemandeDocModal] Envoi vers onSubmit du parent avec FormData :", formData);
         await onSubmit(formData);
       }
 
-      console.log("[DemandeDocModal] Formulaire soumis avec succès !");
       setForm({ title: "", traitementDateLimite: "", reason: "" });
       handleClose();
       toast.success(t("Demande de document envoyée avec succès !"));
     } catch (validationErr) {
-      console.error("[DemandeDocModal] Erreur de validation/soumission :", validationErr);
       if (validationErr.inner) {
         const newErrors = {};
         validationErr.inner.forEach((err) => {

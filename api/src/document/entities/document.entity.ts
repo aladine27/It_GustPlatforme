@@ -18,6 +18,7 @@ export class Document {
     user: Types.ObjectId;
     @Prop({ required: false, default: null })
     file: string;
+ 
     
  
     

@@ -25,14 +25,30 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
-const connection="process.env.MONGO_URI"
-
 @Module({
   imports: [
-    UsersModule, CategoriesModule, ProjectsModule, TasksModule, JobOffreModule, JobCategoryModule, LeaveModule, EventModule, ApplicationModule, DocumentModule, FraisAdvantageModule, LeaveTypeModule, FraiTypeModule, EventTypeModule, AdminModule, RhModule, EmployeModule, ManagerModule, AuthModule
-  ,  ConfigModule.forRoot({
+    UsersModule,
+    CategoriesModule,
+    ProjectsModule,
+    TasksModule,
+    JobOffreModule,
+    JobCategoryModule,
+    LeaveModule,
+    EventModule,
+    ApplicationModule,
+    DocumentModule,
+    FraisAdvantageModule,
+    LeaveTypeModule,
+    FraiTypeModule,
+    EventTypeModule,
+    AdminModule,
+    RhModule,
+    EmployeModule,
+    ManagerModule,
+    AuthModule,
+    ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env', // Spécifier explicitement le fichier .env
+      envFilePath: '.env',
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -44,15 +60,13 @@ const connection="process.env.MONGO_URI"
       inject: [ConfigService],
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'), // chemin physique vers le dossier uploads
-      serveRoot: '/uploads',                     // URL de base pour y accéder
-      exclude: ['/api*'],                        // optionnel : exclure les routes API si nécessaire
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+      exclude: ['/api*'],
       serveStaticOptions: {
-        index: false,                            // ne pas servir d’index.html automatiquement
+        index: false,
       },
     }),
-    
-  
   ],
   controllers: [AppController],
   providers: [AppService],

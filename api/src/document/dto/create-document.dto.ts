@@ -49,6 +49,10 @@ export class CreateDocumentDto {
     @ApiPropertyOptional({ type: String, description: 'Generated file (optional at creation)' })
     @IsOptional()
     file: string;
+    @ApiProperty({ description: "ID du type de document" })
+    @IsString()
+    @IsNotEmpty()
+    documentType: string; 
 
 
 

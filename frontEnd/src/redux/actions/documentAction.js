@@ -124,16 +124,23 @@ export const fetchDocumentTemplate = createAsyncThunk(
       async ({ id, html }, { rejectWithValue }) => {
         try {
           const token = localStorage.getItem("token");
-          // On suppose que le backend attend { html }
+          console.log("[generatePdfFromHtml] id:", id);
+          console.log("[generatePdfFromHtml] html:", html?.substring(0, 200)); // Affiche le début de l'html
+    
           const res = await axios.post(
             `http://localhost:3000/document/${id}/generate-pdf`,
             { html },
             { headers: { Authorization: `Bearer ${token}` } }
           );
+          console.log("[generatePdfFromHtml] Réponse:", res.data);
           return res.data.data; // Retourne le doc mis à jour (avec file généré)
         } catch (err) {
+          console.error("[generatePdfFromHtml] Erreur axios:", {
+            status: err.response?.status,
+            data: err.response?.data,
+            message: err.message
+          });
           return rejectWithValue(err.response?.data?.message || err.message);
         }
       }
-  
-);
+    );

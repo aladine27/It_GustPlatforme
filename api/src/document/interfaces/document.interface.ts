@@ -6,6 +6,7 @@ export interface IDocument extends Document {
     readonly status: string;
     readonly reason: string;
     readonly user: string;
+    readonly documentType: string;
     file: string
     
     

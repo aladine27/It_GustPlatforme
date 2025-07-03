@@ -36,10 +36,12 @@ export class DocumentController {
         status: { type: 'string', description: 'Statut du document' },
         reason: { type: 'string', description: 'Raison' },
         user: { type: 'string', description: 'ID utilisateur associé' },
-        // Ajoute ici un champ fichier si tu veux permettre l'upload d'un document (PDF, image, etc)
+        documentType: { type: 'string', description: 'ID du type de document' },
         file: { type: 'string', format: 'binary', description: 'Fichier du document (optionnel)' }
       },
-      required: ['title', 'delevryDate', 'traitementDateLimite', 'status', 'reason', 'user']
+      required: [
+        'title', 'delevryDate', 'traitementDateLimite', 'status', 'reason', 'user', 'documentType'
+      ]
     }
   })
   @UseInterceptors(
@@ -58,7 +60,6 @@ export class DocumentController {
     @UploadedFile() file?: Express.Multer.File
   ) {
     try {
-      // Si tu veux stocker le nom du fichier :
       if (file) createDocumentDto['file'] = file.filename;
       const newDocument = await this.documentService.create(createDocumentDto);
       return res.status(HttpStatus.CREATED).json({
@@ -183,6 +184,7 @@ export class DocumentController {
       });
     }
   }
+
   @Get(':id/template')
   @ApiOperation({ summary: 'Générer le template HTML fusionné du document (pour édition WYSIWYG)' })
   @ApiResponse({ status: 200, description: 'Le HTML prêt à être édité.' })
@@ -207,38 +209,53 @@ export class DocumentController {
       });
     }
   }
+
   @Post(':id/generate-pdf')
-@ApiOperation({ summary: 'Générer un PDF à partir du HTML personnalisé (WYSIWYG)' })
-@ApiBody({
-  schema: {
-    type: 'object',
-    properties: {
-      html: { type: 'string', description: 'Contenu HTML du document édité' }
-    },
-    required: ['html']
+  @ApiOperation({ summary: 'Générer un PDF à partir du HTML personnalisé (WYSIWYG)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        html: { type: 'string', description: 'Contenu HTML du document édité' }
+      },
+      required: ['html']
+    }
+  })
+  @ApiResponse({ status: 201, description: 'Le document PDF généré et stocké.' })
+  @UseGuards(RolesGuard)
+  @Roles('Admin', 'Rh')
+  async generatePdfFromHtml(
+    @Param('id') id: string,
+    @Body('html') html: string,
+    @Res() res: Response,
+  ) {
+    console.log('----- [PDF] generatePdfFromHtml - ENTRY');
+    console.log('[PDF] id reçu :', id);
+    // Attention : parfois html peut être undefined/null/"" ou trop court...
+    if (!html || typeof html !== 'string' || html.length < 20) {
+      console.error('[PDF] ERREUR : html vide ou invalide ! html =', html);
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        message: "Le contenu HTML est vide ou invalide.",
+        data: null,
+        status: HttpStatus.BAD_REQUEST
+      });
+    }
+    try {
+      console.log('[PDF] Lancement service.generatePdfFromHtml');
+      const doc = await this.documentService.generatePdfFromHtml(id, html);
+      console.log('[PDF] PDF généré avec succès pour doc ');
+      return res.status(HttpStatus.CREATED).json({
+        message: 'Document PDF généré et stocké.',
+        data: doc,
+        status: HttpStatus.CREATED
+      });
+    } catch (error) {
+      console.error('[PDF] ERREUR dans generatePdfFromHtml :', error);
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        message: error.message,
+        data: null,
+        status: HttpStatus.BAD_REQUEST
+      });
+    }
   }
-})
-@ApiResponse({ status: 201, description: 'Le document PDF généré et stocké.' })
-@UseGuards(RolesGuard)
-@Roles('Admin', 'Rh')
-async generatePdfFromHtml(
-  @Param('id') id: string,
-  @Body('html') html: string,
-  @Res() res: Response,
-) {
-  try {
-    const doc = await this.documentService.generatePdfFromHtml(id, html);
-    return res.status(HttpStatus.CREATED).json({
-      message: 'Document PDF généré et stocké.',
-      data: doc,
-      status: HttpStatus.CREATED
-    });
-  } catch (error) {
-    return res.status(HttpStatus.BAD_REQUEST).json({
-      message: error.message,
-      data: null,
-      status: HttpStatus.BAD_REQUEST
-    });
-  }
-}
-}
+}  
