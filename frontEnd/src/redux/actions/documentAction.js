@@ -107,18 +107,21 @@ export const deleteDocument = createAsyncThunk(
 );
 export const fetchDocumentTemplate = createAsyncThunk(
   "document/fetchTemplate",
-    async (id, { rejectWithValue }) => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          `http://localhost:3000/document/${id}/template`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        return res.data.data; // le html string
-      } catch (err) {
-        return rejectWithValue(err.response?.data?.message || err.message);
-      }
-    });
+  async (id, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `http://localhost:3000/document/${id}/template`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log("[fetchDocumentTemplate] Backend HTML:", res.data.data?.substring(0, 200));
+      return res.data.data; // le html string
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
     export const generatePdfFromHtml = createAsyncThunk(
       "document/generatePdfFromHtml",
       async ({ id, html }, { rejectWithValue }) => {

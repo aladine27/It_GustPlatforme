@@ -63,180 +63,122 @@ export class DocumentService {
     return document;
   
   }
-  // document.service.ts
+  
   async getDocumentTemplate(documentId: string): Promise<{ html: string }> {
     const doc = await this.documentModel.findById(documentId).populate<{ user: IUser }>('user');
     if (!doc) throw new NotFoundException('Document not found');
     const user = doc.user as IUser;
     const type = (doc.title || "").toLowerCase();
-
+  
     let html: string;
-
     switch (type) {
-      case "attestation de travail":
-        html = `
-          <div style="font-family:Arial,sans-serif;max-width:700px;margin:auto;background:#fff;">
-            <div style="display:flex;align-items:center;gap:20px;">
-              <img src="https://tonentreprise.com/logo.png" style="height:64px"/>
-              <div>
-                <h2 style="color:#1976d2;margin:0;">Attestation de travail</h2>
-                <div style="color:#888;font-size:13px;">Société Sofiatech</div>
-              </div>
-            </div>
-            <hr style="margin:20px 0;"/>
-            <p>
-              Nous attestons que <b>${user?.fullName ?? ""}</b> est employé(e) par Sofiatech
-              en qualité de <b>...</b> depuis le <b>...</b>.
-            </p>
-            <ul>
-              <li><b>Email :</b> ${user?.email ?? ""}</li>
-              <li><b>Adresse :</b> ${user?.address ?? ""}</li>
-              <li><b>Téléphone :</b> ${user?.phone ?? ""}</li>
-              <li><b>Raison :</b> ${doc.reason ?? ""}</li>
-              <li><b>Date de délivrance :</b> ${doc.delevryDate ? new Date(doc.delevryDate).toLocaleDateString("fr-FR") : "..."}</li>
-            </ul>
-            <div style="margin-top:48px;display:flex;gap:30px;">
-              <div>
-                <img src="https://tonentreprise.com/signature.png" style="height:40px;"/>
-                <div style="font-size:14px;">RH</div>
-              </div>
-              <div>
-                <img src="https://tonentreprise.com/tampon.png" style="height:40px;"/>
-              </div>
-            </div>
-          </div>
-        `;
-        break;
       case "bulletin de paie":
         html = `
-          <div style="font-family:Arial,sans-serif;max-width:740px;margin:auto;background:#fff;padding:36px;">
-            <div style="display:flex;align-items:center;gap:20px;">
-              <img src="https://tonentreprise.com/logo.png" style="height:48px"/>
-              <div>
-                <h2 style="color:#1976d2;margin:0;">Bulletin de Paie</h2>
-                <div style="color:#888;font-size:13px;">Société Sofiatech</div>
-              </div>
-            </div>
-            <hr style="margin:16px 0 24px;"/>
-            <div>
-              <b>Nom :</b> ${user?.fullName ?? ""}<br/>
-              <b>Période :</b> ...<br/>
-              <b>Salaire Net :</b> ... TND
-            </div>
-            <div style="margin-top:24px;">
-              <img src="https://tonentreprise.com/tampon.png" style="height:40px;"/>
-              <div style="font-size:14px;">Service Paie</div>
-            </div>
-          </div>
+          <p><img src="https://tonentreprise.com/logo.png" /></p>
+          <h2>Bulletin de Paie</h2>
+          <p>Société Sofiatech</p>
+          <hr/>
+          <p><b>Nom du salarié :</b> ${user?.fullName ?? ""}</p>
+          <p><b>Période concernée :</b> ...</p>
+          <p><b>Salaire Net à payer :</b> ... TND</p>
+          <p>
+            Ce bulletin de paie certifie la rémunération due au salarié pour la période indiquée ci-dessus.<br>
+            Veuillez vérifier l’exactitude des informations indiquées.<br>
+            <i>Pour toute question relative à ce bulletin, merci de contacter le service paie.</i>
+          </p>
+          <p><img src="https://tonentreprise.com/tampon.png" /></p>
+          <p>Service Paie - Sofiatech</p>
         `;
         break;
+  
       case "attestation de salaire":
         html = `
-          <div style="font-family:Arial,sans-serif;max-width:700px;margin:auto;background:#fff;">
-            <div style="display:flex;align-items:center;gap:20px;">
-              <img src="https://tonentreprise.com/logo.png" style="height:64px"/>
-              <div>
-                <h2 style="color:#1976d2;margin:0;">Attestation de salaire</h2>
-                <div style="color:#888;font-size:13px;">Société Sofiatech</div>
-              </div>
-            </div>
-            <hr style="margin:20px 0;"/>
-            <p>
-              Nous soussignés, attestons que <b>${user?.fullName ?? ""}</b> perçoit un salaire mensuel net de 
-              <b>...</b> TND chez Sofiatech, pour la période de <b>...</b>.
-            </p>
+          <p><img src="https://tonentreprise.com/logo.png" /></p>
+          <h2>Attestation de Salaire</h2>
+          <p>Société Sofiatech</p>
+          <hr/>
+          <p>
+            Nous, soussignés, attestons par la présente que <b>${user?.fullName ?? ""}</b> est employé(e) chez Sofiatech et perçoit un salaire mensuel net de <b>...</b> TND,
+            pour la période de <b>...</b>.
+          </p>
+          <ul>
+            <li><b>Email :</b> ${user?.email ?? ""}</li>
+            <li><b>Adresse :</b> ${user?.address ?? ""}</li>
+            <li><b>Téléphone :</b> ${user?.phone ?? ""}</li>
+            <li><b>Motif de la demande :</b> ${doc.reason ?? ""}</li>
+            <li><b>Date de délivrance :</b> ${doc.delevryDate ? new Date(doc.delevryDate).toLocaleDateString("fr-FR") : "..."}</li>
+          </ul>
+          <p>
+            Cette attestation est délivrée à la demande de l’intéressé(e) pour servir et valoir ce que de droit.
+          </p>
+          <p><img src="https://tonentreprise.com/signature.png" /></p>
+          <p>Direction Administrative - Sofiatech</p>
+        `;
+        break;
+  
+        case "attestation de présence":
+          html = `
+            <p><img src="https://tonentreprise.com/logo.png" /></p>
+            <p><b>Attestation de Présence</b></p>
+            <p>Société Sofiatech</p>
+            <p>Nous attestons que <b>${user?.fullName ?? ""}</b> a effectivement été présent(e) à son poste le <b>${doc.delevryDate ? new Date(doc.delevryDate).toLocaleDateString("fr-FR") : "..."}</b>, au sein de notre société.</p>
             <ul>
               <li><b>Email :</b> ${user?.email ?? ""}</li>
               <li><b>Adresse :</b> ${user?.address ?? ""}</li>
               <li><b>Téléphone :</b> ${user?.phone ?? ""}</li>
-              <li><b>Raison :</b> ${doc.reason ?? ""}</li>
-              <li><b>Date de délivrance :</b> ${doc.delevryDate ? new Date(doc.delevryDate).toLocaleDateString("fr-FR") : "..."}</li>
+              <li><b>Motif de la demande :</b> ${doc.reason ?? ""}</li>
             </ul>
-            <div style="margin-top:36px;">
-              <img src="https://tonentreprise.com/signature.png" style="height:40px;"/>
-              <div style="font-size:14px;">Direction Administrative</div>
-            </div>
-          </div>
-        `;
-        break;
-      case "attestation de présence":
-        html = `
-          <div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;background:#fff;">
-            <div style="display:flex;align-items:center;gap:20px;">
-              <img src="https://tonentreprise.com/logo.png" style="height:48px"/>
-              <div>
-                <h2 style="color:#1976d2;margin:0;">Attestation de présence</h2>
-                <div style="color:#888;font-size:13px;">Société Sofiatech</div>
-              </div>
-            </div>
-            <hr style="margin:16px 0 24px;"/>
-            <p>
-              Nous attestons que <b>${user?.fullName ?? ""}</b> était bien présent(e) à son poste le 
-              <b>${doc.delevryDate ? new Date(doc.delevryDate).toLocaleDateString("fr-FR") : "..."}</b>.
-            </p>
-            <ul>
-              <li><b>Email :</b> ${user?.email ?? ""}</li>
-              <li><b>Adresse :</b> ${user?.address ?? ""}</li>
-              <li><b>Téléphone :</b> ${user?.phone ?? ""}</li>
-              <li><b>Raison :</b> ${doc.reason ?? ""}</li>
-            </ul>
-            <div style="margin-top:36px;">
-              <img src="https://tonentreprise.com/tampon.png" style="height:40px;"/>
-              <div style="font-size:14px;">Service RH</div>
-            </div>
-          </div>
-        `;
-        break;
+            <p>Fait pour servir et valoir ce que de droit.</p>
+            <p><img src="https://tonentreprise.com/tampon.png" /></p>
+            <p>Service RH - Sofiatech</p>
+          `;
+          break;
+      
+  
       case "certificat de non-salaire":
         html = `
-          <div style="font-family:Arial,sans-serif;max-width:700px;margin:auto;background:#fff;">
-            <div style="display:flex;align-items:center;gap:20px;">
-              <img src="https://tonentreprise.com/logo.png" style="height:64px"/>
-              <div>
-                <h2 style="color:#1976d2;margin:0;">Certificat de non-salaire</h2>
-                <div style="color:#888;font-size:13px;">Société Sofiatech</div>
-              </div>
-            </div>
-            <hr style="margin:20px 0;"/>
-            <p>
-              Nous certifions que <b>${user?.fullName ?? ""}</b> n'a perçu aucun salaire pour la période de 
-              <b>...</b> au sein de Sofiatech.
-            </p>
-            <ul>
-              <li><b>Email :</b> ${user?.email ?? ""}</li>
-              <li><b>Adresse :</b> ${user?.address ?? ""}</li>
-              <li><b>Téléphone :</b> ${user?.phone ?? ""}</li>
-              <li><b>Raison :</b> ${doc.reason ?? ""}</li>
-              <li><b>Date de délivrance :</b> ${doc.delevryDate ? new Date(doc.delevryDate).toLocaleDateString("fr-FR") : "..."}</li>
-            </ul>
-            <div style="margin-top:36px;">
-              <img src="https://tonentreprise.com/signature.png" style="height:40px;"/>
-              <div style="font-size:14px;">Direction Administrative</div>
-            </div>
-          </div>
+          <p><img src="https://tonentreprise.com/logo.png" /></p>
+          <h2>Certificat de Non-Salaire</h2>
+          <p>Société Sofiatech</p>
+          <hr/>
+          <p>
+            Nous certifions que <b>${user?.fullName ?? ""}</b> n’a perçu aucun salaire pour la période de <b>...</b> au sein de notre entreprise.
+          </p>
+          <ul>
+            <li><b>Email :</b> ${user?.email ?? ""}</li>
+            <li><b>Adresse :</b> ${user?.address ?? ""}</li>
+            <li><b>Téléphone :</b> ${user?.phone ?? ""}</li>
+            <li><b>Motif de la demande :</b> ${doc.reason ?? ""}</li>
+            <li><b>Date de délivrance :</b> ${doc.delevryDate ? new Date(doc.delevryDate).toLocaleDateString("fr-FR") : "..."}</li>
+          </ul>
+          <p>
+            Délivré à la demande de l’intéressé(e) pour servir et valoir ce que de droit.
+          </p>
+          <p><img src="https://tonentreprise.com/signature.png" /></p>
+          <p>Direction Administrative - Sofiatech</p>
         `;
         break;
+  
       default:
         html = `
-          <div style="font-family:Arial,sans-serif;max-width:700px;margin:auto;background:#fff;">
-            <div style="display:flex;align-items:center;gap:20px;">
-              <img src="https://tonentreprise.com/logo.png" style="height:64px"/>
-              <div>
-                <h2 style="color:#1976d2;margin:0;">Document administratif</h2>
-                <div style="color:#888;font-size:13px;">Société Sofiatech</div>
-              </div>
-            </div>
-            <hr style="margin:20px 0;"/>
-            <p>
-              Document généré pour <b>${user?.fullName ?? ""}</b>.<br/>
-              Délivré le ${doc.delevryDate ? new Date(doc.delevryDate).toLocaleDateString("fr-FR") : "..."}.
-            </p>
-          </div>
+          <p><img src="https://tonentreprise.com/logo.png" /></p>
+          <h2>Document Administratif</h2>
+          <p>Société Sofiatech</p>
+          <hr/>
+          <p>
+            Ce document a été généré pour <b>${user?.fullName ?? ""}</b>.<br/>
+            Délivré le ${doc.delevryDate ? new Date(doc.delevryDate).toLocaleDateString("fr-FR") : "..."}.
+          </p>
+          <p>
+            Pour toute information complémentaire, merci de contacter notre service RH.
+          </p>
         `;
     }
+  
     return { html };
   }
-
+  
+  
   async generatePdfFromHtml(documentId: string, html: string): Promise<IDocument> {
     const doc = await this.documentModel.findById(documentId);
     if (!doc) throw new NotFoundException('Document not found');
