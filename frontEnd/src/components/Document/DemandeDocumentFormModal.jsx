@@ -34,12 +34,14 @@ export default function DemandeDocumentFormModal({
     reason: "",
   });
   const [errors, setErrors] = useState({});
+  const [fileName, setFileName] = useState(null);
+  
 
   React.useEffect(() => {
     if (open) setForm({ title: "", traitementDateLimite: "", reason: "" });
   }, [open]);
 
-  // Validation schema
+  
   const validationSchema = Yup.object({
     title: Yup.string().required(t("Type de document requis")),
     traitementDateLimite: Yup.date()
@@ -47,6 +49,15 @@ export default function DemandeDocumentFormModal({
       .min(dayjs().startOf("day").toDate(), t("Impossible de choisir une date passée")),
     reason: Yup.string().required(t("Le motif est requis")),
   });
+  const resetForm = () => {
+    setForm({
+      title: "",
+      traitementDateLimite: "",
+      reason: "",
+    });
+    setErrors({});
+    setFileName(null);
+  };
 
   const handleChange = (field) => (e) => {
     const value = e.target.value;
@@ -76,6 +87,7 @@ export default function DemandeDocumentFormModal({
       }
 
       setForm({ title: "", traitementDateLimite: "", reason: "" });
+      resetForm();
       handleClose();
       toast.success(t("Demande de document envoyée avec succès !"));
     } catch (validationErr) {
@@ -93,7 +105,7 @@ export default function DemandeDocumentFormModal({
   };
 
   const handleCloseAndReset = () => {
-    setForm({ title: "", traitementDateLimite: "", reason: "" });
+    resetForm();
     handleClose();
   };
 

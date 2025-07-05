@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllDocuments, updateDocument } from "../../redux/actions/documentAction";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import DocumentCustomModal from "../../components/Document/DocumentCustomModal";
+
 import { useNavigate } from "react-router-dom";
 
 // Status Chip pour la colonne Statut
@@ -101,37 +101,51 @@ const DocumentTraitementRH = () => {
       label: t("Employé"),
       align: "left",
       render: (row) => {
-        console.log("[DEBUG] Render user column, row:", row);
         const user = row.user || {};
         const img = user.image || "";
         const fullName = user.fullName || user.email || "—";
-        console.log("[DEBUG] user.img:", img, "user.fullName:", user.fullName, "user.email:", user.email);
+        // Calcul initiales
+        const initials =
+          (!img && fullName && fullName !== "—")
+            ? fullName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase()
+            : "";
         return (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Avatar
-              src={img ? `http://localhost:3000/uploads/users/${encodeURIComponent(img)}?t=${Date.now()}` : undefined}
+              src={
+                img
+                  ? `http://localhost:3000/uploads/users/${encodeURIComponent(img)}?t=${user.image ? Date.now() : ""}`
+                  : undefined
+              }
+              alt={fullName}
               sx={{
                 bgcolor: "#e3f2fd",
                 color: "#1976d2",
-                width: 38,
-                height: 38,
+                width: 44,
+                height: 44,
                 fontWeight: 700,
-                fontSize: 16,
+                fontSize: 19,
                 border: '2px solid #1976d2',
               }}
             >
-              {/* Initiales fallback si pas d'image */}
-              {(!img && fullName !== "—")
-                ? fullName.split(" ").map((n) => n[0]).join("").toUpperCase()
-                : ""}
+              {initials}
             </Avatar>
-            <Typography fontWeight={700} fontSize={15} sx={{ color: "#0d2852" }}>
-              {fullName}
-            </Typography>
+            <Box>
+              <Typography fontWeight={700} fontSize={15} sx={{ color: "#0d2852" }}>
+                {fullName}
+              </Typography>
+            </Box>
           </Box>
         );
       }
     },
+    
+    
     { id: "title", label: t("Type de document"), align: "left" },
     { id: "reason", label: t("Motif"), align: "left" },
     {
@@ -149,24 +163,7 @@ const DocumentTraitementRH = () => {
       align: "center",
       render: (row) => getStatusChip(row, t),
     },
-    {
-      id: "file",
-      label: t("Document généré"),
-      align: "center",
-      render: (row) =>
-        row.file ? (
-          <a
-            href={`http://localhost:3000/uploads/documents/${row.file}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "#1976d2", textDecoration: "underline" }}
-          >
-            <VisibilityIcon fontSize="small" />
-          </a>
-        ) : (
-          "-"
-        ),
-    },
+    
     {
       id: "actions",
       label: t("Actions"),
@@ -289,13 +286,7 @@ const DocumentTraitementRH = () => {
         </pre>
       </ModelComponent>
 
-      {/* Modal génération document */}
-      <DocumentCustomModal
-        open={openCustomModal}
-        handleClose={() => setOpenCustomModal(false)}
-        docId={currentDocId}
-        userFullName={currentDocUser}
-      />
+      
     </Box>
   );
 };

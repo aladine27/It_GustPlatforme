@@ -13,8 +13,8 @@ const style = {
   borderRadius: 1,
   boxShadow: 24,
   p: 4,
-  maxHeight: '90vh',
-  overflowY: 'auto'
+  maxHeight: '94vh',
+  overflowY: 'hidden'
 };
 
 
@@ -28,7 +28,6 @@ const ModelComponent = ({ open, handleClose, title, children, icon }) => {
       aria-describedby="modal-description"
     >
       <Box sx={style}>
-        {/* Close Button */}
         <IconButton
           aria-label="close"
           onClick={handleClose}

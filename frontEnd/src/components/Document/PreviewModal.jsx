@@ -5,7 +5,6 @@ const NAVBAR_HEIGHT = 64;
 
 export default function PreviewModal({ open, onClose, html, signatureData, theme, watermark }) {
   if (!open) return null;
-  console.log("[PreviewModal] html reçu :", html?.substring(0, 200));
 
   return (
     <Box
@@ -91,6 +90,7 @@ export default function PreviewModal({ open, onClose, html, signatureData, theme
                 color: theme.color,
                 fontFamily: "Arial,Helvetica,sans-serif",
               }}
+              // Le HTML généré par le backend contient le footer aligné à gauche/droite selon la structure du template.
               dangerouslySetInnerHTML={{ __html: html }}
             />
             {/* Signature si ajoutée */}

@@ -67,6 +67,7 @@
     "recharts": "^2.15.4",
     "redux-persist": "^6.0.0",
     "slick-carousel": "^1.8.1",
+    "tiptap-extension-resize-image": "^1.2.2",
     "yup": "^1.6.1"
   },
   "devDependencies": {

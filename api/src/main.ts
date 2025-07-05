@@ -3,7 +3,7 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { APP_GUARD } from '@nestjs/core';
-
+import * as bodyParser from 'body-parser';
 import { RolesGuard } from './guards/roles.guard';
 import { AccessTokenGuard } from './guards/accessToken.guard';
 
@@ -33,6 +33,8 @@ async function bootstrap() {
     new AccessTokenGuard(app.get(Reflector)),
     new RolesGuard(app.get(Reflector))
   );
+  app.use(bodyParser.json({ limit: '10mb' })); // accepte jusqu'à 10MB
+  app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
   await app.listen(process.env.PORT ?? 3000);
 }

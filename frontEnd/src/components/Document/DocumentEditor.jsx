@@ -27,7 +27,7 @@ import ImageIcon from "@mui/icons-material/Image";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import { StyledButton } from "../../style/style";
-
+import ResizeImage from "tiptap-extension-resize-image";
 export default function DocumentEditor({
   editedHtml,
   setEditedHtml,
@@ -58,6 +58,7 @@ export default function DocumentEditor({
       types: ["heading", "paragraph"],
       alignments: ["left", "center", "right", "justify"],
     }),
+    ResizeImage,
   ];
 
   // Editor instance

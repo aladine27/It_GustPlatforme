@@ -26,7 +26,10 @@ export default function DocumentEmploye() {
   const [openModal, setOpenModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const docs = documents || [];
+  const docs = (documents || []).slice().sort((a, b) => {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+  
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -61,35 +64,7 @@ export default function DocumentEmploye() {
       label: t("Statut"),
       align: "center",
       render: getStatusChip,
-    },
-    {
-      id: "traitementDateLimite",
-      label: t("Date limite"),
-      align: "center",
-      render: (row) =>
-        row.traitementDateLimite
-          ? new Date(row.traitementDateLimite).toLocaleDateString("fr-FR")
-          : "-",
-    },
-    { id: "reason", label: t("Motif"), align: "left" },
-    {
-      id: "file",
-      label: t("Document généré"),
-      align: "center",
-      render: (row) =>
-        row.file ? (
-          <a
-            href={`http://localhost:3000/uploads/documents/${row.file}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "#1976d2", textDecoration: "underline" }}
-          >
-            <VisibilityIcon fontSize="small" />
-          </a>
-        ) : (
-          "-"
-        ),
-    },
+    },    
     {
       id: "delevryDate",
       label: t("Date de délivrance"),
@@ -108,6 +83,25 @@ export default function DocumentEmploye() {
           ? new Date(row.createdAt).toLocaleDateString("fr-FR")
           : "-",
     },
+    {
+      id: "file",
+      label: t("Document généré"),
+      align: "center",
+      render: (row) =>
+        row.file ? (
+          <a
+            href={`http://localhost:3000/uploads/documents/${row.file}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#1976d2", textDecoration: "underline" }}
+          >
+            Télécharger
+          </a>
+        ) : (
+          "-"
+        ),
+    },
+    
   ];
 
   // Ouvrir/fermer le modal

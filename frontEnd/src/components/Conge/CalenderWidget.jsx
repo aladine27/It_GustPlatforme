@@ -8,10 +8,7 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import TodayIcon from '@mui/icons-material/Today';
 
 export default function CalendarWidget({ leaves = [] }) {
-  // ---- Jours fériés (désactivé ici) ----
-  // const [holidays, setHolidays] = useState([]);
 
-  // Date système à minuit
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -31,40 +28,32 @@ export default function CalendarWidget({ leaves = [] }) {
   // Couleurs et icônes
   const tileClassName = ({ date, view }) => {
     if (view !== "month") return "";
-    if (leavePeriods.some(({ start, end }) => isWithinInterval(date, { start, end }))) {
-      return "calendar-leave";
-    }
-    if (isSameDay(date, today)) return "calendar-today";
+    const isLeave = leavePeriods.some(({ start, end }) => isWithinInterval(date, { start, end }));
+    const isToday = isSameDay(date, today);
+    if (isToday) return "calendar-today"; // Priorité
+    if (isLeave) return "calendar-leave";
     return "";
   };
-
-  const tileContent = ({ date, view }) => {
-    if (view === "month" && isSameDay(date, today)) {
-      return <TodayIcon sx={{ fontSize: 19, color: "#00e676", mt: "2px" }} />;
-    }
-    if (view === "month" && leavePeriods.some(({ start, end }) => isWithinInterval(date, { start, end }))) {
-      return <EventAvailableIcon sx={{ fontSize: 18, color: "#1976d2", mt: "2px" }} />;
-    }
-    return null;
-  };
+  
+  
+  const tileContent = () => null;
 
   return (
     <StyledCard
       sx={{
         p: 2,
         borderRadius: 3,
-        bgcolor: "#f6f9ff",
+        bgcolor: "#e3f2fd" ,
         boxShadow: '0 6px 24px rgba(25,118,210,0.07)',
         mt: 2,
+       
       }}
     >
-      <Typography variant="h6" fontWeight={700} mb={1}>
-        Vue Calendrier (Congés à venir)
-      </Typography>
+     
       <Box sx={{
         display: 'flex',
         justifyContent: 'center',
-        bgcolor: "#f6f9ff",
+        bgcolor: "#e3f2fd" ,
         borderRadius: 3
       }}>
         <Calendar
@@ -78,17 +67,16 @@ export default function CalendarWidget({ leaves = [] }) {
       <Stack direction="row" spacing={2} mt={2} alignItems="center" justifyContent="center">
         <EventAvailableIcon sx={{ color: "#1976d2" }} />
         <Typography sx={{ fontSize: 14 }}>Congé approuvé à venir</Typography>
-        <TodayIcon sx={{ color: "#00e676" }} />
-        <Typography sx={{ fontSize: 14 }}>Aujourd’hui</Typography>
       </Stack>
       <style>
         {`
         .react-calendar {
           border-radius: 18px !important;
-          background: #f6f9ff !important;
+          background:"#e3f2fd"  !important;
           font-family: Inter, Roboto, Arial, sans-serif;
           border: none !important;
           box-shadow: none !important;
+         
         }
         .react-calendar__navigation button {
           color: #1976d2 !important;
@@ -124,6 +112,19 @@ export default function CalendarWidget({ leaves = [] }) {
         .react-calendar__month-view__weeks > div:nth-child(n+6) {
           display: none !important;
         }
+       .calendar-today,
+        .calendar-today:enabled:hover,
+        .calendar-today:enabled:focus {
+          background: #43ea84 !important;
+          color: #fff !important;
+          border-radius: 50% !important;
+          font-weight: bold;
+          box-shadow: 0 2px 8px 0 rgba(67, 234, 132, 0.15);
+          border: none !important;
+          outline: none !important;
+        }
+
+
         `}
       </style>
     </StyledCard>

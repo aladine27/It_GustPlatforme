@@ -63,6 +63,7 @@ export default function Login() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(validationSchema),
@@ -91,6 +92,7 @@ export default function Login() {
       if (LoginAction.fulfilled.match(resultAction)) {
         toast.success("Connexion réussie !");
         localStorage.setItem('user', JSON.stringify(resultAction.payload));
+        reset();
         navigate("/dashboard");
       } else {
         toast.error(

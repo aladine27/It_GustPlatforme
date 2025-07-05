@@ -4,6 +4,7 @@ import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import PaletteIcon from '@mui/icons-material/Palette';
 import WatermarkIcon from '@mui/icons-material/Opacity';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
+import BorderColorIcon from '@mui/icons-material/BorderColor'; // icône signature numérique
 
 export default function DocumentHeader({
   fullName,
@@ -11,6 +12,7 @@ export default function DocumentHeader({
   setAnchorEl,
   setWatermarkAnchor,
   setShowQr,
+  setShowSignature,
   setOpenPreview,
   setFullScreen,
   fullScreen,
@@ -40,6 +42,9 @@ export default function DocumentHeader({
         </Tooltip>
         <Tooltip title="Insérer un QR code">
           <IconButton onClick={() => setShowQr(true)}><QrCode2Icon /></IconButton>
+        </Tooltip>
+        <Tooltip title="Insérer une signature numérique">
+          <IconButton onClick={() => setShowSignature(true)}><BorderColorIcon /></IconButton>
         </Tooltip>
         <Button variant="outlined" size="small" onClick={() => setOpenPreview(true)}>Voir l’aperçu</Button>
         <Button variant="outlined" size="small"

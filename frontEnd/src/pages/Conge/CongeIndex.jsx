@@ -77,10 +77,14 @@ const CongeIndex = () => {
           >
             {t("Historique des congés")}
           </Button>
+          <Divider sx={{ mb: 2, mx: 2 }} />
+          
         </Stack>
+        
+        
       )}
 
-      <Divider sx={{ mb: 2, mx: 2 }} />
+     
 
       {/* Affichage du contenu */}
       {view === "WhoIsOnLeave" && isRhOrAdmin ? (

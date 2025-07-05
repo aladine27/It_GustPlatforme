@@ -200,7 +200,7 @@ export default function CongeEmploye() {
           {t("Suivi de mes demandes")}
         </Button>
       </Stack>
-      <Divider sx={{ mb: 3 }} />
+      <Divider sx={{ mb: 1 }} />
 
       {/* DEMANDE DE CONGÉ */}
       {view === "demande" && (
@@ -280,8 +280,8 @@ export default function CongeEmploye() {
         <Box py={2} sx={{ width: "100%" }}>
   <Box sx={{ display: { xs: "block", md: "flex" }, gap: 3, width: "100%", alignItems: "flex-start" }}>
     {/* Colonne principale : Tableau */}
-    <Box sx={{ flex: 2, minWidth: 0 }}>
-      <Typography variant="h5" fontWeight={700} mb={2}>
+    <Box sx={{ flex: 3, minWidth: 0 }}>
+      <Typography variant="h5" fontWeight={700} mb={2} color="#080D50">
         {t("Mes demandes de congé")}
       </Typography>
       {loading ? (
@@ -291,7 +291,7 @@ export default function CongeEmploye() {
       ) : error ? (
         <Typography color="error">{error}</Typography>
       ) : (
-        <TableComponent columns={columns} rows={paginatedRows} />
+        <TableComponent columns={columns} rows={paginatedRows}  />
       )}
       {totalPages > 1 && (
         <PaginationComponent
@@ -302,7 +302,6 @@ export default function CongeEmploye() {
       )}
     </Box>
 
-    {/* Colonne widgets */}
     <Box
       sx={{
         flex: 1,
