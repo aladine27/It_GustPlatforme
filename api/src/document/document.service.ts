@@ -66,22 +66,18 @@ export class DocumentService {
     return document;
   }
 
-  /**
-   * Génère le HTML dynamique pour un document.
-   * Les champs manquants sont indiqués explicitement au RH pour saisie manuelle.
-   */
   async getDocumentTemplate(documentId: string): Promise<{ html: string }> {
     const doc = await this.documentModel.findById(documentId).populate<{ user: any }>('user');
     if (!doc) throw new NotFoundException('Document not found');
     const user = doc.user as any;
     const type = (doc.title || "").toLowerCase();
-
+  
     // Helper pour afficher un champ ou un aide-texte
     const F = (val: any, label?: string) =>
       val !== undefined && val !== null && val !== ""
         ? val
         : `<span style="color:#2874c9; font-style:italic;">[À remplir&nbsp;: ${label ?? "informations manquantes"}]</span>`;
-
+  
     // HEADER HTML
     const headerHtml = `
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
@@ -91,78 +87,52 @@ export class DocumentService {
           </div>
           <div style="color:#7d7e84;font-size:15px;">
             ${F(null, "Adresse de l'entreprise")}<br/>
-            ${F(null, "Code postal")} ${F(null, "Ville de l'entreprise")}
+            ${F(null, "Code postal")}
           </div>
         </div>
         <div style="text-align:right;">
-          <div style="font-weight:700;color:#223a67;">${F(user?.fullName, "Nom complet du salarié")}</div>
-          <div style="color:#7d7e84;font-size:15px;">
-            ${F(user?.address, "Adresse du salarié")}<br/>
-            ${F(user?.domain, "Domaine")}
-          </div>
           <div style="margin-top:12px;font-weight:700;color:#223a67;">
             ${F(null, "Ville de signature")}, le ${doc.delevryDate ? new Date(doc.delevryDate).toLocaleDateString("fr-FR") : F(null, "Date de signature")}
           </div>
         </div>
       </div>
     `;
-
-    // FOOTER HTML (ALIGNÉ A GAUCHE !)
+  
+    // FOOTER HTML (AVEC UN PLACEHOLDER SIMPLE "Signature" + [Signature RH])
     const footerHtml = `
-      <div style="
-        display: flex;
-        width: 100%;
-        justify-content: flex-start; /* <---- ALIGNÉ A GAUCHE */
-        align-items: flex-end;
-        margin-top: 38px;
-      ">
-        <div style="
-          display: flex;
-          flex-direction: row;
-          gap: 38px;
-          align-items: flex-end;
-          background: #f8faff;
-          border-radius: 14px;
-          box-shadow: 0 2px 12px #e0e9f9;
-          padding: 20px 30px 18px 32px;
-          min-width: 490px;
-          max-width: 650px;
-        ">
-          <div style="min-width: 210px; text-align: left;"> <!-- <--- LEFT ! -->
-            <b style="color: #223a67;">
-              Fait à <span style="color:#2874c9;">[À remplir : Ville de signature]</span>,<br/>
-              le <span style="color:#2874c9;">[À remplir : Date de signature]</span>
-            </b>
-            <br/><br/>
-            <span style="color:#2874c9;">[À remplir : Nom et fonction du signataire]</span>
-            <div style="margin-top:10px;font-size:13px;color:#677088;">
-              Signature
-            </div>
-            <div style="margin-top:22px;">
-              <img src="https://tonentreprise.com/signature.png" alt="Signature RH" style="height:38px;border-radius:8px;box-shadow:0 2px 6px #ececec;"/>
-            </div>
+    <div style="display: flex;width: 100%;justify-content: flex-start;align-items: flex-end;margin-top: 38px;">
+      <div style="display: flex;flex-direction: row;gap: 38px;align-items: flex-end;background: #f8faff;border-radius: 14px;box-shadow: 0 2px 12px #e0e9f9;padding: 20px 30px 18px 32px;min-width: 490px;max-width: 650px;">
+        <div style="min-width: 210px; text-align: left;">
+          <b style="color: #223a67;">
+            Fait à <span style="color:#2874c9;">[À remplir : Ville de signature]</span>,<br/>
+            le <span style="color:#2874c9;">[À remplir : Date de signature]</span>
+          </b>
+          <br/><br/>
+          <span style="color:#2874c9;">[À remplir : Nom et fonction du signataire]</span>
+          <div style="margin-top:10px;font-size:13px;color:#677088;">
+            Signature
           </div>
-          <div style="min-width: 120px; text-align: center;">
-            <img src="https://tonentreprise.com/logo.png" alt="Logo" style="height:44px;margin-bottom:8px;box-shadow:0 2px 12px #f2f2f2;border-radius:7px;"/>
-            <br/>
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https://tonentreprise.com/doc/${doc._id}" alt="QR code" style="border-radius:10px;box-shadow:0 2px 8px #d6e2f5;margin-top:10px;"/>
+          <!-- Conteneur pour la signature avec styles -->
+          <div id="signature-container" style="width: 150px; height: 75px; margin-top: 10px;">
+            <!-- L'image de la signature sera insérée ici par le frontend -->
           </div>
         </div>
       </div>
-      <div style="margin-top:18px;text-align:center;font-size:13px;color:#b7b7bb;letter-spacing:0.5px;">
-        DOCUMENT | Généré automatiquement | ${new Date().getFullYear()}
-      </div>
-    `;
-
+    </div>
+    <div style="margin-top:18px;text-align:center;font-size:13px;color:#b7b7bb;letter-spacing:0.5px;">
+      DOCUMENT | Généré automatiquement | ${new Date().getFullYear()}
+    </div>
+  `;
+  
+  
     // MAIN BODY
     let mainBody = '';
     let titre = '';
-
-    // ---- Titre CENTRÉ ET EN GRAS (style="text-align:center;font-weight:800;") ----
+  
     function TitreComponent(text: string) {
       return `<div style="text-align:center;font-size:1.35em;font-weight:800;text-decoration:underline;color:#223a67;margin-bottom:22px;letter-spacing:1.2px;">${text}</div>`;
     }
-
+  
     switch (type) {
       case "attestation de travail":
         titre = "ATTESTATION DE TRAVAIL";
@@ -179,7 +149,7 @@ export class DocumentService {
           </div>
         `;
         break;
-
+  
       case "attestation de salaire":
         titre = "ATTESTATION DE SALAIRE";
         mainBody = `
@@ -192,7 +162,7 @@ export class DocumentService {
           </div>
         `;
         break;
-
+  
       case "bulletin de paie":
         titre = "BULLETIN DE PAIE";
         mainBody = `
@@ -208,7 +178,7 @@ export class DocumentService {
           </div>
         `;
         break;
-
+  
       case "attestation de présence":
         titre = "ATTESTATION DE PRÉSENCE";
         mainBody = `
@@ -221,7 +191,7 @@ export class DocumentService {
           </div>
         `;
         break;
-
+  
       case "certificat d'emploi et de fonction":
         titre = "CERTIFICAT D'EMPLOI ET DE FONCTION";
         mainBody = `
@@ -234,7 +204,7 @@ export class DocumentService {
           </div>
         `;
         break;
-
+  
       default:
         titre = "DOCUMENT ADMINISTRATIF";
         mainBody = `
@@ -245,7 +215,7 @@ export class DocumentService {
           </div>
         `;
     }
-
+  
     // TEMPLATE FINAL
     return {
       html: `
@@ -267,10 +237,6 @@ export class DocumentService {
       `
     };
   }
-
-  /**
-   * Génère un PDF depuis du HTML et met à jour le document
-   */
   async generatePdfFromHtml(documentId: string, html: string): Promise<IDocument> {
     const doc = await this.documentModel.findById(documentId);
     if (!doc) throw new NotFoundException('Document not found');
@@ -294,7 +260,7 @@ export class DocumentService {
 
     (doc as any).file = fileName;
     (doc as any).delevryDate = new Date();
-    (doc as any).status = 'traité';
+    (doc as any).status = 'Génerated';
 
     await doc.save();
     return doc;

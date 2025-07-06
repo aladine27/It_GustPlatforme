@@ -187,22 +187,7 @@ const DocumentTraitementRH = () => {
           </Button>
         ),
     },
-    {
-      id: "detail",
-      label: t("Détails"),
-      align: "center",
-      render: (row) => (
-        <Button
-          variant="text"
-          color="primary"
-          size="small"
-          startIcon={<VisibilityIcon />}
-          onClick={() => { setSelectedDocument(row); setOpenDetail(true); }}
-        >
-          {t("Voir")}
-        </Button>
-      ),
-    }
+   
   ];
 
   return (

@@ -18,6 +18,7 @@ export default function PreviewModal({ open, onClose, html, signatureData, theme
         height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
         width: "100vw",
         overflow: "auto",
+        
       }}>
       <Box
         sx={{

@@ -18,7 +18,7 @@ const documentTypes = [
   { value: "Bulletin de paie", label: "Bulletin de paie" },
   { value: "Attestation de salaire", label: "Attestation de salaire" },
   { value: "Attestation de présence", label: "Attestation de présence" },
-  { value: "Certificat de non-salaire", label: "Certificat de non-salaire" },
+  { value: "certificat d'emploi et de fonction", label: "certificat d'emploi et de fonction" },
 ];
 
 export default function DemandeDocumentFormModal({
