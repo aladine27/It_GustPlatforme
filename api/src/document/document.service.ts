@@ -68,6 +68,14 @@ export class DocumentService {
 
   async getDocumentTemplate(documentId: string): Promise<{ html: string }> {
     const doc = await this.documentModel.findById(documentId).populate<{ user: any }>('user');
+    const formatDate = (dateStr) => {
+      if (!dateStr) return "";
+      const date = new Date(dateStr);
+      // Format court : 12/06/2025
+      return date.toLocaleDateString("fr-FR");
+      // Format long : 12 juin 2025
+      // return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+    };
     if (!doc) throw new NotFoundException('Document not found');
     const user = doc.user as any;
     const type = (doc.title || "").toLowerCase();
@@ -128,6 +136,8 @@ export class DocumentService {
     // MAIN BODY
     let mainBody = '';
     let titre = '';
+    const formattedDate = formatDate(user?.createdAt);
+    
   
     function TitreComponent(text: string) {
       return `<div style="text-align:center;font-size:1.35em;font-weight:800;text-decoration:underline;color:#223a67;margin-bottom:22px;letter-spacing:1.2px;">${text}</div>`;
@@ -140,10 +150,10 @@ export class DocumentService {
           <div style="margin-bottom:12px;">Objet : Attestation de travail / ${F(user?.fullName, "Nom du salarié")}</div>
           ${TitreComponent(titre)}
           <div style="font-size:1.09em;line-height:1.75;">
-            Je soussigné(e) : <b>${F(null, "Nom du signataire")}</b>, agissant en qualité de <b>${F(user?.role, "Poste du signataire")}</b>
+            Je soussigné(e) : <b>${F(null, "Nom du signataire")}</b>, agissant en qualité de <b>RH</b>
             de la société <b>${F(null, "Nom de l'entreprise")}</b>, atteste que <b>${F(user?.fullName, "Nom du salarié")}</b>,<br/>
             demeurant <b>${F(user?.address, "Adresse du salarié")}</b>,<br/>
-            - est salarié(e) depuis le <b>${F(null, "Date d'embauche")}</b>,<br/>
+            - est salarié(e) depuis le <b>${F(formattedDate, "Date d'embauche")}</b>,<br/>
             - occupe actuellement le poste de <b>${F(user?.role, "Poste du salarié")}</b>.<br/><br/>
             Cette attestation lui est délivrée pour servir et valoir ce que de droit.
           </div>

@@ -110,20 +110,22 @@ export default function WhoIsOnLeave({
         {/* Filtre par type */}
         <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 4 }}>
           <Box sx={{ minWidth: 240, maxWidth: 340 }}>
-            <Select
+          <Select
+            size="small"
               fullWidth
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
               variant="outlined"
-              sx={{
-                bgcolor: "#fff",
-                borderRadius: 3,
-                fontWeight: 700,
-                fontFamily: "'Quicksand', Arial, sans-serif",
-                border: `2px solid ${accentGreen}`,
-                "&:focus, &:hover": { borderColor: accentOrange }
-              }}
-              MenuProps={{ PaperProps: { sx: { maxHeight: 320 } } }}
+            sx={{
+  bgcolor: "#fff",
+  borderRadius: 3,
+  fontWeight: 700,
+  fontFamily: "'Quicksand', Arial, sans-serif",
+  border: `2px solid ${accentGreen}`,
+  minHeight: 36, // ou height: 36
+  "&:focus, &:hover": { borderColor: accentOrange },
+}}
+              MenuProps={{ PaperProps: { sx:{maxHeight: 320 } } }}
             >
               <MenuItem value="all">
                 <Chip

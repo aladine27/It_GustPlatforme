@@ -17,13 +17,16 @@ export class AuthService {
     ){}
     async signIn(CreateLoginDto:createLoginDto){
         //test existantce user
+        console.log("[BACKEND] Service.signIn() - DTO :", CreateLoginDto);
         const user = await this.userService.findbyEmail(CreateLoginDto.email)
+        console.log("[BACKEND] Service.signIn() - DTO :", CreateLoginDto);
         if (!user){
             throw new BadRequestException("user not exist")
 
         }
         //test Password
-        const passwordMatches= await argon2.verify(user.password,CreateLoginDto.password)
+        const passwordMatches= await argon2.verify(user.password,CreateLoginDto.password);
+        console.log("[BACKEND] Service.signIn() - Password OK ?", passwordMatches);
         console.log(passwordMatches)
         if (!passwordMatches){
             throw new BadRequestException("password incorrect")

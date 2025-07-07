@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { toast } from "react-toastify";
 import { StyledButton } from "../../style/style";
-import WhoIsOnLeave from "./WhoisOnleave";
+
 import PendingRequests from "./PendingRequests";
 import TypeCongeFormModal from "../../components/Conge/TypeCongeFormModal";
 import CongeDetailModal from "../../components/Conge/CongeDetailDemandeModal";
@@ -16,6 +16,7 @@ import {
   updateLeaveType
 } from "../../redux/actions/LeaveAction";
 import { useTranslation } from "react-i18next"; // ← Ajoute l'import
+import WhoIsOnLeave from "./WhoisOnLeave";
 
 const Conge = () => {
   const { t } = useTranslation(); // ← Ajoute la traduction

@@ -163,7 +163,7 @@ export default function DocumentEmploye() {
           }}
           onClick={() => setView("demande")}
         >
-          {t("Faire une demande")}
+          {t("Demande un Nouveau Document")}
         </Button>
         <Button
           startIcon={<HistoryIcon />}

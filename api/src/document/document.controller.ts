@@ -53,7 +53,7 @@ export class DocumentController {
     })
   )
   @UseGuards(RolesGuard)
-  @Roles('Admin', 'Rh')
+  @Roles('Admin', 'Rh','Employe','Manager')
   async create(
     @Body() createDocumentDto: CreateDocumentDto,
     @Res() res,

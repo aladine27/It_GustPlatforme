@@ -195,7 +195,6 @@ export default function DocumentEditor({
               <Tooltip title="Centrer"><IconButton onClick={() => editor.chain().focus().setTextAlign("center").run()}><FormatAlignCenterIcon /></IconButton></Tooltip>
               <Tooltip title="Aligner à droite"><IconButton onClick={() => editor.chain().focus().setTextAlign("right").run()}><FormatAlignRightIcon /></IconButton></Tooltip>
               <Tooltip title="Justifier"><IconButton onClick={() => editor.chain().focus().setTextAlign("justify").run()}><FormatAlignJustifyIcon /></IconButton></Tooltip>
-              {/* Image upload */}
               <Tooltip title="Image">
                 <IconButton onClick={() => fileInputRef.current.click()}><ImageIcon /></IconButton>
               </Tooltip>

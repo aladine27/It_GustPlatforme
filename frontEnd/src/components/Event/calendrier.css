@@ -136,6 +136,7 @@
 /* Grille, calendrier, conteneur */
 .CalendarContainer {
     overflow-x: hidden !important;
+    overflow-y: auto !important;
     height:120vh;
     width: 75vw;
    

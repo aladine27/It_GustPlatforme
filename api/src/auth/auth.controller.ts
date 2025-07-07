@@ -26,6 +26,7 @@ export class AuthController {
    @UseGuards( RolesGuard)
    @Public()
   signIn(@Body() createLoginDto: createLoginDto){
+    console.log("[BACKEND] Reçu dans signIn :", createLoginDto);
     return this.authService.signIn(createLoginDto)
 
     }

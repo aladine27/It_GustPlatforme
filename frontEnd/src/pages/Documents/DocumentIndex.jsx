@@ -103,10 +103,12 @@ const DocumentIndex = () => {
           >
             {t("Historique des documents")}
           </Button>
+          <Divider sx={{ mb: 2, mx: 2 }} />
         </Stack>
+        
       )}
 
-      <Divider sx={{ mb: 2, mx: 2 }} />
+     
 
       {/* Affichage du contenu */}
       {view === "traitement" && isRhOrAdmin ? (

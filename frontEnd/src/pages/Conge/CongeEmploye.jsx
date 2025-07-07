@@ -185,7 +185,7 @@ export default function CongeEmploye() {
           }}
           onClick={() => setView("demande")}
         >
-          {t("Faire une demande")}
+          {t("Demande un Nouveau Congé")}
         </Button>
         <Button
           startIcon={<HistoryIcon />}

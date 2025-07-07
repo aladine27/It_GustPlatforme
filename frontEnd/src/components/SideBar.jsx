@@ -33,7 +33,6 @@ const SidebarPro = ({ collapsed, setCollapsed }) => {
   const userRole = CurrentUser?.role || CurrentUser?.user?.role;
   const theme = useTheme(); // Access the default Material-UI theme
 
-  // Refined color palette to match your application's light, professional aesthetic
   const sidebarBackground = '#ffffff'; // Clean white, matching the overall app's background
   const primaryBrandBlue = '#1890ff'; // The vibrant blue from your buttons/active states
   const lightAccentBlue = '#e6f7ff'; // Very light blue for subtle active/hover backgrounds
