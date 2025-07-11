@@ -3,8 +3,16 @@ import { Box, Button } from "@mui/material";
 
 const NAVBAR_HEIGHT = 64;
 
-export default function PreviewModal({ open, onClose, html, signatureData, theme, watermark }) {
+export default function PreviewModal({ open, onClose, html, theme, watermark }) {
   if (!open) return null;
+  console.log("PreviewModal > html reçu :", html);
+// Tu peux même aller plus loin :
+if (html && html.includes("signature-placeholder")) {
+  const reg = /<div[^>]*id="signature-placeholder"[^>]*>[\s\S]*?<\/div>/g;
+  const matches = html.match(reg);
+  console.log("PreviewModal > contenu du placeholder :", matches?.[0]);
+}
+
 
   return (
     <Box
@@ -18,7 +26,6 @@ export default function PreviewModal({ open, onClose, html, signatureData, theme
         height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
         width: "100vw",
         overflow: "auto",
-        
       }}>
       <Box
         sx={{
@@ -80,6 +87,19 @@ export default function PreviewModal({ open, onClose, html, signatureData, theme
               "&::-webkit-scrollbar": { width: 10, background: "#eaf1fa", borderRadius: 9 },
               "&::-webkit-scrollbar-thumb": { background: "#b3d6fc", borderRadius: 9 },
               scrollbarColor: "#b3d6fc #eaf1fa", scrollbarWidth: "thin",
+              // Styles pour les signatures dans le preview
+              "& #signature-placeholder": {
+                display: "block",
+                width: "100%",
+                height: "auto",
+                minHeight: "60px",
+              },
+              "& #signature-placeholder img": {
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                opacity: 0.93,
+              },
             }}
           >
             <div
@@ -91,15 +111,8 @@ export default function PreviewModal({ open, onClose, html, signatureData, theme
                 color: theme.color,
                 fontFamily: "Arial,Helvetica,sans-serif",
               }}
-              // Le HTML généré par le backend contient le footer aligné à gauche/droite selon la structure du template.
               dangerouslySetInnerHTML={{ __html: html }}
             />
-            {/* Signature si ajoutée */}
-            {signatureData && (
-              <img src={signatureData} alt="Signature" style={{
-                marginTop: 40, marginLeft: 16, width: 180, maxHeight: 70, objectFit: "contain", opacity: 0.9
-              }} />
-            )}
           </Box>
         </Box>
       </Box>

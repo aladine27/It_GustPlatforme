@@ -15,13 +15,15 @@ export class LeaveTypeService {
    
   }
 
- async findAll():Promise<IleaveType[]> {
-    const leaveTypes = await this.leaveTypeModel.find();
-    if(!leaveTypes || leaveTypes.length === 0){ 
-      throw new NotFoundException('No user found')
-    }
-    return leaveTypes;
+async findAll() {
+  console.log("==== REQUETE FINDALL ====");
+  const leaveTypes = await this.leaveTypeModel.find();
+  console.log("RESULTAT:", leaveTypes);
+  if(!leaveTypes || leaveTypes.length === 0){ 
+    throw new NotFoundException('No user found')
   }
+  return leaveTypes;
+}
 
   async findOne(id: string):Promise<IleaveType>  {
     const leaveType = await this.leaveTypeModel.findById(id);

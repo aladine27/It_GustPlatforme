@@ -5,12 +5,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { IjobCategory } from './interfaces/jobCategory.interface';
 import { Model } from 'mongoose';
 
-import { Icategory } from 'src/categories/interfaces/category.interface';
+
 
 @Injectable()
 export class JobCategoryService {
   constructor(@InjectModel('jobCategories') private jobCategoryModel: Model<IjobCategory>) {}
- async create(createJobCategoryDto: CreateJobCategoryDto):Promise<Icategory> {
+ async create(createJobCategoryDto: CreateJobCategoryDto):Promise<IjobCategory> {
      const newCategory = new  this.jobCategoryModel(createJobCategoryDto);
 
     return newCategory.save();
@@ -33,7 +33,7 @@ export class JobCategoryService {
       return category
     }
 
-  async update(id: string, updateCategoryDto: UpdateJobCategoryDto):Promise<Icategory> {
+  async update(id: string, updateCategoryDto: UpdateJobCategoryDto):Promise<IjobCategory> {
    
    const category = await this.jobCategoryModel.findByIdAndUpdate(id, updateCategoryDto, {new: true})
    if(!category){ 
@@ -43,7 +43,7 @@ export class JobCategoryService {
      return category;
    }
 
-  async remove(id: string):Promise<Icategory> {
+  async remove(id: string):Promise<IjobCategory> {
       const category = await this.jobCategoryModel.findByIdAndDelete(id);
        if(!category){ 
         throw new NotFoundException('No user found')

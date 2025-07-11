@@ -65,7 +65,6 @@ export default function WhoIsOnLeave({
           p: { xs: 2, md: 3 },
           borderRadius: 4,
           width: "100%",
-          border: `2.5px solid ${accentLavender}`,
           background: "linear-gradient(120deg, #e3f2fd 60%, #f6fffc 100%)",
           boxShadow: "0 4px 24px 0 #B9F6CA25",
         }}

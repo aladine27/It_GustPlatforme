@@ -48,7 +48,7 @@ export default function TypeCongeFormModal({
   const [typeToDelete, setTypeToDelete] = useState(null);
 
   const schema = Yup.object().shape({
-    typeName: Yup.string()
+    name: Yup.string()
       .trim()
       .required("Le nom du type est requis")
       .max(40)
@@ -77,7 +77,7 @@ export default function TypeCongeFormModal({
 
   const onSubmit = async (data) => {
     try {
-      await onCreate({ name: data.typeName, limitDuration: data.limitDuration });
+      await onCreate({ name: data.name, limitDuration: data.limitDuration });
       reset();
     } catch {
       toast.error("Erreur lors de la création");
@@ -131,10 +131,10 @@ export default function TypeCongeFormModal({
             <form onSubmit={handleSubmit(onSubmit)}>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                 <Controller
-                  name="typeName"
+                  name="name"
                   control={control}
                   render={({ field }) => (
-                    <TextField {...field} label="Nom" size="small" fullWidth error={!!errors.typeName} helperText={errors.typeName?.message} />
+                    <TextField {...field} label="Nom" size="small" fullWidth error={!!errors.name} helperText={errors.name?.message} />
                   )}
                 />
                 <Controller

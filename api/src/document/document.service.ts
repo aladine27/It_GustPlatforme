@@ -68,14 +68,6 @@ export class DocumentService {
 
   async getDocumentTemplate(documentId: string): Promise<{ html: string }> {
     const doc = await this.documentModel.findById(documentId).populate<{ user: any }>('user');
-    const formatDate = (dateStr) => {
-      if (!dateStr) return "";
-      const date = new Date(dateStr);
-      // Format court : 12/06/2025
-      return date.toLocaleDateString("fr-FR");
-      // Format long : 12 juin 2025
-      // return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
-    };
     if (!doc) throw new NotFoundException('Document not found');
     const user = doc.user as any;
     const type = (doc.title || "").toLowerCase();
@@ -85,6 +77,41 @@ export class DocumentService {
       val !== undefined && val !== null && val !== ""
         ? val
         : `<span style="color:#2874c9; font-style:italic;">[À remplir&nbsp;: ${label ?? "informations manquantes"}]</span>`;
+  
+    // Format date courte
+    const formatDate = (dateStr) => {
+      if (!dateStr) return "";
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("fr-FR");
+    };
+  
+    function TitreComponent(text: string) {
+      return `<div style="text-align:center;font-size:1.35em;font-weight:800;text-decoration:underline;color:#223a67;margin-bottom:22px;letter-spacing:1.2px;">${text}</div>`;
+    }
+  
+    // Emplacement signature imposé par le backend
+    const SIGNATURE_WIDTH = 180;
+    const SIGNATURE_HEIGHT = 90;
+    const SIGNATURE_MARGIN_TOP = 10;
+  
+    // Le placeholder signature: taille/position imposée, id unique, pas éditable dans le front
+    const signaturePlaceholder = `
+    <img 
+      id="signature-placeholder"
+      src=""
+      alt="Signature"
+      style="
+        width: ${SIGNATURE_WIDTH}px;
+        height: ${SIGNATURE_HEIGHT}px;
+        margin-top: ${SIGNATURE_MARGIN_TOP}px;
+        display: block;
+        pointer-events: none;
+        user-select: none;
+        opacity: 0.93;
+      "
+    />
+  `;
+  
   
     // HEADER HTML
     const headerHtml = `
@@ -106,42 +133,33 @@ export class DocumentService {
       </div>
     `;
   
-    // FOOTER HTML (AVEC UN PLACEHOLDER SIMPLE "Signature" + [Signature RH])
+    // FOOTER HTML (avec le placeholder signature imposé)
     const footerHtml = `
-    <div style="display: flex;width: 100%;justify-content: flex-start;align-items: flex-end;margin-top: 38px;">
-      <div style="display: flex;flex-direction: row;gap: 38px;align-items: flex-end;background: #f8faff;border-radius: 14px;box-shadow: 0 2px 12px #e0e9f9;padding: 20px 30px 18px 32px;min-width: 490px;max-width: 650px;">
-        <div style="min-width: 210px; text-align: left;">
-          <b style="color: #223a67;">
-            Fait à <span style="color:#2874c9;">[À remplir : Ville de signature]</span>,<br/>
-            le <span style="color:#2874c9;">[À remplir : Date de signature]</span>
-          </b>
-          <br/><br/>
-          <span style="color:#2874c9;">[À remplir : Nom et fonction du signataire]</span>
-          <div style="margin-top:10px;font-size:13px;color:#677088;">
-            Signature
-          </div>
-          <!-- Conteneur pour la signature avec styles -->
-          <div id="signature-container" style="width: 150px; height: 75px; margin-top: 10px;">
-            <!-- L'image de la signature sera insérée ici par le frontend -->
+      <div style="display: flex;width: 100%;justify-content: flex-start;align-items: flex-end;margin-top: 38px;">
+        <div style="display: flex;flex-direction: row;gap: 38px;align-items: flex-end;background: #f8faff;border-radius: 14px;box-shadow: 0 2px 12px #e0e9f9;padding: 20px 30px 18px 32px;min-width: 490px;max-width: 650px;">
+          <div style="min-width: 210px; text-align: left;">
+            <b style="color: #223a67;">
+              Fait à <span style="color:#2874c9;">[À remplir : Ville de signature]</span>,<br/>
+              le <span style="color:#2874c9;">[À remplir : Date de signature]</span>
+            </b>
+            <br/><br/>
+            <span style="color:#2874c9;">[À remplir : Nom et fonction du signataire]</span>
+            <div style="margin-top:10px;font-size:13px;color:#677088;">
+              Signature
+            </div>
+            ${signaturePlaceholder}
           </div>
         </div>
       </div>
-    </div>
-    <div style="margin-top:18px;text-align:center;font-size:13px;color:#b7b7bb;letter-spacing:0.5px;">
-      DOCUMENT | Généré automatiquement | ${new Date().getFullYear()}
-    </div>
-  `;
-  
+      <div style="margin-top:18px;text-align:center;font-size:13px;color:#b7b7bb;letter-spacing:0.5px;">
+        DOCUMENT | Généré automatiquement | ${new Date().getFullYear()}
+      </div>
+    `;
   
     // MAIN BODY
     let mainBody = '';
     let titre = '';
     const formattedDate = formatDate(user?.createdAt);
-    
-  
-    function TitreComponent(text: string) {
-      return `<div style="text-align:center;font-size:1.35em;font-weight:800;text-decoration:underline;color:#223a67;margin-bottom:22px;letter-spacing:1.2px;">${text}</div>`;
-    }
   
     switch (type) {
       case "attestation de travail":
@@ -159,7 +177,6 @@ export class DocumentService {
           </div>
         `;
         break;
-  
       case "attestation de salaire":
         titre = "ATTESTATION DE SALAIRE";
         mainBody = `
@@ -172,7 +189,6 @@ export class DocumentService {
           </div>
         `;
         break;
-  
       case "bulletin de paie":
         titre = "BULLETIN DE PAIE";
         mainBody = `
@@ -188,20 +204,18 @@ export class DocumentService {
           </div>
         `;
         break;
-  
-      case "attestation de présence":
-        titre = "ATTESTATION DE PRÉSENCE";
+      case "attestation de cnss":
+        titre = "ATTESTATION DE CNSS";
         mainBody = `
-          <div style="margin-bottom:12px;">Objet : Attestation de présence / ${F(user?.fullName, "Nom du salarié")}</div>
+          <div style="margin-bottom:12px;">Objet : Attestation CNSS / ${F(user?.fullName, "Nom du salarié")}</div>
           ${TitreComponent(titre)}
           <div style="font-size:1.09em;line-height:1.75;">
-            Nous attestons que <b>${F(user?.fullName, "Nom du salarié")}</b> a été présent(e) à son poste dans l'entreprise <b>${F(null, "Nom de l'entreprise")}</b>
-            le <b>${doc.delevryDate ? new Date(doc.delevryDate).toLocaleDateString("fr-FR") : F(null, "Date de présence")}</b>.<br/><br/>
+            Nous attestons que <b>${F(user?.fullName, "Nom du salarié")}</b> est déclaré(e) à la CNSS sous le numéro <b>${F(user?.cnssNumber, "Numéro CNSS")}</b>
+            depuis le <b>${F(formattedDate, "Date d'embauche")}</b> en tant que <b>${F(user?.role, "Poste du salarié")}</b>.<br/><br/>
             Cette attestation est délivrée à la demande de l'intéressé(e).
           </div>
         `;
         break;
-  
       case "certificat d'emploi et de fonction":
         titre = "CERTIFICAT D'EMPLOI ET DE FONCTION";
         mainBody = `
@@ -214,7 +228,6 @@ export class DocumentService {
           </div>
         `;
         break;
-  
       default:
         titre = "DOCUMENT ADMINISTRATIF";
         mainBody = `
@@ -247,6 +260,8 @@ export class DocumentService {
       `
     };
   }
+  
+  
   async generatePdfFromHtml(documentId: string, html: string): Promise<IDocument> {
     const doc = await this.documentModel.findById(documentId);
     if (!doc) throw new NotFoundException('Document not found');

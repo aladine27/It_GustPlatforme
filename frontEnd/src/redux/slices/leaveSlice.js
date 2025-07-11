@@ -14,7 +14,7 @@ import {
   fetchLeaveBalance
 } from "../actions/LeaveAction";
 
-// --- LEAVES ---
+
 const leaveInitialState = {
   leaves: [],
   selectedLeave: null,
@@ -45,6 +45,7 @@ export const leaveSlice = createSlice({
         state.success = null;
       })
       .addCase(fetchAllLeaves.fulfilled, (state, action) => {
+        console.log("[Reducer] fetchAllLeaveTypes.fulfilled", action.payload);        
         state.loading = false;
         state.leaves = action.payload;
         state.error = null;

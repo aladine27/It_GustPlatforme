@@ -12,6 +12,7 @@ import * as ExcelJS from 'exceljs';
 import * as PDFDocument from 'pdfkit';
 import axios from 'axios';
 import * as nodemailer from 'nodemailer';
+import { Toast } from 'react-bootstrap';
 
 @Injectable()
 export class UsersService {
@@ -49,8 +50,6 @@ export class UsersService {
     });
    
     const user = await newUser.save();
-    console.log('[CREATE USER] User enregistré en BDD :', user.email);
-      // Envoi de l'email après la création
       await this.sendAccountCreationEmail(user.email, user.fullName, plainPassword);
 
     return user;
@@ -64,26 +63,26 @@ export class UsersService {
     if (this.isVirtualEmail(email)) {
       // Envoi avec Mailtrap
       try {
-        const transporter = nodemailer.createTransport({
-          host: 'sandbox.smtp.mailtrap.io', // ou celui affiché dans ton dashboard Mailtrap
-          port: 2525, // ou celui fourni
-          auth: {
-            user: this.configService.get<string>('MAILTRAP_USER'), // à mettre dans .env !
-            pass: this.configService.get<string>('MAILTRAP_PASS'), // à mettre dans .env !
-          },
-        });
-  
-        await transporter.sendMail({
-          from: '"Plateforme ITGust" <noreply@itg.com>',
-          to: email,
-          subject: 'Bienvenue sur notre plateforme (TEST)',
-          html: `
-            <h3>Bonjour ${fullName},</h3>
-            <p>Votre compte a été créé avec succès.</p>
-            <p>Voici vos informations de connexion :</p>
-            <ul>
-              <li>Email : <strong>${email}</strong></li>
-              <li>Mot de passe : <strong>${password}</strong></li>
+      const transporter = nodemailer.createTransport({
+        host: 'sandbox.smtp.mailtrap.io',
+        port: 2525, 
+        auth: {
+        user: this.configService.get<string>('MAILTRAP_USER'),
+        pass: this.configService.get<string>('MAILTRAP_PASS'),
+        },
+      });
+
+      await transporter.sendMail({
+        from: '"Plateforme ITGust" <noreply@itg.com>',
+        to: email,
+        subject: 'Bienvenue sur notre plateforme ITGust',
+        html: `
+        <h3>Bonjour ${fullName},</h3>
+        <p>Votre compte a été créé avec succès.</p>
+        <p>Voici vos informations de connexion :</p>
+        <ul>
+          <li>Email : <strong>${email}</strong></li>
+          <li>Mot de passe : <strong>${password}</strong></li>
             </ul>
             <p>Vous pouvez changer votre mot de passe après connexion.</p>
           `,
@@ -127,11 +126,6 @@ export class UsersService {
       console.error('[Mail] Erreur lors de l’envoi du mail réel :', error);
     }
   }
-  
-
-
-  
-
   async findAll():Promise<IUser[]> {
     const users = await this.userModel.find()
     if(!users || users.length === 0){ 
@@ -200,9 +194,7 @@ export class UsersService {
         filter.createdAt.$lte = end;
       }
     }
-    console.log("[fetchUsersByDateRange] Filtre utilisé :", filter);
     const users = await this.userModel.find(filter);
-    console.log("[fetchUsersByDateRange] Users trouvés :", users.length);
     if (!users || users.length === 0) {
       throw new NotFoundException('Aucun utilisateur trouvé pour ce filtre');
     }
@@ -212,9 +204,6 @@ export class UsersService {
   
   async exportUsersToPdf(startDate?: Date, endDate?: Date): Promise<Buffer> {
     const users = await this.fetchUsersByDateRange(startDate, endDate);
-   // AJOUTE CE LOG :
-   console.log("[EXPORT PDF] Nb users exportés :", users.length, users.map(u => u.fullName));
-
     const doc = new PDFDocument({ size: 'A4', margin: 40 });
     const buffers: Buffer[] = [];
     doc.on('data', chunk => buffers.push(chunk));
@@ -375,9 +364,6 @@ export class UsersService {
   
       return users;
     }
-    // users.service.js
-   
-
     async importUsersFromExcel(fileBuffer: Buffer): Promise<IUser[]> {
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(fileBuffer);
@@ -391,8 +377,6 @@ export class UsersService {
       worksheet.eachRow((row, rowNumber) => {
         if (rowNumber === 1) return; // skip header
     
-        // Modifie ici l'ordre si besoin, selon ton fichier Excel
-        // [_id, fullName, email, phone, role, address, image, domain]
         const [_, fullName, email, phone, role, address, image, domain] = row.values as any[];
         console.log(`[IMPORT EXCEL] Row ${rowNumber} :`, { fullName, email, phone, role, address, image, domain });
     
@@ -438,7 +422,6 @@ export class UsersService {
       });
     
       await Promise.all(userPromises);
-    
       console.log(`[IMPORT EXCEL] Utilisateurs créés :`, created.map(u => u.email));
       return created;
     }

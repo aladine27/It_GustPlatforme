@@ -242,7 +242,23 @@ const resources = {
       "Email requis": "Email required",
       "Le mot de passe est requis": "Password required",
       "GitHub": "GitHub",
-      "Google": "Google"
+      "Google": "Google",
+      "loginTitle": "Login",
+      "email": "Email address",
+      "password": "Password",
+      "signIn": "Sign in",
+      "orLoginWith": "or sign in with",
+      "forgotPassword": "Forgot password?",
+      "githubLoginError": "Error while logging in with GitHub",
+      "githubLoginSuccess": "GitHub login successful!",
+      "loginSuccess": "Login successful!",
+      "loginError": "Incorrect email or password",
+      "unexpectedError": "An unexpected error occurred.",
+      "emailInvalid": "Invalid email",
+      "emailRequired": "Email required",
+      "passwordRequired": "Password required",
+      "fr": "French",
+      "en": "English"
       
                   
       

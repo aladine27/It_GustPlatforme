@@ -1,17 +1,5 @@
-import React, { useEffect, useState } from "react";
-import {
-  Avatar,
-  Button,
-  TextField,
-  Grid,
-  Box,
-  Typography,
-  Stack,
-  Link,
-  Paper,
-  IconButton,
-  Menu,
-  MenuItem
+import { useEffect, useState } from "react";
+import {Avatar,Button,TextField,Grid,Box,Typography,Stack,Link,Paper,IconButton,Menu,MenuItem
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useLocation, Link as RouterLink, useNavigate } from "react-router-dom";
@@ -22,7 +10,7 @@ import { useDispatch } from "react-redux";
 import { LoginAction, GithubLoginAction, GithubCallbackAction } from "../redux/actions/userAction";
 import { toast } from "react-toastify";
 import logo from '../assets/logo.jpeg';
-import loginImage from '../assets/login.jpg';   // <<< AJOUT ICI
+import loginImage from '../assets/login.jpg';
 import { useTranslation } from 'react-i18next';
 import Flag from "react-world-flags";
 
@@ -32,18 +20,17 @@ export default function Login() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
 
-  // Language menu
+  // -------- Gestion du menu de langue --------
   const [langMenu, setLangMenu] = useState(null);
-  const [selectedLanguage, setSelectedLanguage] = useState('fr');
-  const handleFlagClick = (e) => setLangMenu(e.currentTarget);
-  const handleFlagClose = () => setLangMenu(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('fr'); 
+  const handleFlagClick = (e) => setLangMenu(e.currentTarget); // Ouvre menu
+  const handleFlagClose = () => setLangMenu(null); 
   const handleLanguageChange = (lang) => {
     setSelectedLanguage(lang);
-    i18n.changeLanguage(lang);
+    i18n.changeLanguage(lang); 
     handleFlagClose();
   };
 
-  // Auth actions
   const handleGoogleLogin = () => {
     window.location.href = "http://localhost:3000/auth/google";
   };
@@ -51,14 +38,13 @@ export default function Login() {
     try {
       await dispatch(GithubLoginAction()).unwrap();
     } catch (error) {
-      toast.error("Erreur lors de la connexion GitHub");
+      toast.error(t("Erreur lors de la connexion GitHub"));
     }
   };
-
-  // Validation
+  
   const validationSchema = Yup.object().shape({
-    email: Yup.string().email("Email invalide").required("Email requis"),
-    password: Yup.string().required("Le mot de passe est requis"),
+    email: Yup.string().email(t("Email invalide")).required(t("Email requis")),
+    password: Yup.string().required(t("Le mot de passe est requis")),
   });
 
   const {
@@ -70,42 +56,42 @@ export default function Login() {
     resolver: yupResolver(validationSchema),
   });
 
+
   useEffect(() => {
     if (location.pathname === "/github-callback") {
       const queryParams = location.search;
       dispatch(GithubCallbackAction(queryParams))
         .unwrap()
         .then((result) => {
-          toast.success("Connexion GitHub réussie !");
+          toast.success(t("Connexion GitHub réussie !"));
           localStorage.setItem("user", JSON.stringify(result.data));
           navigate("/dashboard");
         })
         .catch((error) => {
-          toast.error(error || "Échec de la connexion GitHub");
+          toast.error(error || t("Erreur lors de la connexion GitHub"));
           navigate("/login");
         });
     }
-  }, [dispatch, location, navigate]);
+  }, [dispatch, location, navigate, t]);
 
   const onSubmit = async (formData) => {
     try {
       const resultAction = await dispatch(LoginAction(formData));
       if (LoginAction.fulfilled.match(resultAction)) {
-        toast.success("Connexion réussie !");
+        toast.success(t("Connexion réussie !"));
         localStorage.setItem('user', JSON.stringify(resultAction.payload));
         reset();
         navigate("/dashboard");
       } else {
         toast.error(
-          resultAction.payload?.message || "Email ou mot de passe incorrect"
+          resultAction.payload?.message || t("Email ou mot de passe incorrect")
         );
       }
     } catch (error) {
-      toast.error("Une erreur inattendue est survenue.");
+      toast.error(t("Une erreur inattendue est survenue."));
     }
   };
 
-  // SVGs for OAuth buttons
   const GithubSvg = (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <path fill="#181717" fillRule="evenodd" clipRule="evenodd"
@@ -125,11 +111,8 @@ export default function Login() {
 
   return (
     <Grid container sx={{ minHeight: "100vh" }}>
-      {/* Colonne Gauche - IMAGE FULL COVER */}
-      <Grid
-        item
-        xs={12}
-        md={6}
+      {/* Colonne Gauche - image de couverture (masquée sur mobile) */}
+      <Grid item xs={12} md={6}
         sx={{
           display: { xs: "none", md: "flex" },
           backgroundImage: `url(${loginImage})`,
@@ -138,15 +121,10 @@ export default function Login() {
           backgroundRepeat: "no-repeat",
           minHeight: "100vh",
           width: "100%",
-
         }}
       />
-
-      {/* Colonne Droite */}
-      <Grid
-        item
-        xs={12}
-        md={6}
+      {/* Colonne Droite (formulaire + options langue) */}
+      <Grid item xs={12} md={6}
         sx={{
           display: "flex",
           alignItems: "center",
@@ -155,9 +133,8 @@ export default function Login() {
           minHeight: "100vh",
         }}
       >
-        {/* CARD agrandie et centrée */}
-        <Paper
-          elevation={6}
+        {/* Card centrale */}
+        <Paper elevation={9}
           sx={{
             borderRadius: 2.5,
             width: "90%",
@@ -168,18 +145,17 @@ export default function Login() {
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            boxShadow: "0 6px 48px #0002",
+            boxshadow: "0px 6px 11px 0px",
             position: "relative",
-           
           }}
         >
-          {/* Logo + Flag sur la même ligne */}
+          {/* Ligne du logo et du drapeau langue */}
           <Box sx={{
             width: "100%",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            px: { xs: 1, md: 4 },
+            px: { xs: 0, md: 0 },
             pt: { xs: 2, md: 3 },
             pb: 0
           }}>
@@ -190,8 +166,10 @@ export default function Login() {
                   p: 0.7,
                   background: "#fff",
                   border: "1px solid #e0e0e0",
-                  "&:hover": { background: "#f5faff" }
+                  "&:hover": { background: "#f5faff" },
+                  mr: 2,
                 }}>
+
                 <Flag code={selectedLanguage === 'fr' ? 'FR' : 'GB'} style={{ width: 28, height: 18, borderRadius: 3 }} />
               </IconButton>
               <Menu
@@ -212,8 +190,7 @@ export default function Login() {
               </Menu>
             </Box>
           </Box>
-
-          {/* Formulaire centré verticalement */}
+          {/* --------- Formulaire --------- */}
           <Box sx={{
             flex: 1,
             width: "100%",
@@ -229,20 +206,20 @@ export default function Login() {
               <LockOutlinedIcon />
             </Avatar>
             <Typography component="h1" variant="h5" fontWeight={600} mb={2} sx={{ textAlign: "center" }}>
-              Connexion
+              {t("Connexion")}
             </Typography>
             <form onSubmit={handleSubmit(onSubmit)} style={{ width: "100%" }}>
               <Stack spacing={2} mt={1}>
                 <TextField
                   fullWidth
-                  label="Adresse e-mail"
+                  label={t("Adresse e-mail")}
                   {...register("email")}
                   error={Boolean(errors.email)}
                   helperText={errors.email?.message}
                 />
                 <TextField
                   fullWidth
-                  label="Mot de passe"
+                  label={t("Mot de passe")}
                   type="password"
                   {...register("password")}
                   error={Boolean(errors.password)}
@@ -255,11 +232,11 @@ export default function Login() {
                     background: "#1890ff",
                     "&:hover": { background: "#1763b7" }
                   }}>
-                  Se connecter
+                  {t("Se connecter")}
                 </Button>
               </Stack>
               <Typography align="center" variant="body2" color="text.secondary" mt={2} mb={1}>
-                ou se connecter avec
+                {t("ou se connecter avec")}
               </Typography>
               <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
                 <Button
@@ -268,7 +245,7 @@ export default function Login() {
                   onClick={handleGithubLogin}
                   sx={{ borderRadius: 7, fontWeight: 600, minWidth: 120 }}
                 >
-                  GitHub
+                  {t("GitHub")}
                 </Button>
                 <Button
                   variant="outlined"
@@ -276,12 +253,12 @@ export default function Login() {
                   onClick={handleGoogleLogin}
                   sx={{ borderRadius: 7, fontWeight: 600, minWidth: 120 }}
                 >
-                  Google
+                  {t("Google")}
                 </Button>
               </Stack>
               <Box sx={{ textAlign: "right" }}>
                 <Link component={RouterLink} to="/resetPassword" variant="body2">
-                  Mot de passe oublié ?
+                  {t("Mot de passe oublié ?")}
                 </Link>
               </Box>
             </form>

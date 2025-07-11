@@ -106,7 +106,7 @@ export const updateLeave = createAsyncThunk(
   }
 );
 
-// Delete a leave
+
 export const deleteLeave = createAsyncThunk(
   "leave/delete",
   async (id, { rejectWithValue }) => {
@@ -131,12 +131,15 @@ export const fetchAllLeaveTypes = createAsyncThunk(
       const res = await axios.get("http://localhost:3000/leave-type", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log("[Thunk] fetchAllLeaveTypes API DATA:", res.data.data); // <==== AJOUTE CE LOG
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
+
+
 
 // Fetch leave type by ID
 export const fetchLeaveTypeById = createAsyncThunk(

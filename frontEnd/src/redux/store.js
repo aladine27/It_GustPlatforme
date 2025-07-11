@@ -2,6 +2,7 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import userReducer from './slices/userSlice'
 import employeReducer from './slices/employeSlice'; 
 import documentReducer from './slices/documentSlice';
+import projectReducer from './slices/projectSlice'
 import { eventSlice, eventTypeSlice } from './slices/eventSlice';
 import {persistReducer} from 'redux-persist'
 import { persistStore } from 'redux-persist';
@@ -16,7 +17,8 @@ const rootReducer = combineReducers({
     eventType: eventTypeSlice.reducer,
     leave:leaveSlice.reducer,
     leaveType:leaveTypeSlice.reducer,
-    document: documentReducer
+    document: documentReducer,
+    project:projectReducer
     
 });
 const persistConfig={

@@ -6,7 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Employe from './pages/Employe';
 import Evenement from './pages/Evenement';
 import Projet from './pages/Projet';
-import Tache from './pages/Tache';
+
 
 import Recrutement from './pages/Recrutement';
 import Frais from './pages/Frais';
@@ -27,6 +27,8 @@ import CongeEmploye from './pages/Conge/CongeEmploye';
 import CongeHistory from './pages/Conge/CongeHistory';
 import DocumentIndex from './pages/Documents/DocumentIndex';
 import DocumentPersonnalisationPage from './pages/Documents/DocumentPersonnalisationPage';
+import Tache from './pages/Tache/Tache';
+import ProjectSprintIndex from './pages/Tache/ProjectSprintIndex';
 function App() {
   const { CurrentUser } = useSelector((state) => state.user);
   const role = CurrentUser?.role || CurrentUser?.user?.role;
@@ -75,7 +77,8 @@ function App() {
             {/* Projet + Tache : Admin + Manager + Employe */}
             <Route element={<PrivateRoute rolesAllowed={["Admin", "Manager", "Employe"]} />}>
               <Route path="projet" element={<Projet />} />
-              <Route path="tache" element={<Tache />} />
+              <Route path="tache" element={<ProjectSprintIndex />} />
+              <Route path="tache/:projectId" element={<ProjectSprintIndex />} />
             </Route>
 
             {/* Recrutement : Admin + Rh */}
@@ -93,6 +96,7 @@ function App() {
               <Route path="employee/Conge" element={<CongeEmploye />} />
               <Route path="conge/history" element={<CongeHistory />} />
               <Route path="frais" element={<Frais />} />
+              <Route path="sprints" element={<ProjectSprintIndex />} />
             </Route>
 
            

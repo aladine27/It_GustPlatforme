@@ -1,96 +1,118 @@
-import * as React from 'react';
-import { useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
-  Box, Card, Typography, Divider, Grid,
-  TextField, InputAdornment, IconButton, Chip,
-  MenuItem
+  Box, Typography, TextField, InputAdornment,
+  IconButton, Grid, CircularProgress, Chip, MenuItem, useTheme
 } from '@mui/material';
-import {
-  Search as SearchIcon,
-  AddCircleOutline, Visibility, Edit, Delete
-} from '@mui/icons-material';
-import { ButtonComponent } from '../components/Global/ButtonComponent';
-import PaginationComponent from '../components/Global/PaginationComponent';
-import TableComponent from '../components/Global/TableComponent';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import ProgressChart from '../components/projet/ProgressChart';
+
+import {
+  fetchAllProjects,
+} from '../redux/actions/projectActions';
+import { clearProjectMessages } from '../redux/slices/projectSlice';
+
+import TableComponent from '../components/Global/TableComponent';
+import PaginationComponent from '../components/Global/PaginationComponent';
+import { ButtonComponent } from '../components/Global/ButtonComponent';
+
+import CreateProjectModal from '../components/projet/CreateProjectModal';
 import EditProjectModal from '../components/projet/EditProjectModal';
 import DeleteProjectModal from '../components/projet/DeleteProjectModal';
-import CreateProjectModal from '../components/projet/CreateProjectModal';
+
+import ProjectSprintIndex from './Tache/ProjectSprintIndex';
+import { toast } from 'react-toastify';
+import { StyledPaper } from '../style/style';
+import { AddCircleOutline } from '@mui/icons-material';
+import { SearchIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Projet = () => {
-const { t } = useTranslation();
-const [editModalOpen, setEditModalOpen] = useState(false);
-const [selectedProject, setSelectedProject] = useState(null);
-const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-const [projectToDelete, setProjectToDelete] = useState(null);
-const [createModalOpen, setCreateModalOpen] = useState(false);
-const handleDeleteConfirmed = (project) => {
-  setProjects(prev => prev.filter(p => p.id !== project.id));
-};
-const handleCreateProject = (newProject) => {
-  const newId = projects.length > 0 ? Math.max(...projects.map(p => p.id)) + 1 : 1;
-  setProjects(prev => [...prev, { id: newId, ...newProject }]);
-};
+  const { t } = useTranslation();
+  const dispatch = useDispatch();
+  const theme = useTheme();
 
+  const { projects: allRows, loading, error: loadError, success } = useSelector(state => state.project);
 
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      title: 'Tech Innovators',
-      description: 'Revolutionizing the tech world',
-      duration: '5 months',
-      start: '2023-01-15',
-      end: '2023-05-15',
-      status: '75% complete'
-    },
-    {
-      id: 2,
-      title: 'Green Energy Initiative',
-      description: 'Promoting a healthier planet',
-      duration: '6 months',
-      start: '2023-02-02',
-      end: '2023-08-02',
-      status: '60% complete'
-    },
-    {
-      id: 3,
-      title: 'Blue Energy Initiative',
-      description: 'Sustainable ocean energy',
-      duration: '6 months',
-      start: '2023-02-02',
-      end: '2023-08-02',
-      status: '60% complete'
+  // States
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Modals
+  const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [openDetail, setOpenDetail] = useState(false);
+  const navigate = useNavigate();
+
+  // Fetch projects on mount
+  useEffect(() => {
+    dispatch(fetchAllProjects());
+  }, [dispatch]);
+
+  // Notifications
+  useEffect(() => {
+    if (success) {
+      toast.success(success);
+      dispatch(clearProjectMessages());
     }
-  ]);
+    if (loadError) {
+      toast.error(loadError);
+      dispatch(clearProjectMessages());
+    }
+  }, [success, loadError, dispatch]);
 
-  const handleEditClick = (project) => {
-    setSelectedProject(project);
-    setEditModalOpen(true);
-  };
+  // Filtrage & search
+  const filteredRows = allRows.filter(row => {
+    const searchMatch =
+      row.title?.toLowerCase().includes(search.toLowerCase()) ||
+      row.description?.toLowerCase().includes(search.toLowerCase());
 
-  const handleSave = (updatedProject) => {
-    setProjects(prev =>
-      prev.map(p => (p.id === updatedProject.id ? updatedProject : p))
-    );
-    setEditModalOpen(false);
-  };
+    let statusMatch = true;
+    if (statusFilter !== 'All') {
+      if (statusFilter === 'Completed') statusMatch = row.status?.toLowerCase().includes('completed');
+      if (statusFilter === 'Ongoing') statusMatch = row.status?.toLowerCase().includes('ongoing');
+      if (statusFilter === 'Planned') statusMatch = row.status?.toLowerCase().includes('planned');
+    }
+    return searchMatch && statusMatch;
+  });
 
+  // Pagination
+  const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+  const paginatedRows = filteredRows.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const handlePageChange = (_e, value) => setCurrentPage(value);
 
-
+  // Columns
   const columns = [
-    { id: 'title', label: 'Title', align: 'left' },
-    { id: 'description', label: 'Description', align: 'left' },
-    { id: 'duration', label: 'Duration', align: 'center' },
+    { id: 'title', label: t('Titre'), align: 'left' },
+    { id: 'description', label: t('Description'), align: 'left' },
+    { id: 'duration', label: t('Durée'), align: 'center' },
     {
-      id: 'start',
-      label: 'Start/End',
+      id: 'file',
+      label: t('Fichier'),
       align: 'center',
-      render: row => `${row.start} - ${row.end}`
+      render: row => row.file ? (
+        <a
+          href={`http://localhost:3000/uploads/projects/${row.file}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >{row.file}</a>
+      ) : "-"
+    },
+    {
+      id: 'startDate',
+      label: t('Début/Fin'),
+      align: 'center',
+      render: row => `${row.startDate?.substring(0, 10) || ''} - ${row.endDate?.substring(0, 10) || ''}`
     },
     {
       id: 'status',
-      label: 'Status',
+      label: t('Statut'),
       align: 'center',
       render: row => (
         <Chip label={row.status} color="primary" variant="outlined" size="small" />
@@ -98,141 +120,138 @@ const handleCreateProject = (newProject) => {
     }
   ];
 
+  // Actions
   const actions = [
     {
-      icon: <Visibility sx={{ color: '#1976d2' }} />,
-      tooltip: 'View Tasks',
-      onClick: (project) => console.log('Viewing tasks for:', project.title)
+      icon: <DeleteIcon />,
+      tooltip: t('Supprimer'),
+      onClick: project => { setSelectedProject(project); setOpenDelete(true); }
     },
     {
-      icon: <Edit sx={{ color: '#ff9800' }} />,
-      tooltip: 'Edit Project',
-      onClick: handleEditClick
+      icon: <EditIcon sx={{ color: "#1976d2" }} />,
+      tooltip: t('Modifier'),
+      onClick: project => { setSelectedProject(project); setOpenEdit(true); }
     },
-    {
-      icon: <Delete sx={{ color: '#f44336' }} />,
-      tooltip: 'Delete Project',
-      onClick: (project) => {
-        setProjectToDelete(project);
-        setDeleteModalOpen(true);
-    }
-    }
-    
+ 
+  {
+    icon: <TimelineIcon sx={{ color: "#1273BA" }} />,
+    tooltip: t('Sprints'),
+    onClick: project => navigate(`/dashboard/tache/${project._id}`)
+  }
   ];
+  
 
-  const [statusFilter, setStatusFilter] = useState('All');
+  // Loader
+  if (loading) {
+    return (
+      <Box sx={{ p: 6, textAlign: 'center' }}>
+        <CircularProgress color="primary" />
+      </Box>
+    );
+  }
 
-  const filteredProjects = statusFilter === 'All'
-    ? projects
-    : projects.filter(p => {
-        const status = p.status.toLowerCase();
-        return (
-          (statusFilter === 'Completed' && status.includes('75')) ||
-          (statusFilter === 'Ongoing' && status.includes('60')) ||
-          (statusFilter === 'Upcoming' && status.includes('30'))
-        );
-      });
+  // Error
+  if (loadError) {
+    return (
+      <Box sx={{ p: 4 }}>
+        <Typography color="error" fontWeight={600}>{loadError}</Typography>
+      </Box>
+    );
+  }
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
-  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
-  const paginatedProjects = filteredProjects.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  const handlePageChange = (_e, value) => setCurrentPage(value);
-
+  // MAIN UI
   return (
-    <Box sx={{ p: 3, bgcolor:'#F3FAFF', minHeight: '100vh' }}>
-      <Card sx={{ p: 4, borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.1)', bgcolor: 'white' }}>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="h4" fontWeight="bold" color="#1976d2">
-            {t('All Projects')}
-          </Typography>
-         
-          
-        </Box>
-
-        <Divider sx={{ mb: 3 }} />
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, borderRadius: 3 }}>
-          <TextField
-            label={t('Search here')}
-            variant="outlined"
-            sx={{
-              width: '50%',
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 3
-              }
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <IconButton size="small"><SearchIcon /></IconButton>
-                </InputAdornment>
-              )
-            }}
-          />
-
-          <Grid container spacing={2} justifyContent="flex-end" sx={{ width: 'fit-content' }}>
+    <>
+      <StyledPaper sx={{ p: { xs: 2, md: 4 }, mt: 2 }}>
+        {/* HEADER BOUTONS + SEARCH + FILTRE */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { md: 'row', xs: 'column' },
+            justifyContent: 'space-between',
+            alignItems: { xs: 'stretch', md: 'center' },
+            mb: 3,
+            gap: { xs: 2, md: 0 }
+          }}
+        >
+          <Grid container spacing={2} justifyContent="flex-end" alignItems="center" sx={{ width: 'fit-content' }}>
             <Grid item>
-              <TextField
-                select
-                label={t('Filter by')}
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                variant="outlined"
-                size="small"
-                sx={{ minWidth: 150, borderRadius: 3 }}
-              >
-                <MenuItem value="All">{t('All')}</MenuItem>
-                <MenuItem value="Completed">{t('Completed')}</MenuItem>
-                <MenuItem value="Ongoing">{t('Ongoing')}</MenuItem>
-                <MenuItem value="Upcoming">{t('Upcoming')}</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item>
-            <ButtonComponent
-                     text={t('Add')}
-                     icon={<AddCircleOutline />}
-                     onClick={() => setCreateModalOpen(true)}
-            />
+              <ButtonComponent
+                onClick={() => setOpenAdd(true)}
+                text={t('Ajouter')}
+                icon={<AddCircleOutline />}
+                color="primary"
+              />
             </Grid>
           </Grid>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <TextField
+              label={t('Rechercher')}
+              value={search}
+              onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+              placeholder={t('Titre, Description...')}
+              sx={{
+                width: { xs: '100%', md: 340 },
+                borderRadius: '50px',
+                bgcolor: '#fff',
+                boxShadow: theme.shadows[1]
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <IconButton size="small" color="primary"><SearchIcon /></IconButton>
+                  </InputAdornment>
+                ),
+                sx: { borderRadius: '16px', fontSize: '1.03rem' }
+              }}
+            />
+            <TextField
+              select
+              label={t('Filtrer')}
+              value={statusFilter}
+              onChange={e => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+              sx={{ minWidth: 160, borderRadius: 3, bgcolor: "#fff", boxShadow: theme.shadows[1] }}
+            >
+              <MenuItem value="All">{t('Tous')}</MenuItem>
+              <MenuItem value="Completed">{t('Complété')}</MenuItem>
+              <MenuItem value="Ongoing">{t('En cours')}</MenuItem>
+              <MenuItem value="Planned">{t('Planifié')}</MenuItem>
+            </TextField>
+          </Box>
         </Box>
 
-        <TableComponent columns={columns} rows={paginatedProjects} actions={actions} />
-
+        {/* TABLE + PAGINATION */}
+        <TableComponent columns={columns} rows={paginatedRows} actions={actions} />
         <Box mt={4} display="flex" justifyContent="center">
           <PaginationComponent count={totalPages} page={currentPage} onChange={handlePageChange} />
         </Box>
-      </Card>
+      </StyledPaper>
 
-      {selectedProject && (
+      {/* CRUD MODALS */}
+      <CreateProjectModal open={openAdd} handleClose={() => setOpenAdd(false)} />
+      {openEdit && selectedProject && (
         <EditProjectModal
-          open={editModalOpen}
-          onClose={() => setEditModalOpen(false)}
+          open={openEdit}
+          onClose={() => setOpenEdit(false)}
           project={selectedProject}
-          onSave={handleSave}
+          onSave={handleEditProject}
         />
-      
       )}
-      {projectToDelete && (
-  <DeleteProjectModal
-    open={deleteModalOpen}
-    handleClose={() => setDeleteModalOpen(false)}
-    project={projectToDelete}
-    onDelete={handleDeleteConfirmed}
-  />
-  
-)}
-<CreateProjectModal
-  open={createModalOpen}
-  handleClose={() => setCreateModalOpen(false)}
-  onCreate={handleCreateProject}
-/>
-
-
-
-
-    </Box>
+      {openDelete && selectedProject && (
+        <DeleteProjectModal
+          open={openDelete}
+          handleClose={() => setOpenDelete(false)}
+          project={selectedProject}
+          onDelete={handleDeleteProject}
+        />
+      )}
+      {openDetail && selectedProject && (
+        <ProjectSprintIndex
+          projectId={selectedProject._id}
+          onClose={() => setOpenDetail(false)}
+        />
+      )}
+    </>
   );
 };
 

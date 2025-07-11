@@ -17,7 +17,7 @@ const documentTypes = [
   { value: "Attestation de travail", label: "Attestation de travail" },
   { value: "Bulletin de paie", label: "Bulletin de paie" },
   { value: "Attestation de salaire", label: "Attestation de salaire" },
-  { value: "Attestation de présence", label: "Attestation de présence" },
+  { value: "attestation de cnss", label: "attestation de cnss" },
   { value: "certificat d'emploi et de fonction", label: "certificat d'emploi et de fonction" },
 ];
 

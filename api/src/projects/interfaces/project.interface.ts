@@ -14,9 +14,7 @@ export interface IProject extends Document {
               readonly endDate: Date;
               
               readonly status: String;
-
-              readonly category: string;
-              
+      
               readonly tasks:string;
 
               readonly user: string;

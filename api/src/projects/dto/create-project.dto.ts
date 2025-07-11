@@ -31,7 +31,6 @@ export class CreateProjectDto {
         description: 'The file associated with the project'
     })
     @IsString() 
-    @IsNotEmpty()
     file: string;
 
     @ApiProperty({

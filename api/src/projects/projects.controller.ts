@@ -5,7 +5,15 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { Roles } from 'src/decorators/roles.decorators';
+import { AccessTokenGuard } from 'src/guards/accessToken.guard';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth("access-token")
+@ApiTags('Document')
+@UseGuards(AccessTokenGuard)
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
@@ -21,7 +29,6 @@ export class ProjectsController {
         startDate:{type: 'Date'},
         endDate:{type: 'Date'},
         status:{type: 'string'},
-        category:{type: 'string'},
         user:{type: 'string'},
         file:{type: 'string', format: 'binary'},
         }
@@ -39,7 +46,9 @@ export class ProjectsController {
       })
     )
 
-  @Post('')
+  @Post()
+  @UseGuards(RolesGuard)
+  @Roles('Admin', 'Rh')
   async create(@Body() createProjectDto: CreateProjectDto, @Res() res,@UploadedFile()file: Express.Multer.File) {
     try {
       createProjectDto.file = file?.filename
@@ -72,23 +81,8 @@ export class ProjectsController {
       
     }
   }
-  @Get('/findProjectByCategory/:category')
-  async findProjectbyCategory(@Param('category') category: string, @Res() res) {
-    try {
-       const projectCategory = await this.projectsService.findProjectBycategory(category);
-      return res.status(HttpStatus.OK).json({message: 'Project Associated to Category retrieved successfully',
-        data:projectCategory, 
-        status: HttpStatus.OK
-    });
-      
-    } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
-        data:null, 
-        status: HttpStatus.BAD_REQUEST,
-        message: error.message} );
-      
-    }
-  } 
+
+
 
 
 
@@ -137,7 +131,6 @@ async findAll( @Res() res) {
           startDate:{type: 'Date'},
           endDate:{type: 'Date'},
           status:{type: 'string'},
-          category:{type: 'string'},
           user:{type: 'string'},
           }
         }

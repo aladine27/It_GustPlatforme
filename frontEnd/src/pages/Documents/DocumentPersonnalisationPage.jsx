@@ -48,7 +48,9 @@ export default function DocumentPersonnalisationPage() {
   const [fullName, setFullName] = useState(userFullName);
   const [anchorEl, setAnchorEl] = useState(null);
   const [watermarkAnchor, setWatermarkAnchor] = useState(null);
-  const editorRef = useRef(null); // Added editor ref
+  const editorRef = useRef(null); 
+  const [signatureData, setSignatureData] = useState(null);
+
 
   useEffect(() => {
     if (!userFullName && documents && docId) {
@@ -103,29 +105,26 @@ export default function DocumentPersonnalisationPage() {
 
   const handleSaveSignature = (dataUrl) => {
     setShowSignature(false);
-    
     if (!dataUrl) {
       toast.error("Aucune signature détectée");
       return;
     }
-  
-    if (editorRef.current) {
-      // Définir la taille de la signature en pixels
-      const signatureWidth = 30; // Réduit à 150px pour une taille plus adaptée
-      const signatureHeight = 30;  // Réduit à 75px pour garder les proportions
-  
-      // Insérer l'image de la signature à la position du curseur
-      editorRef.current.chain().focus().setImage({
-        src: dataUrl,
-        alt: "Signature",
-        width: signatureWidth,
-        height: signatureHeight,
-      }).run();
-      toast.success("Signature insérée avec succès !");
-    } else {
-      toast.error("Éditeur non prêt");
-    }
+    setSignatureData(dataUrl);
+    // Remplacement du src de l'image signature
+    setEditedHtml((prevHtml) =>
+      prevHtml.replace(
+        /<img([^>]+id="signature-placeholder"[^>]*)src="[^"]*"([^>]*)>/,
+        `<img$1src="${dataUrl}"$2>`
+      )
+    );
+    toast.success("Signature ajoutée !");
   };
+  
+  
+  
+  
+  
+  
 
   const handleGeneratePdf = async () => {
     try {
@@ -176,13 +175,13 @@ export default function DocumentPersonnalisationPage() {
         onClose={() => setShowSignature(false)}
       />
       <PreviewModal
-        open={openPreview}
-        onClose={() => setOpenPreview(false)}
-        html={editedHtml}
-        signatureData={null}
-        theme={THEMES[themeIdx]}
-        watermark={watermark}
-      />
+  open={openPreview}
+  onClose={() => setOpenPreview(false)}
+  html={editedHtml}
+  theme={THEMES[themeIdx]}
+  watermark={watermark}
+/>
+
 
       <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
         <DocumentEditor
@@ -196,7 +195,9 @@ export default function DocumentPersonnalisationPage() {
           currentTheme={THEMES[themeIdx]}
           openPreview={openPreview}
           forceToolbarTop={fullScreen}
-          onEditorReady={(editor) => { editorRef.current = editor; }} // Added onEditorReady
+          onEditorReady={(editor) => { editorRef.current = editor; }} 
+          signatureData={signatureData} 
+
         />
       </Box>
     </Box>

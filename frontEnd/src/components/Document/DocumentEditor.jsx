@@ -4,7 +4,6 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
 import Color from "@tiptap/extension-color";
 import TextStyle from "@tiptap/extension-text-style";
 import Highlight from "@tiptap/extension-highlight";
@@ -27,6 +26,7 @@ import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import { StyledButton } from "../../style/style";
 import ResizeImage from "tiptap-extension-resize-image";
+import { CustomImage } from "./CustomImage"; // Import extension image personnalisée
 
 export default function DocumentEditor({
   editedHtml,
@@ -43,17 +43,15 @@ export default function DocumentEditor({
   forceToolbarTop = false,
 }) {
   const fileInputRef = useRef();
-  const toolbarHeight = 64; // hauteur de la toolbar en px
-  const headerHeight = 72;  // hauteur du header en mode plein écran
+  const toolbarHeight = 64;
+  const headerHeight = 72;
 
+  // Utilise CustomImage à la place de l'Image standard
   const extensions = [
-    StarterKit.configure({
-      history: true,
-      heading: { levels: [1, 2, 3] },
-    }),
+    StarterKit.configure({ history: true, heading: { levels: [1, 2, 3] } }),
     Underline,
     Link.configure({ openOnClick: true }),
-    Image.configure({ allowBase64: true }),
+    CustomImage.configure({ allowBase64: true }), // IMPORTANT
     Color,
     TextStyle,
     Highlight,
@@ -63,39 +61,37 @@ export default function DocumentEditor({
       alignments: ["left", "center", "right", "justify"],
     }),
     ResizeImage,
-    Image,
   ];
 
-  // Instance de l'éditeur
   const editor = useEditor({
     extensions,
-    content: editedHtml || "<p></p>",
+    content: "<p></p>", // Initial vide
     editable: !loading && !readOnly,
     autofocus: true,
     onUpdate({ editor }) {
       setEditedHtml(editor.getHTML());
     },
     onCreate({ editor }) {
-      if (typeof onEditorReady === "function") {
-        onEditorReady(editor);
-      }
+      if (typeof onEditorReady === "function") onEditorReady(editor);
     },
   });
 
-  // Synchronisation du contenu si editedHtml change
+  // Synchronise le HTML backend, sans manip signature !
   useEffect(() => {
-    if (editor && typeof editedHtml === "string" && editor.getHTML() !== editedHtml) {
-      editor.commands.setContent(editedHtml || "<p></p>");
+    if (!editor) return;
+    if (!editedHtml) {
+      editor.commands.setContent("<p></p>");
+      return;
     }
-    // eslint-disable-next-line
-  }, [editedHtml]);
+    editor.commands.setContent(editedHtml);
+  }, [editedHtml, editor]);
 
-  // Nettoyage lors du démontage
+  // Nettoyage
   useEffect(() => {
     return () => editor?.destroy();
-  }, []);
+  }, [editor]);
 
-  // Insertion d'image depuis un fichier local
+  // Insertion image depuis upload utilisateur
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -108,7 +104,7 @@ export default function DocumentEditor({
     reader.readAsDataURL(file);
   };
 
-  // STYLE pour la toolbar
+  // Style toolbar
   const toolbarSx = fullScreen && forceToolbarTop
     ? {
         position: "fixed",
@@ -174,7 +170,7 @@ export default function DocumentEditor({
         <Typography color="error" py={2}>{error.toString()}</Typography>
       ) : (
         <>
-          {/* BARRE D'ÉDITION STICKY/FIXED */}
+          {/* Toolbar */}
           {!readOnly && editor && !openPreview && (
             <Box sx={toolbarSx}>
               <Tooltip title="Gras"><IconButton onClick={() => editor.chain().focus().toggleBold().run()}><FormatBoldIcon /></IconButton></Tooltip>
@@ -204,7 +200,7 @@ export default function DocumentEditor({
             </Box>
           )}
 
-          {/* EDITEUR SCROLLABLE */}
+          {/* Éditeur */}
           <Box
             sx={{
               flex: 1,
@@ -241,15 +237,13 @@ export default function DocumentEditor({
                 },
               }}
             >
-              {/* Zone d'édition */}
               <EditorContent editor={editor} className="MuiTiptap-root" />
 
-              {/* Bouton de validation */}
               {!readOnly && (
                 <Stack direction="row" justifyContent="flex-end" gap={2} mt={3}>
                   <StyledButton
                     onClick={handleGeneratePdf}
-                    disabled={loading || !editedHtml.trim()}
+                    disabled={loading || !editedHtml?.trim()}
                     sx={{ minWidth: 220, fontSize: "1.09rem", py: 1.2, borderRadius: 8 }}
                   >
                     {loading ? <CircularProgress size={20} /> : "Générer le PDF & Valider"}

@@ -16,22 +16,15 @@ export class AuthService {
         private configService:ConfigService,
     ){}
     async signIn(CreateLoginDto:createLoginDto){
-        //test existantce user
-        console.log("[BACKEND] Service.signIn() - DTO :", CreateLoginDto);
         const user = await this.userService.findbyEmail(CreateLoginDto.email)
-        console.log("[BACKEND] Service.signIn() - DTO :", CreateLoginDto);
         if (!user){
             throw new BadRequestException("user not exist")
-
         }
-        //test Password
         const passwordMatches= await argon2.verify(user.password,CreateLoginDto.password);
-        console.log("[BACKEND] Service.signIn() - Password OK ?", passwordMatches);
-        console.log(passwordMatches)
+      
         if (!passwordMatches){
             throw new BadRequestException("password incorrect")
         }
-        //generate Token
        const token = await this.generateToken(user._id, user.email, user.role);
         await this.updateRefreshToken(user._id,token.refreshToken)
         return {user , token}
@@ -101,10 +94,9 @@ async updatePassword(id: string, updateUserDto: UpdateUserDto) {
 //Vérifie qu’un utilisateur avec cet email existe déjà dans la base de données.
   async validateExistingUserByEmail(email: string) {
     const user = await this.userService.findbyEmail(email);
-    return user; // ou null si pas trouvé
+    return user; 
   }
   isVirtualEmail(email: string): boolean {
-    // Liste des domaines d’emails virtuels à supporter ici
     return (
       email.endsWith('@smtp.dev') ||
       email.endsWith('@mail.tm') ||
@@ -131,7 +123,7 @@ async updatePassword(id: string, updateUserDto: UpdateUserDto) {
     const sendinblue = new SibApiV3Sdk.TransactionalEmailsApi();
 
     const emailParams: SibApiV3Sdk.SendSmtpEmail = {
-      sender: { name: 'Votre Société', email: 'noreply@votredomaine.com' },
+      sender: { name: 'Gust-IT', email: 'noreply@votredomaine.com' },
       to: [{ email: user.email, name: user.fullName || 'Utilisateur' }],
       subject: 'Réinitialisation de votre mot de passe',
       htmlContent: `
