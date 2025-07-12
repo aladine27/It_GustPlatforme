@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
-  Box, TextField, Typography, Button, Grid
+  Box, TextField, Typography, Button, Grid, Stack
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
@@ -17,18 +17,16 @@ import StepperComponent from "../Global/StepperComponent";
 import { ButtonComponent } from "../Global/ButtonComponent";
 import { useTranslation } from "react-i18next";
 
-// Step titles
-const steps = [
+const stepsKeys = [
   "Infos générales",
   "Dates",
   "Fichier"
 ];
 
-// Validation schemas par étape
 const projectStepSchemas = [
   Yup.object({
-    title: Yup.string().required("Le titre est requis"),
-    description: Yup.string().required("La description est requise"),
+    title: Yup.string().required("Le titre est requis").min(3).max(100),
+    description: Yup.string().required("La description est requise").max(500),
   }),
   Yup.object({
     startDate: Yup.date()
@@ -39,7 +37,9 @@ const projectStepSchemas = [
       .required("Date de fin requise")
       .min(Yup.ref("startDate"), "La date de fin doit être après la date de début"),
   }),
- 
+  Yup.object({
+    file: Yup.mixed().nullable() // OPTIONNEL
+  })
 ];
 
 function todayDate() {
@@ -51,15 +51,19 @@ function todayDate() {
 export default function CreateProjectModal({ open, handleClose }) {
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  // Utilisateur connecté (adapter selon ton state redux)
   const user = useSelector(state => state.user.CurrentUser?.user || state.user.CurrentUser) || {};
   const userId = user?._id;
 
   const [activeStep, setActiveStep] = useState(0);
 
-  // react-hook-form setup
   const {
-    control, register, handleSubmit, reset, trigger, watch, setValue, formState: { errors }
+    register,
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+    trigger
   } = useForm({
     resolver: yupResolver(projectStepSchemas[activeStep]),
     defaultValues: {
@@ -67,39 +71,34 @@ export default function CreateProjectModal({ open, handleClose }) {
       description: "",
       startDate: todayDate(),
       endDate: null,
-   
+      file: null,
     }
   });
 
-  // Reset form à chaque ouverture modale
-  useEffect(() => {
-    if (open) {
-      reset({
-        title: "",
-        description: "",
-        startDate: todayDate(),
-        endDate: null,
-        file: null,
-      });
-      setActiveStep(0);
-    }
-  }, [open, reset]);
-
-  // Logs pour debug
-  useEffect(() => {
-    console.log("[CreateProjectModal] Watched values:", watch());
-  });
-
-  // Étape suivante
-  const handleNext = async () => {
-    const isValid = await trigger();
-    console.log("[CreateProjectModal] Step:", activeStep, "Valid?", isValid, "Errors:", errors);
-    if (isValid) setActiveStep(s => Math.min(s + 1, steps.length - 1));
-    else toast.error("Erreur de validation !");
+  // RESET seulement à la fermeture
+  const closeAndReset = () => {
+    reset({
+      title: "",
+      description: "",
+      startDate: todayDate(),
+      endDate: null,
+      file: null,
+    });
+    setActiveStep(0);
+    handleClose();
   };
 
-  // Étape précédente
-  const handleBack = () => setActiveStep(s => Math.max(s - 1, 0));
+  // Étapes
+  const handleNext = async () => {
+    const isValid = await trigger();
+    if (!isValid) {
+      toast.error("Erreur de validation !");
+      return;
+    }
+    setActiveStep((s) => Math.min(s + 1, stepsKeys.length - 1));
+  };
+
+  const handleBack = () => setActiveStep((s) => Math.max(s - 1, 0));
 
   // Soumission finale
   const onFinalSubmit = async (data) => {
@@ -108,7 +107,7 @@ export default function CreateProjectModal({ open, handleClose }) {
         toast.error("Utilisateur non détecté !");
         return;
       }
-      // Calcul duration + status
+
       let duration = "";
       if (data.startDate && data.endDate) {
         const diff = differenceInCalendarDays(new Date(data.endDate), new Date(data.startDate)) + 1;
@@ -119,7 +118,6 @@ export default function CreateProjectModal({ open, handleClose }) {
       if (data.endDate && new Date(data.endDate) < now) status = "Completed";
       else if (data.startDate && new Date(data.startDate) > now) status = "Planned";
 
-      // FormData pour envoi fichier
       const formData = new FormData();
       formData.append("title", data.title);
       formData.append("description", data.description);
@@ -127,195 +125,194 @@ export default function CreateProjectModal({ open, handleClose }) {
       formData.append("endDate", data.endDate?.toISOString());
       formData.append("duration", duration);
       formData.append("status", status);
-      formData.append("user", userId); // Ajout du user obligatoire
-      formData.append("file", data.file);
-
-      console.log("==[CREATE PROJECT]== FormData envoyé", { ...data, user: userId, duration, status });
+      formData.append("user", userId);
+      if (data.file) formData.append("file", data.file);
 
       const actionResult = await dispatch(createProject(formData));
-      console.log("==[CREATE PROJECT]== Résultat action", actionResult);
-
       if (actionResult?.error) {
         toast.error(actionResult?.payload || "Erreur lors de la création.");
-        return;
+        return; // Ne ferme PAS en cas d’erreur
       }
       toast.success(t("Projet créé avec succès"));
-      handleClose();
-      reset();
-      setActiveStep(0);
+      closeAndReset(); // Ferme et reset seulement en cas de succès
     } catch (e) {
-      toast.error("Erreur interne ! Voir console.");
-      console.log("==[CREATE PROJECT]== Erreur catch:", e);
+      toast.error("Erreur interne !");
+      // Ne ferme pas la modale
     }
   };
 
-  // Step content
-  function getStepContent(step) {
+  // Formulaire par étape
+  const getStepContent = step => {
     switch (step) {
-      case 0:
-        return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField
-              label={t("Titre") + " *"}
-              {...register("title")}
-              error={!!errors.title}
-              helperText={errors.title?.message}
-              fullWidth
-            />
-            <TextField
-              label={t("Description") + " *"}
-              {...register("description")}
-              error={!!errors.description}
-              helperText={errors.description?.message}
-              fullWidth
-              multiline
-              minRows={2}
-            />
-          </Box>
-        );
-      case 1:
-        return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Controller
-              name="startDate"
-              control={control}
-              render={({ field }) => (
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    label={t("Date de début") + " *"}
-                    value={field.value}
-                    onChange={val => field.onChange(val)}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        error: !!errors.startDate,
-                        helperText: errors.startDate?.message
-                      }
-                    }}
-                    format="dd/MM/yyyy"
-                  />
-                </LocalizationProvider>
-              )}
-            />
-            <Controller
-              name="endDate"
-              control={control}
-              render={({ field }) => (
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    label={t("Date de fin") + " *"}
-                    value={field.value}
-                    onChange={val => field.onChange(val)}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        error: !!errors.endDate,
-                        helperText: errors.endDate?.message
-                      }
-                    }}
-                    format="dd/MM/yyyy"
-                  />
-                </LocalizationProvider>
-              )}
-            />
-            {/* Affichage preview durée */}
-            {watch("startDate") && watch("endDate") && (
-              <Typography variant="body2" color="primary" mt={1}>
-                {t("Durée calculée")}:{" "}
-                <strong>
-                  {differenceInCalendarDays(new Date(watch("endDate")), new Date(watch("startDate"))) + 1}{" "}
-                  {(differenceInCalendarDays(new Date(watch("endDate")), new Date(watch("startDate"))) + 1) > 1 ? t("jours") : t("jour")}
-                </strong>
-              </Typography>
+      case 0: return (
+        <>
+          <TextField
+            label={t("Titre") + " *"}
+            fullWidth
+            {...register("title")}
+            error={!!errors.title}
+            helperText={errors.title?.message && t(errors.title?.message)}
+            sx={{ mb: 2 }}
+            placeholder={t("Ex: Développement application mobile")}
+          />
+          <TextField
+            label={t("Description") + " *"}
+            fullWidth
+            multiline
+            minRows={3}
+            {...register("description")}
+            error={!!errors.description}
+            helperText={errors.description?.message && t(errors.description?.message)}
+            placeholder={t("Description détaillée du projet...")}
+          />
+        </>
+      );
+      case 1: return (
+        <>
+          <Controller
+            name="startDate"
+            control={control}
+            render={({ field }) => (
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label={t("Date de début") + " *"}
+                  {...field}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      error: !!errors.startDate,
+                      helperText: errors.startDate?.message && t(errors.startDate?.message),
+                      sx: { mb: 2 },
+                      placeholder: t("Choisissez la date de début")
+                    }
+                  }}
+                  format="dd/MM/yyyy"
+                  onChange={val => field.onChange(val)}
+                />
+              </LocalizationProvider>
             )}
-          </Box>
-        );
-      case 2:
-        return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Controller
-              name="file"
-              control={control}
-              render={({ field }) => (
-                <>
-                  <Button
-                    variant="outlined"
-                    component="label"
-                    color={!!errors.file ? "error" : "primary"}
-                  >
-                    {watch("file") ? t("Changer le fichier") : t("Importer un fichier")}
-                    <input
-                      type="file"
-                      accept=".pdf,.doc,.docx,.xls,.xlsx"
-                      hidden
-                      onChange={e => {
-                        field.onChange(e.target.files[0]);
-                      }}
-                    />
-                  </Button>
-                  {errors.file && (
-                    <Typography color="error" fontSize="0.75rem">{errors.file.message}</Typography>
-                  )}
-                  {watch("file") && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      {t("Fichier sélectionné")}: <strong>{watch("file")?.name}</strong>
-                    </Typography>
-                  )}
-                </>
+          />
+          <Controller
+            name="endDate"
+            control={control}
+            render={({ field }) => (
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label={t("Date de fin") + " *"}
+                  {...field}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      error: !!errors.endDate,
+                      helperText: errors.endDate?.message && t(errors.endDate?.message),
+                      sx: { mb: 2 },
+                      placeholder: t("Choisissez la date de fin")
+                    }
+                  }}
+                  format="dd/MM/yyyy"
+                  onChange={val => field.onChange(val)}
+                />
+              </LocalizationProvider>
+            )}
+          />
+          {watch("startDate") && watch("endDate") && (
+            <Typography variant="body2" color="primary" mt={1}>
+              {t("Durée calculée")}:{" "}
+              <strong>
+                {differenceInCalendarDays(new Date(watch("endDate")), new Date(watch("startDate"))) + 1}{" "}
+                {(differenceInCalendarDays(new Date(watch("endDate")), new Date(watch("startDate"))) + 1) > 1 ? t("jours") : t("jour")}
+              </strong>
+            </Typography>
+          )}
+        </>
+      );
+      case 2: return (
+        <Controller
+          name="file"
+          control={control}
+          render={({ field }) => (
+            <>
+              <Button
+                variant="outlined"
+                component="label"
+                color={!!errors.file ? "error" : "primary"}
+                fullWidth
+                sx={{ mb: 2 }}
+              >
+                {watch("file") ? t("Changer le fichier") : t("Importer un fichier")}
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
+                  hidden
+                  onChange={e => field.onChange(e.target.files[0])}
+                />
+              </Button>
+              {errors.file && (
+                <Typography color="error" fontSize="0.75rem" sx={{ mb: 1 }}>
+                  {errors.file.message}
+                </Typography>
               )}
-            />
-          </Box>
-        );
-      default:
-        return "Étape inconnue";
+              {watch("file") && (
+                <Typography variant="body2" color="text.secondary">
+                  {t("Fichier sélectionné")}: <strong>{watch("file")?.name}</strong>
+                </Typography>
+              )}
+            </>
+          )}
+        />
+      );
+      default: return null;
     }
-  }
+  };
 
   return (
     <>
       <ToastContainer position="top-right" autoClose={3500} />
       <ModelComponent
         open={open}
-        handleClose={handleClose}
+        handleClose={closeAndReset}
         title={t("Créer un nouveau projet")}
         icon={<AddCircleOutline />}
       >
-        <Box sx={{ mt: 2 }}>
-          <StepperComponent steps={steps.map(s => t(s))} activeStep={activeStep} />
-          <form
-            onSubmit={handleSubmit(onFinalSubmit)}
-            noValidate
-            style={{ marginTop: 16 }}
-          >
-            <Grid container spacing={2} direction="column">
-              <Grid item>{getStepContent(activeStep)}</Grid>
-            </Grid>
-            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 3 }}>
-              {activeStep > 0 && (
-                <ButtonComponent
-                  onClick={handleBack}
-                  text={t("Retour")}
-                  icon={<ArrowBack />}
-                />
-              )}
-              {activeStep < steps.length - 1 ? (
-                <ButtonComponent
-                  onClick={handleNext}
-                  text={t("Suivant")}
-                  icon={<ArrowForward />}
-                  color="primary"
-                />
-              ) : (
-                <ButtonComponent
-                  type="submit"
-                  text={t("Créer")}
-                  icon={<SaveOutlined />}
-                  color="primary"
-                />
-              )}
-            </Box>
-          </form>
+        <Box sx={{ my: 2 }}>
+          <StepperComponent steps={stepsKeys.map(label => t(label))} activeStep={activeStep} />
         </Box>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (activeStep === stepsKeys.length - 1) {
+              handleSubmit(onFinalSubmit)(e);
+            } else {
+              handleNext();
+            }
+          }}
+          noValidate
+        >
+          <Grid container spacing={2} direction="column">
+            <Grid item>{getStepContent(activeStep)}</Grid>
+          </Grid>
+
+          <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 3 }}>
+            {activeStep > 0 &&
+              <ButtonComponent
+                onClick={handleBack}
+                text={t("Retour")}
+                icon={<ArrowBack />}
+              />
+            }
+            {activeStep < stepsKeys.length - 1
+              ? <ButtonComponent
+                text={t("Suivant")}
+                icon={<ArrowForward />}
+                color="primary"
+              />
+              : <Button variant="contained" color="primary" type="submit">
+                <SaveOutlined sx={{ mr: 1 }} />
+                {t("Créer")}
+              </Button>
+            }
+          </Stack>
+        </form>
       </ModelComponent>
     </>
   );

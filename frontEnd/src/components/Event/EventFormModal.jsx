@@ -4,6 +4,7 @@ import {
 } from "@mui/material";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { fr } from "date-fns/locale";
 import ModelComponent from "../Global/ModelComponent";
 import StepperComponent from "../Global/StepperComponent";
 import * as Yup from "yup";
@@ -15,6 +16,7 @@ import { ArrowBack, ArrowForward, SaveOutlined } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { ButtonComponent } from "../Global/ButtonComponent";
 
+// Schéma de validation par étape
 const stepsKeys = [
   "Détails de l'événement",
   "Informations avancées",
@@ -89,9 +91,13 @@ export default function EventFormModal({
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(0);
 
-  // LOG : rendu du composant
-  console.log("[EventFormModal] Render", { open, event, isEditMode, activeStep });
+  // IMPORTANT: employer la bonne façon pour le resolver RHF
+  const resolver = React.useMemo(
+    () => yupResolver(eventStepSchemas[activeStep]),
+    [activeStep]
+  );
 
+  // RHF context placé au bon endroit, plus de context dans le resolver
   const {
     register,
     control,
@@ -101,29 +107,66 @@ export default function EventFormModal({
     formState: { errors },
     trigger
   } = useForm({
-    resolver: yupResolver(eventStepSchemas[activeStep], { context: { currentUserId } }),
+    resolver,
+    context: { currentUserId },
     defaultValues: {
       title: "", description: "", startDate: new Date(),
       duration: "", location: "", types: [], invited: []
     }
   });
 
-  // LOG : watch values
+  // Liste filtrée (employés sauf utilisateur courant)
+  const employesList = React.useMemo(
+    () => Array.isArray(employes) ? employes.filter(e => e._id !== currentUserId) : [],
+    [employes, currentUserId]
+  );
+
+  // LOG Render + Employés + event.invited
+  useEffect(() => {
+    console.log("[EventFormModal] Rendered. Props:", { open, event, isEditMode, activeStep });
+    if (event && event.invited) {
+      console.log("[EventFormModal] event.invited fourni :", event.invited);
+    }
+    console.log("[EventFormModal] employesList (filtered):", employesList);
+  }, [open, event, isEditMode, activeStep, employesList]);
+
+  // RHF : watcher de toutes les valeurs pour debug
   const watchedValues = watch();
   useEffect(() => {
-    console.log("[EventFormModal] Watched values:", watchedValues);
-  });
+    console.log("[EventFormModal] Watched form values:", watchedValues);
+  }, [watchedValues]);
 
+  // Reset du formulaire à l'ouverture du modal
   useEffect(() => {
     if (open) {
+      // -- Mapping pour invités
+      let initialInvited = [];
+      if (Array.isArray(event?.invited)) {
+        initialInvited = event.invited.map(inv => {
+          // Cas objet avec _id (back), ou simple id (cas rare)
+          if (typeof inv === "object" && inv._id) {
+            let matched = employesList.find(e => e._id === inv._id);
+            if (!matched) console.warn("[Reset] Invité (objet) non trouvé dans employesList :", inv);
+            return matched || inv;
+          }
+          if (typeof inv === "string") {
+            let matched = employesList.find(e => e._id === inv);
+            if (!matched) console.warn("[Reset] Invité (id) non trouvé dans employesList :", inv);
+            return matched || null;
+          }
+          console.warn("[Reset] Type inattendu dans invited :", inv);
+          return null;
+        }).filter(Boolean);
+      }
+
       let initialTypes = [];
       if (Array.isArray(event?.types)) {
         initialTypes = event.types
           .map(t => typeof t === "string" ? eventTypes.find(et => et._id === t) : t)
           .filter(Boolean);
       }
-      let initialInvited = Array.isArray(event?.invited) ? event.invited : [];
-      console.log("[EventFormModal] Resetting form with", {
+
+      console.log("[EventFormModal] Reset form on open:", {
         title: event?.title,
         description: event?.description,
         startDate: event?.startDate,
@@ -133,31 +176,26 @@ export default function EventFormModal({
         invited: initialInvited,
       });
       reset({
-        title:       event?.title       || "",
+        title: event?.title || "",
         description: event?.description || "",
-        startDate:   event?.startDate   ? new Date(event.startDate) : new Date(),
-        duration:    event?.duration    || "",
-        location:    event?.location    || "",
-        types:       initialTypes,
-        invited:     initialInvited,
+        startDate: event?.startDate ? new Date(event.startDate) : new Date(),
+        duration: event?.duration || "",
+        location: event?.location || "",
+        types: initialTypes,
+        invited: initialInvited,
       });
       setActiveStep(0);
     }
-  }, [open, reset, event, eventTypes]);
+  }, [open, reset, event, eventTypes, employesList]);
 
-  // LOG : quand le step change
   useEffect(() => {
-    console.log("[EventFormModal] Active step changed:", activeStep);
+    console.log("[EventFormModal] Active step:", activeStep);
   }, [activeStep]);
 
+  // Stepper: suivant
   const handleNext = async () => {
-    console.log("[handleNext] Clicked on Next! Step:", activeStep);
+    console.log("[handleNext] Clicked on Next (step:", activeStep, ")");
     const isValid = await trigger();
-    console.log("[handleNext] Validation result:", isValid);
-    if (!isValid) {
-      console.log("[handleNext] Form errors:", errors);
-      toast.error("Erreur de validation ! Voir la console.");
-    }
     if (isValid) {
       setActiveStep(s => {
         const nextStep = Math.min(s + 1, stepsKeys.length - 1);
@@ -167,8 +205,9 @@ export default function EventFormModal({
     }
   };
 
+  // Stepper: retour
   const handleBack = () => {
-    console.log("[handleBack] Back button clicked! Step:", activeStep);
+    console.log("[handleBack] Clicked on Back (step:", activeStep, ")");
     setActiveStep(s => {
       const prevStep = Math.max(s - 1, 0);
       console.log("[handleBack] Go to prev step:", prevStep);
@@ -176,21 +215,30 @@ export default function EventFormModal({
     });
   };
 
-  const onFinalSubmit = data => {
-    console.log("[onFinalSubmit] Submit data:", data);
-    const status = computeStatus(data.startDate, data.duration);
-    const payload = { ...data, status };
-    if (isEditMode && event && (event._id || event.id)) {
-      payload._id = event._id || event.id;
-      payload.id = event._id || event.id;
+  // Soumission finale
+  const onFinalSubmit = async (data) => {
+    console.log("[onFinalSubmit] Submitting form for", isEditMode ? "modification" : "création");
+    try {
+      const status = computeStatus(data.startDate, data.duration);
+      const payload = { ...data, status };
+      if (isEditMode && event && (event._id || event.id)) {
+        payload._id = event._id || event.id;
+        payload.id = event._id || event.id;
+      }
+      console.log("[onFinalSubmit] Payload envoyé à onSave():", payload);
+      await onSave(payload);
+      toast.success(isEditMode ? "Événement modifié avec succès" : "Événement ajouté avec succès");
+    } catch (err) {
+      console.error("[onFinalSubmit] Erreur lors de l'enregistrement:", err);
+      toast.error("Erreur lors de l'enregistrement de l'événement !");
+    } finally {
+      onClose();
     }
-    console.log("[onFinalSubmit] Final payload:", payload);
-    onSave(payload);
-    onClose();
   };
 
-  const getStepContent = step => {
-    console.log("[getStepContent] Rendered for step:", step);
+  // Contenu dynamique selon l'étape
+  const getStepContent = (step) => {
+    console.log("[getStepContent] Rendering content for step:", step, "current errors:", errors);
     switch (step) {
       case 0: return (
         <>
@@ -202,8 +250,6 @@ export default function EventFormModal({
             helperText={errors.title?.message && t(errors.title?.message)}
             sx={{ mb: 2 }}
             placeholder={t("Ex: Réunion trimestrielle, Conférence...")}
-            // LOG sur les changements
-            onChange={e => { console.log("[Step 0] title changed:", e.target.value); register("title").onChange(e); }}
           />
           <TextField
             label={t('Description') + " *"}
@@ -214,34 +260,39 @@ export default function EventFormModal({
             error={!!errors.description}
             helperText={errors.description?.message && t(errors.description?.message)}
             placeholder={t("Ex: Réunion de suivi trimestriel, sujets à aborder...")}
-            onChange={e => { console.log("[Step 0] description changed:", e.target.value); register("description").onChange(e); }}
           />
         </>
       );
       case 1: return (
         <>
-          <Controller name="startDate" control={control}
+          <Controller
+            name="startDate"
+            control={control}
             render={({ field }) => (
-              <DateTimePicker
-                label={t('Date de début') + " *"}
-                {...field}
-                disabled={isEditMode}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    error: !!errors.startDate,
-                    helperText: isEditMode
-                      ? t("Modification de la date impossible lors de l'édition")
-                      : (errors.startDate?.message && t(errors.startDate?.message)),
-                    sx: { mb: 2 },
-                    placeholder: t("Choisissez la date et l'heure de début")
-                  }
-                }}
-                onChange={val => { 
-                  console.log("[Step 1] startDate changed:", val); 
-                  field.onChange(val); 
-                }}
-              />
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
+                <DateTimePicker
+                  label={t('Date de début') + " *"}
+                  value={field.value}
+                  onChange={val => field.onChange(val)}
+                  disabled={isEditMode}
+                  ampm={false}
+                  format="dd/MM/yyyy HH:mm"
+                  locale={fr}
+                  disablePast
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      error: !!errors.startDate,
+                      helperText: isEditMode
+                        ? t("Modification de la date impossible lors de l'édition")
+                        : (errors.startDate?.message && t(errors.startDate?.message)),
+                      sx: { mb: 2 },
+                      placeholder: t("Choisissez la date et l'heure de début"),
+                      InputLabelProps: { shrink: true },
+                    }
+                  }}
+                />
+              </LocalizationProvider>
             )}
           />
           <TextField
@@ -255,7 +306,6 @@ export default function EventFormModal({
             sx={{ mb: 2 }}
             disabled={isEditMode}
             placeholder={t("Ex: 1h, 90min, 2h30min")}
-            onChange={e => { console.log("[Step 1] duration changed:", e.target.value); register("duration").onChange(e); }}
           />
           <TextField
             label={t('Emplacement') + " *"}
@@ -268,7 +318,6 @@ export default function EventFormModal({
             sx={{ mb: 2 }}
             disabled={isEditMode}
             placeholder={t("Ex: Salle 1, Auditorium...")}
-            onChange={e => { console.log("[Step 1] location changed:", e.target.value); register("location").onChange(e); }}
           />
           <Controller
             name="types"
@@ -280,8 +329,7 @@ export default function EventFormModal({
                 fullWidth
                 value={field.value[0]?._id || ""}
                 onChange={e => {
-                  console.log("[Step 1] types changed:", e.target.value);
-                  const selected = eventTypes.find(t => t._id === e.target.value);
+                  const selected = (eventTypes || []).find(t => t._id === e.target.value);
                   field.onChange(selected ? [selected] : []);
                 }}
                 error={!!errors.types}
@@ -300,36 +348,60 @@ export default function EventFormModal({
           />
         </>
       );
-      case 2: return (
-        <Controller name="invited" control={control}
-          render={({ field }) => (
-            <Autocomplete
-              multiple
-              options={employes.filter(e => e._id !== currentUserId)}
-              getOptionLabel={o => o.fullName}
-              value={field.value}
-              onChange={(_, v) => { console.log("[Step 2] invited changed:", v); field.onChange(v); }}
-              renderInput={params => (
-                <TextField
-                  {...params}
-                  label={t('Invités') + " *"}
-                  fullWidth
-                  error={!!errors.invited}
-                  helperText={errors.invited?.message && t(errors.invited?.message)}
-                  placeholder={t("Sélectionner les invités")}
+      case 2: {
+        const fieldValue = watch("invited");
+        const selectedInvited = Array.isArray(fieldValue)
+          ? fieldValue.map(inv =>
+              employesList.find(emp => emp._id === (inv?._id || inv)) || inv
+            ).filter(Boolean)
+          : [];
+        console.log("[Step 2] fieldValue (invited):", fieldValue);
+        console.log("[Step 2] selectedInvited (mapped for Autocomplete):", selectedInvited);
+        console.log("[Step 2] Available employees:", employesList);
+
+        return (
+          <Controller
+            name="invited"
+            control={control}
+            render={({ field }) => {
+              const selectedForAuto = Array.isArray(field.value)
+                ? field.value.map(inv =>
+                    employesList.find(emp => emp._id === (inv?._id || inv)) || inv
+                  ).filter(Boolean)
+                : [];
+              return (
+                <Autocomplete
+                  multiple
+                  options={employesList}
+                  getOptionLabel={o => o.fullName}
+                  value={selectedForAuto}
+                  isOptionEqualToValue={(option, value) => option._id === value._id}
+                  onChange={(_, v) => {
+                    field.onChange(v);
+                  }}
+                  renderInput={params => (
+                    <TextField
+                      {...params}
+                      label={t('Invités') + " *"}
+                      fullWidth
+                      error={!!errors.invited}
+                      helperText={errors.invited?.message && t(errors.invited?.message)}
+                      placeholder={t("Sélectionner les invités")}
+                    />
+                  )}
+                  filterSelectedOptions
                 />
-              )}
-              filterSelectedOptions
-            />
-          )}
-        />
-      );
+              );
+            }}
+          />
+        );
+      }
       default: return null;
     }
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
       <ToastContainer position="top-right" autoClose={3000} />
       <ModelComponent open={open} handleClose={onClose}
         title={event?._id ? t("Modifier un événement") : t("Ajouter un événement")}
@@ -338,35 +410,46 @@ export default function EventFormModal({
         <Box sx={{ my: 2 }}>
           <StepperComponent steps={stepsKeys.map(label => t(label))} activeStep={activeStep} />
         </Box>
-        <form onSubmit={(e)=> {e.preventDefault(); if(activeStep === stepsKeys.length - 1)
-        {handleSubmit(onFinalSubmit)(e);} else{handleNext()}}} noValidate>
-          
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            if (activeStep === stepsKeys.length - 1) {
+              handleSubmit(onFinalSubmit)(e);
+            }
+          }}
+          noValidate
+        >
           <Grid container spacing={2} direction="column">
             <Grid item>{getStepContent(activeStep)}</Grid>
           </Grid>
-          {t("Retour")}
           <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 3 }}>
-            {activeStep > 0 &&
-             <ButtonComponent
-                   onClick={() => {
-                     console.log("[Button] Retour Clicked");
-                     handleBack();
-                   }}
-                   text={t("Retour")}
-                   icon={<ArrowBack />}
-                 />
-            }
-            {activeStep < stepsKeys.length - 1
-              ? <ButtonComponent
-               
-                  text={t("next")}
-                  icon={<ArrowForward />}
-                  color="primary"
-                />
-              : <Button variant="contained" color="primary" type="submit">
-                  {t("Enregistrer")}
-                </Button>
-            }
+            {activeStep > 0 && (
+              <ButtonComponent
+                onClick={e => {
+                  e.preventDefault();
+                  handleBack();
+                }}
+                text={t("Retour")}
+                icon={<ArrowBack />}
+                type="button"
+              />
+            )}
+            {activeStep < stepsKeys.length - 1 ? (
+              <ButtonComponent
+                onClick={e => {
+                  e.preventDefault();
+                  handleNext();
+                }}
+                text={t("next")}
+                icon={<ArrowForward />}
+                color="primary"
+                type="button"
+              />
+            ) : (
+              <Button variant="contained" color="primary" type="submit">
+                {t("Enregistrer")}
+              </Button>
+            )}
           </Stack>
         </form>
       </ModelComponent>
