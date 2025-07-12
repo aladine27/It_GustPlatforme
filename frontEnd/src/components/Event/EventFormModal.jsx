@@ -16,13 +16,12 @@ import { ArrowBack, ArrowForward, SaveOutlined } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { ButtonComponent } from "../Global/ButtonComponent";
 
-// Schéma de validation par étape
+
 const stepsKeys = [
   "Détails de l'événement",
   "Informations avancées",
   "Invités"
 ];
-
 const eventStepSchemas = [
   Yup.object().shape({
     title: Yup.string().required("Le titre est requis").min(3).max(100)
@@ -97,7 +96,6 @@ export default function EventFormModal({
     [activeStep]
   );
 
-  // RHF context placé au bon endroit, plus de context dans le resolver
   const {
     register,
     control,
@@ -137,56 +135,41 @@ export default function EventFormModal({
   }, [watchedValues]);
 
   // Reset du formulaire à l'ouverture du modal
-  useEffect(() => {
-    if (open) {
-      // -- Mapping pour invités
-      let initialInvited = [];
-      if (Array.isArray(event?.invited)) {
-        initialInvited = event.invited.map(inv => {
-          // Cas objet avec _id (back), ou simple id (cas rare)
-          if (typeof inv === "object" && inv._id) {
-            let matched = employesList.find(e => e._id === inv._id);
-            if (!matched) console.warn("[Reset] Invité (objet) non trouvé dans employesList :", inv);
-            return matched || inv;
-          }
-          if (typeof inv === "string") {
-            let matched = employesList.find(e => e._id === inv);
-            if (!matched) console.warn("[Reset] Invité (id) non trouvé dans employesList :", inv);
-            return matched || null;
-          }
-          console.warn("[Reset] Type inattendu dans invited :", inv);
-          return null;
-        }).filter(Boolean);
-      }
-
-      let initialTypes = [];
-      if (Array.isArray(event?.types)) {
-        initialTypes = event.types
-          .map(t => typeof t === "string" ? eventTypes.find(et => et._id === t) : t)
-          .filter(Boolean);
-      }
-
-      console.log("[EventFormModal] Reset form on open:", {
-        title: event?.title,
-        description: event?.description,
-        startDate: event?.startDate,
-        duration: event?.duration,
-        location: event?.location,
-        types: initialTypes,
-        invited: initialInvited,
-      });
-      reset({
-        title: event?.title || "",
-        description: event?.description || "",
-        startDate: event?.startDate ? new Date(event.startDate) : new Date(),
-        duration: event?.duration || "",
-        location: event?.location || "",
-        types: initialTypes,
-        invited: initialInvited,
-      });
-      setActiveStep(0);
+// Reset du formulaire à l'ouverture du modal
+useEffect(() => {
+  if (open) {
+    let initialInvited = [];
+    if (Array.isArray(event?.invited)) {
+      initialInvited = event.invited
+        .map(inv => {
+          const id = typeof inv === "object" && inv._id ? String(inv._id) : String(inv);
+          const found = employesList.find(e => String(e._id) === id);
+          console.log("[DEBUG MATCH] inv:", inv, "id:", id, "matched employe:", found);
+          return found || null;
+        })
+        .filter(Boolean);
     }
-  }, [open, reset, event, eventTypes, employesList]);
+
+    let initialTypes = [];
+    if (Array.isArray(event?.types)) {
+      initialTypes = event.types
+        .map(t => typeof t === "string" ? eventTypes.find(et => et._id === t) : t)
+        .filter(Boolean);
+    }
+
+    reset({
+      title: event?.title || "",
+      description: event?.description || "",
+      startDate: event?.startDate ? new Date(event.startDate) : new Date(),
+      duration: event?.duration || "",
+      location: event?.location || "",
+      types: initialTypes,
+      invited: initialInvited,
+    });
+    setActiveStep(0);
+  }
+}, [open, reset, event, eventTypes, employesList]);
+
 
   useEffect(() => {
     console.log("[EventFormModal] Active step:", activeStep);

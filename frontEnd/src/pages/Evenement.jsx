@@ -74,14 +74,20 @@ moment.locale(i18n.language);
         .map(t => (typeof t === "object" && t !== null && t.name) ? t : eventTypes.find(et => et._id === (t._id || t)))
         .filter(Boolean);
     }
-    let invitedFullObjects = ext.invited;
-    if (Array.isArray(ext.invited) && employes?.length) {
-      if (typeof ext.invited[0] === "string" || typeof ext.invited[0] === "number") {
-        invitedFullObjects = ext.invited
-          .map(id => employes.find(emp => emp._id === id))
-          .filter(Boolean);
-      }
+  let invitedFullObjects = [];
+if (Array.isArray(ext.invited) && employes?.length) {
+  invitedFullObjects = ext.invited.map(inv => {
+    if (typeof inv === "object" && inv._id) {
+      const found = employes.find(emp => emp._id === inv._id);
+      return found || inv;
     }
+    if (typeof inv === "string" || typeof inv === "number") {
+      return employes.find(emp => emp._id === inv) || null;
+    }
+    return null;
+  }).filter(Boolean);
+}
+
     const fullEvent = {
       _id: calEvent._id,
       id: calEvent._id,
