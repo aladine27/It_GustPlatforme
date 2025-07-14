@@ -23,9 +23,13 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { SprintsModule } from './sprints/sprints.module';
+import { TeamsModule } from './teams/teams.module';
 
 @Module({
   imports: [
+    SprintsModule,
+    TeamsModule,
     UsersModule,
     ProjectsModule,
     TasksModule,
@@ -63,6 +67,8 @@ import { join } from 'path';
         index: false,
       },
     }),
+    SprintsModule,
+    TeamsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

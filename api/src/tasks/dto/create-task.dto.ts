@@ -64,4 +64,8 @@ export class CreateTaskDto {
     @IsString() 
     @IsNotEmpty()
     user: string;
+     @ApiProperty({ type: String, description: 'The sprint associated with the task' })
+    @IsString() @IsNotEmpty()
+    sprint: string;
+    
 }

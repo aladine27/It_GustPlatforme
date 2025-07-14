@@ -19,7 +19,7 @@ import PaginationComponent from '../components/Global/PaginationComponent';
 import { ButtonComponent } from '../components/Global/ButtonComponent';
 
 import CreateProjectModal from '../components/projet/CreateProjectModal';
-import EditProjectModal from '../components/projet/EditProjectModal';
+
 import DeleteProjectModal from '../components/projet/DeleteProjectModal';
 
 import ProjectSprintIndex from './Tache/ProjectSprintIndex';
@@ -44,7 +44,7 @@ const Projet = () => {
 
   // Modals
   const [openAdd, setOpenAdd] = useState(false);
-  const [openEdit, setOpenEdit] = useState(false);
+
   const [openDelete, setOpenDelete] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [openDetail, setOpenDetail] = useState(false);
@@ -130,7 +130,7 @@ const Projet = () => {
     {
       icon: <EditIcon sx={{ color: "#1976d2" }} />,
       tooltip: t('Modifier'),
-      onClick: project => { setSelectedProject(project); setOpenEdit(true); }
+     
     },
  
   {
@@ -227,16 +227,6 @@ const Projet = () => {
         </Box>
       </StyledPaper>
 
-      {/* CRUD MODALS */}
-      <CreateProjectModal open={openAdd} handleClose={() => setOpenAdd(false)} />
-      {openEdit && selectedProject && (
-        <EditProjectModal
-          open={openEdit}
-          onClose={() => setOpenEdit(false)}
-          project={selectedProject}
-          onSave={handleEditProject}
-        />
-      )}
       {openDelete && selectedProject && (
         <DeleteProjectModal
           open={openDelete}

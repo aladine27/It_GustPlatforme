@@ -47,6 +47,10 @@ export class User {
     tasks: Types.ObjectId[];
     @Prop([{type:SchemaTypes.ObjectId, ref: 'events'}])
     events: Types.ObjectId[];
+   @Prop([{ type: SchemaTypes.ObjectId, ref: 'teams' }])
+   teams: Types.ObjectId[];
+
+
   
   
   

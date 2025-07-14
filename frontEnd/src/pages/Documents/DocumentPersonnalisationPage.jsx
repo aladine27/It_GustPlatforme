@@ -119,13 +119,6 @@ export default function DocumentPersonnalisationPage() {
     );
     toast.success("Signature ajoutée !");
   };
-  
-  
-  
-  
-  
-  
-
   const handleGeneratePdf = async () => {
     try {
       await dispatch(generatePdfFromHtml({ id: docId, html: editedHtml })).unwrap();

@@ -12,7 +12,6 @@ import { UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth("access-token")
-@ApiTags('Document')
 @UseGuards(AccessTokenGuard)
 @Controller('projects')
 export class ProjectsController {
@@ -35,7 +34,6 @@ export class ProjectsController {
       }
     })
     @ApiConsumes('multipart/form-data')
-    //filConfig
     @UseInterceptors(
       FileInterceptor('file', {
           storage: diskStorage({

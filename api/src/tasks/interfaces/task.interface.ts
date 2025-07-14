@@ -15,6 +15,8 @@ export interface ITask extends Document {
     readonly project: string;
 
     readonly user: string;
+    readonly sprint: string;
+
 
     
     }

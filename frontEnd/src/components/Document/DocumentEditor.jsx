@@ -63,11 +63,10 @@ export default function DocumentEditor({
     ResizeImage,
   ];
 
-  const editor = useEditor({
+ const editor = useEditor({
     extensions,
-    content: "<p></p>", // Initial vide
     editable: !loading && !readOnly,
-    autofocus: true,
+    autofocus: 'start',
     onUpdate({ editor }) {
       setEditedHtml(editor.getHTML());
     },
@@ -77,18 +76,24 @@ export default function DocumentEditor({
   });
 
   // Synchronise le HTML backend, sans manip signature !
-  useEffect(() => {
-    if (!editor) return;
-    if (!editedHtml) {
-      editor.commands.setContent("<p></p>");
-      return;
-    }
+useEffect(() => {
+  if (!editor) return;
+  const currentHtml = editor.getHTML();
+  if (editedHtml && currentHtml !== editedHtml) {
     editor.commands.setContent(editedHtml);
-  }, [editedHtml, editor]);
+  }
+  if (!editedHtml) {
+    editor.commands.setContent("<p></p>");
+    editor.commands.setTextSelection(0);
+  }
+}, [editedHtml, editor]);
+  
+
 
   // Nettoyage
   useEffect(() => {
     return () => editor?.destroy();
+
   }, [editor]);
 
   // Insertion image depuis upload utilisateur

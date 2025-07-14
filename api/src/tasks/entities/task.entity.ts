@@ -21,6 +21,8 @@ export class Task {
         project: Types.ObjectId;      
         @Prop({type:SchemaTypes.ObjectId, ref: 'users',required: true})
         user: Types.ObjectId;
+        @Prop({ type: SchemaTypes.ObjectId, ref: 'sprints', required: true })
+        sprint: Types.ObjectId;
 
 }
 export const taskSchema = SchemaFactory.createForClass(Task);

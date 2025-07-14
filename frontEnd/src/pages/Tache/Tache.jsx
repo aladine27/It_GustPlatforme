@@ -181,7 +181,7 @@ const Tache = () => {
             }}
           />
         </Box>
-        {/* KANBAN */}
+      
         <DragDropContext
           onDragEnd={handleDragEnd}
           onDragStart={() => setIsDragging(true)}

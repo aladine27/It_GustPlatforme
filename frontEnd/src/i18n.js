@@ -458,7 +458,7 @@ const resources = {
     'En cours de traitement': 'En cours de traitement',
     'Mon Profil': 'Mon Profil',
     'Déconnexion': 'Déconnexion',
-    'adminDashboard': 'Tableau de bord admin',
+    'adminDashboard': 'Tableau de bord',
     'Employe': 'Employé',
     'Profil': 'Profil',
     'Traitement des demandes': 'Traitement des demandes',
