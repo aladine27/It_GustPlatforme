@@ -46,7 +46,7 @@ export default function Navbar() {
   const dispatch = useDispatch();
   const CurrentUser = useSelector((state) => state.user.CurrentUser);
 
-  // Helpers pour avoir toutes les infos utilisateur correctement
+  
   const userImage   = CurrentUser?.image   || CurrentUser?.user?.image;
   const userFullName= CurrentUser?.fullName|| CurrentUser?.user?.fullName;
   const userEmail   = CurrentUser?.email   || CurrentUser?.user?.email;

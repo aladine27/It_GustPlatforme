@@ -1,308 +1,325 @@
-import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Paper,
-  Stack,
-  Avatar,
-  AvatarGroup,
-  IconButton,
-  Tooltip,
-  LinearProgress,
-} from "@mui/material";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import React, { useEffect, useState, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Box } from "@mui/material";
+import { useParams } from "react-router-dom";
+import { fetchSprintsByProject, deleteSprint } from "../../redux/actions/sprintActions";
+import { fetchAllTeams, deleteTeam, updateTeam } from "../../redux/actions/teamActions";
+import CreateSprintModal from "../../components/Sprint/CreateSprintModal";
+import CreateTeamModal from "../../components/Equipes/CreateTeamModal";
+import CustomDeleteForm from "../../components/Global/CustomDeleteForm";
+import AddMemberModal from "../../components/Equipes/AddMembreModal";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { ButtonComponent } from "../../components/Global/ButtonComponent";
-import PaginationComponent from "../../components/Global/PaginationComponent";
-import EquipesBoard from "../../components/Equipes/EquipesBoard";
+import { toast } from "react-toastify";
+import SprintSection from "./SprintSection";
+import TeamSection from "./TeamSection";
 
-
-// MOCK DATA (inchangé)
-const MOCK_SPRINTS = [
-  {
-    id: 1,
-    title: "Sprint 1",
-    startDate: "2024-07-01",
-    endDate: "2024-07-14",
-    progress: 62,
-    members: [
-      { id: 1, name: "John Doe", email: "john@ex.com", role: "Développeur" },
-      { id: 2, name: "Sarah Lee", email: "sarah@ex.com", role: "QA" }
-    ]
-  },
-  {
-    id: 2,
-    title: "Sprint 2",
-    startDate: "2024-07-15",
-    endDate: "2024-07-28",
-    progress: 31,
-    members: [
-      { id: 3, name: "Ali Ben", email: "ali@ex.com", role: "Développeur" },
-      { id: 4, name: "Yassine", email: "yassine@ex.com", role: "PO" }
-    ]
-  }
-];
-
-const MOCK_TEAMS = [
-  {
-    id: 1,
-    name: "Dev",
-    type: "Développement",
-    color: "#1976d2",
-    members: [
-      { id: 1, name: "John Doe", email: "john@ex.com", role: "Frontend" },
-      { id: 2, name: "Sarah Lee", email: "sarah@ex.com", role: "Backend" }
-    ]
-  },
-  {
-    id: 2,
-    name: "Design",
-    type: "UI/UX",
-    color: "#ff9800",
-    members: [
-      { id: 3, name: "Mehdi Design", email: "mehdi@ex.com", role: "UI Designer" },
-      { id: 4, name: "Nada UX", email: "nada@ex.com", role: "UX Designer" }
-    ]
-  },
-  {
-    id: 3,
-    name: "DevOps",
-    type: "DevOps",
-    color: "#43a047",
-    members: [
-      { id: 5, name: "Ali Ben", email: "ali@ex.com", role: "DevOps" }
-    ]
-  }
-];
+// Helper
+function getNextSprintStartDate(sprints = [], projectStartDate) {
+  if (!sprints.length) return projectStartDate ? new Date(projectStartDate) : new Date();
+  const sorted = [...sprints].sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
+  const last = sorted[sorted.length - 1];
+  const date = new Date(last.endDate);
+  date.setDate(date.getDate() + 1);
+  return date;
+}
 
 const SprintList = ({ isAdminOrManager, onSprintSelect }) => {
-  const [sprints, setSprints] = useState([]);
+  const dispatch = useDispatch();
+  const { projectId } = useParams();
+  const { sprints, loading: loadingSprint } = useSelector((state) => state.sprint);
+  const { teams, loading: loadingTeam } = useSelector((state) => state.team);
+  const { projects } = useSelector((state) => state.project);
+
+  // === Filtrage sprints robustes sur id projet ===
+  const sprintsForProject = useMemo(
+    () => (sprints || []).filter(s => {
+      let sprintProjectId;
+      if (typeof s.project === "object" && s.project !== null) {
+        sprintProjectId = s.project._id;
+      } else {
+        sprintProjectId = s.project;
+      }
+      return String(sprintProjectId) === String(projectId);
+    }),
+    [sprints, projectId]
+  );
+
+  // === Filtrage équipes ===
+  const teamsForProject = useMemo(() => {
+    return (teams || []).filter(t => {
+      let teamProject = t.project;
+      if (teamProject && typeof teamProject === 'object' && teamProject.toString) {
+        teamProject = teamProject.toString();
+      }
+      return String(teamProject) === String(projectId);
+    });
+  }, [teams, projectId]);
+
+  // === Projet courant ===
+  const project = useMemo(() => {
+    return (projects || []).find(p => String(p._id) === String(projectId));
+  }, [projects, projectId]);
+
+  const projectStartDate = project?.startDate ? new Date(project.startDate) : null;
+  const projectEndDate = project?.endDate ? new Date(project.endDate) : null;
+
+  const nextSprintStartDate = useMemo(() => {
+    return getNextSprintStartDate(sprintsForProject, projectStartDate);
+  }, [sprintsForProject, projectStartDate]);
+
+  // --- Blocage création sprint (durée ou date dépassée)
+  const totalSprintDays = useMemo(() => {
+    return sprintsForProject.reduce((acc, s) => {
+      const d1 = new Date(s.startDate);
+      const d2 = new Date(s.endDate);
+      return acc + (Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)) + 1);
+    }, 0);
+  }, [sprintsForProject]);
+
+  const projectTotalDays = (projectStartDate && projectEndDate)
+    ? Math.floor((projectEndDate - projectStartDate) / (1000 * 60 * 60 * 24)) + 1
+    : 0;
+
+  // Nouvelle logique de blocage
+  const isDateExceeded = projectEndDate && nextSprintStartDate > projectEndDate;
+  const blockCreateSprint = totalSprintDays >= projectTotalDays || isDateExceeded;
+
+  // --- PAGINATION ---
   const [sprintPage, setSprintPage] = useState(1);
-  const [teams, setTeams] = useState([]);
   const sprintsPerPage = 3;
-  const paginatedSprints = sprints.slice(
+  const paginatedSprints = sprintsForProject.slice(
     (sprintPage - 1) * sprintsPerPage,
     sprintPage * sprintsPerPage
   );
+  const sprintTotalPages = Math.ceil(sprintsForProject.length / sprintsPerPage);
 
-  const sprintTotalPages = Math.ceil(sprints.length / sprintsPerPage);
   const [teamPage, setTeamPage] = useState(1);
-  const teamsPerPage = 3; // nombre de cards d'équipe par page (ajuste selon ton besoin)
-  const paginatedTeams = teams.slice(
+  const teamsPerPage = 3;
+  const paginatedTeams = teamsForProject.slice(
     (teamPage - 1) * teamsPerPage,
     teamPage * teamsPerPage
   );
-  const teamTotalPages = Math.ceil(teams.length / teamsPerPage);
-  
+  const teamTotalPages = Math.ceil(teamsForProject.length / teamsPerPage);
 
+  // --- FETCHEURS ---
   useEffect(() => {
-    setSprints(MOCK_SPRINTS);
-    setTeams(MOCK_TEAMS);
-  }, []);
+    if (projectId) {
+      dispatch(fetchSprintsByProject(projectId));
+      dispatch(fetchAllTeams());
+    }
+  }, [dispatch, projectId]);
 
-  // Handlers (logique minimale)
-  const handleAddTeam = () => {
-    const newTeamId = teams.length + 1;
-    setTeams([
-      ...teams,
-      {
-        id: newTeamId,
-        name: `Equipe ${newTeamId}`,
-        type: "Autre",
-        color: "#0097a7",
-        members: []
-      }
-    ]);
+  // --- MODALS STATE ---
+  const [openSprintModal, setOpenSprintModal] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [sprintToEdit, setSprintToEdit] = useState(null);
+  const [openTeamModal, setOpenTeamModal] = useState(false);
+  const [openEditTeamModal, setOpenEditTeamModal] = useState(false);
+  const [teamToEdit, setTeamToEdit] = useState(null);
+  const [sprintToDelete, setSprintToDelete] = useState(null);
+  const [teamToDelete, setTeamToDelete] = useState(null);
+  const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
+  const [currentTeamForMember, setCurrentTeamForMember] = useState(null);
+  const [memberToDelete, setMemberToDelete] = useState(null);
+
+  // --- HANDLERS SPRINT ---
+  const handleOpenSprintModal = () => {
+    if (!blockCreateSprint) setOpenSprintModal(true);
   };
-  const handleEditTeam = (team) => alert(`Modifier l'équipe ${team.name}`);
-  const handleDeleteTeam = (team) => setTeams(teams.filter((t) => t.id !== team.id));
-  const handleAddMember = (team) => alert(`Ajouter un membre à ${team.name}`);
-  const handleEditMember = (member) => alert(`Modifier ${member.name}`);
-  const handleDeleteMember = (member) => alert(`Supprimer ${member.name}`);
+  const handleEditSprint = (sprint) => {
+    setSprintToEdit(sprint);
+    setOpenEditModal(true);
+  };
+  const handleDeleteSprint = (sprint) => setSprintToDelete(sprint);
+  const handleCloseEditModal = () => {
+    setSprintToEdit(null);
+    setOpenEditModal(false);
+  };
+  const handleCloseDeleteModal = () => setSprintToDelete(null);
+
+  const handleConfirmDelete = async () => {
+    if (sprintToDelete) {
+      await dispatch(deleteSprint(sprintToDelete._id));
+      setSprintToDelete(null);
+      dispatch(fetchSprintsByProject(projectId));
+    }
+  };
+
+  // --- HANDLERS TEAM ---
+  const handleOpenTeamModal = () => setOpenTeamModal(true);
+  const handleEditTeam = (team) => {
+    setTeamToEdit(team);
+    setOpenEditTeamModal(true);
+  };
+  const handleDeleteTeam = (team) => setTeamToDelete(team);
+  const handleCloseDeleteTeamModal = () => setTeamToDelete(null);
+  const handleConfirmDeleteTeam = async () => {
+    if (teamToDelete) {
+      await dispatch(deleteTeam(teamToDelete._id));
+      setTeamToDelete(null);
+      dispatch(fetchAllTeams());
+    }
+  };
+
+  // --- HANDLERS MEMBERS ---
+  const handleAddMember = (team) => {
+    setCurrentTeamForMember(team);
+    setOpenAddMemberModal(true);
+  };
+  const handleCloseAddMemberModal = () => {
+    setOpenAddMemberModal(false);
+    setCurrentTeamForMember(null);
+  };
+  const handleDeleteMember = (team, member) => {
+    setCurrentTeamForMember(team);
+    setMemberToDelete(member);
+  };
+  const handleConfirmDeleteMember = async () => {
+    if (currentTeamForMember && memberToDelete) {
+      const newEmployeeList = currentTeamForMember.employeeList
+        .filter(emp => (emp._id || emp) !== memberToDelete._id);
+      const actionResult = await dispatch(updateTeam({
+        id: currentTeamForMember._id,
+        updateData: { employeeList: newEmployeeList.map(e => e._id || e) }
+      }));
+      if (actionResult?.error) {
+        toast.error(actionResult?.payload || "Erreur lors du retrait du membre.");
+      } else {
+        toast.success("Membre retiré !");
+      }
+      setMemberToDelete(null);
+      setCurrentTeamForMember(null);
+      dispatch(fetchAllTeams());
+    }
+  };
+  const handleCloseDeleteMemberModal = () => {
+    setMemberToDelete(null);
+    setCurrentTeamForMember(null);
+  };
 
   return (
     <Box>
-      {/* Sprints Section */}
-      <Paper
-        elevation={2}
-        sx={{
-          p: 2,
-          mb: 2,
-          borderRadius: 1.5,
-          border: "1.5px solid #e6eafd",
-          background: "#fafdff"
-        }}
+      {/* --- SPRINTS --- */}
+      <SprintSection
+        isAdminOrManager={isAdminOrManager}
+        paginatedSprints={paginatedSprints}
+        teamsForProject={teamsForProject}
+        loadingSprint={loadingSprint}
+        sprintTotalPages={sprintTotalPages}
+        sprintPage={sprintPage}
+        setSprintPage={setSprintPage}
+        onSprintSelect={onSprintSelect}
+        handleEditSprint={handleEditSprint}
+        handleDeleteSprint={handleDeleteSprint}
+        blockCreateSprint={blockCreateSprint}
+        handleOpenSprintModal={handleOpenSprintModal}
+      />
+      {/* --- EQUIPES --- */}
+      <TeamSection
+        isAdminOrManager={isAdminOrManager}
+        loadingTeam={loadingTeam}
+        teamsForProject={teamsForProject}
+        paginatedTeams={paginatedTeams}
+        teamTotalPages={teamTotalPages}
+        teamPage={teamPage}
+        setTeamPage={setTeamPage}
+        handleOpenTeamModal={handleOpenTeamModal}
+        handleEditTeam={handleEditTeam}
+        handleDeleteTeam={handleDeleteTeam}
+        handleAddMember={handleAddMember}
+        handleDeleteMember={handleDeleteMember}
+      />
+
+      {/* --- MODALS ET FORMS --- */}
+      <CreateSprintModal
+        open={openSprintModal}
+        handleClose={() => setOpenSprintModal(false)}
+        projectId={projectId}
+        projectStartDate={projectStartDate}
+        projectEndDate={projectEndDate}
+        nextSprintStartDate={nextSprintStartDate}
+        sprints={sprintsForProject}
+        blockCreateSprint={blockCreateSprint}
+      />
+      <CreateSprintModal
+        open={openEditModal}
+        handleClose={handleCloseEditModal}
+        projectId={projectId}
+        projectStartDate={projectStartDate}
+        projectEndDate={projectEndDate}
+        nextSprintStartDate={nextSprintStartDate}
+        sprints={sprintsForProject}
+        sprintData={sprintToEdit}
+        isEdit
+      />
+      <CustomDeleteForm
+        open={!!sprintToDelete}
+        handleClose={handleCloseDeleteModal}
+        title={sprintToDelete ? `Voulez-vous vraiment supprimer le sprint "${sprintToDelete.title}" ?` : ""}
+        icon={<DeleteIcon sx={{ fontSize: 42 }} color="error" />}
       >
-        <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-          <Typography fontWeight={700} fontSize={22} flex={2}>
-            Sprints du projet
-          </Typography>
-          {isAdminOrManager && (
-            <ButtonComponent
-              text="Créer un sprint"
-              icon={<AddCircleOutlineIcon />}
-              onClick={() => {
-                const newSprint = {
-                  id: sprints.length + 1,
-                  title: `Sprint ${sprints.length + 1}`,
-                  startDate: "2024-08-01",
-                  endDate: "2024-08-14",
-                  progress: 0,
-                  members: [],
-                };
-                setSprints([...sprints, newSprint]);
-              }}
-              color="primary"
-            />
-          )}
-        </Stack>
-        {paginatedSprints.length === 0 && (
-          <Typography color="text.secondary" sx={{ textAlign: "center", my: 4 }}>
-            Aucun sprint créé pour ce projet.
-          </Typography>
-        )}
-        {paginatedSprints.map((sprint) => (
-          <Paper
-            key={sprint.id}
-            elevation={0}
-            sx={{
-              my: 1.2,
-              px: 2,
-              py: 2,
-              borderRadius: 4,
-              boxShadow: "0 1px 6px #4f8ff914",
-              border: "1.3px solid #e8eefb",
-              display: "flex",
-              alignItems: "center",
-              "&:hover": {
-                borderColor: "#1976d2",
-                background: "#eaf6ff",
-                boxShadow: "0 6px 18px #b9dbff44"
-              },
-              transition: "all 0.14s"
-            }}
-            onClick={() => onSprintSelect(sprint)}
-          >
-            {/* Sprint (titre+date) */}
-            <Box flex={2}>
-              <Typography fontWeight={800} fontSize={18}>
-                {sprint.title}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {sprint.startDate} — {sprint.endDate}
-              </Typography>
-            </Box>
-            {/* Progression */}
-            <Box flex={1} minWidth={120} display="flex" alignItems="center" gap={2}>
-              <LinearProgress
-                variant="determinate"
-                value={sprint.progress}
-                sx={{
-                  flex: 1,
-                  height: 10,
-                  borderRadius: 8,
-                  bgcolor: " #e3f2fd",
-                  "& .MuiLinearProgress-bar": {
-                    borderRadius: 8,
-                    background: "linear-gradient(90deg,#43a047,#4caf50)"
-                  }
-                }}
-              />
-              <Typography fontWeight={800} fontSize={20} color="#41a340" minWidth={45}>
-                {sprint.progress}%
-              </Typography>
-            </Box>
-            {/* Membres */}
-            <Box flex={1} minWidth={110}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <AvatarGroup max={4}>
-                  {sprint.members.map((m) => (
-                    <Tooltip key={m.id} title={m.name}>
-                      <Avatar sx={{ width: 36, height: 36, fontSize: 15 }}>
-                        {m.name.split(" ").map(x => x[0]).join("")}
-                      </Avatar>
-                    </Tooltip>
-                  ))}
-                </AvatarGroup>
-                <IconButton size="small" color="primary">
-                  <AddCircleOutlineIcon />
-                </IconButton>
-              </Stack>
-            </Box>
-            {/* Action menu */}
-      <Box>
-              <IconButton>
-                <MoreVertIcon />
-              </IconButton>
-            </Box>
-          </Paper>
-        ))}
-        {/* Pagination Sprint */}
-        {sprintTotalPages > 1 && (
-          <PaginationComponent
-            count={sprintTotalPages}
-            page={sprintPage}
-            onChange={(_, value) => setSprintPage(value)}
-          />
-        )}
-      </Paper>
-
-      {/* SECTION MULTI-ÉQUIPES */}
-      <Paper
-  elevation={2}
-  sx={{
-    mt: 6,
-    p: 3,
-    borderRadius: 3,
-    border: "1.5px solid #e6eafd",
-    background: "#fff"
-  }}
->
-
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-          <Typography variant="h6" fontWeight={700}>
-            Équipes du projet
-          </Typography>
+        <Box textAlign="center" mt={2}>
           <ButtonComponent
-            text="Ajouter une équipe"
-            onClick={handleAddTeam}
-            color="primary"
+            color="error"
+            text="Supprimer définitivement"
+            onClick={handleConfirmDelete}
           />
-        </Stack>
-        {teams.length === 0 ? (
-          <Box sx={{ p: 4, mt: 2, textAlign: "center", borderRadius: 3 }}>
-            <Typography color="text.secondary" fontSize={18}>
-              Aucune équipe n’a encore été créée pour ce projet.
-            </Typography>
-            <ButtonComponent
-              text="Ajouter une équipe"
-              onClick={handleAddTeam}
-              sx={{ mt: 3 }}
-            />
-            </Box>
-        ) : (
-          <EquipesBoard
-            teams={paginatedTeams}
-            onEditTeam={handleEditTeam}
-            onDeleteTeam={handleDeleteTeam}
-            onAddMember={handleAddMember}
-            onEditMember={handleEditMember}
-            onDeleteMember={handleDeleteMember}
+        </Box>
+      </CustomDeleteForm>
+      {/* TEAM MODALS */}
+      <CreateTeamModal
+        open={openTeamModal}
+        handleClose={() => setOpenTeamModal(false)}
+        projectId={projectId}
+      />
+      <CreateTeamModal
+        open={openEditTeamModal}
+        handleClose={() => setOpenEditTeamModal(false)}
+        projectId={projectId}
+        teamData={teamToEdit}
+        isEdit
+      />
+      <CustomDeleteForm
+        open={!!teamToDelete}
+        handleClose={handleCloseDeleteTeamModal}
+        title={teamToDelete ? `Voulez-vous vraiment supprimer l’équipe "${teamToDelete.title}" ?` : ""}
+        icon={<DeleteOutlineIcon sx={{ fontSize: 42 }} color="error" />}
+      >
+        <Box textAlign="center" mt={2}>
+          <ButtonComponent
+            color="error"
+            text="Supprimer définitivement"
+            onClick={handleConfirmDeleteTeam}
           />
-          
-        )}
-        {teamTotalPages > 1 && (
-  <PaginationComponent
-    count={teamTotalPages}
-    page={teamPage}
-    onChange={(_, value) => setTeamPage(value)}
-    sx={{ mt: 3, display: "flex", justifyContent: "center" }}
-  />
-)}
-
-        </Paper>
-
-</Box>
+        </Box>
+      </CustomDeleteForm>
+      {/* MEMBRE MODALS */}
+      <AddMemberModal
+        open={openAddMemberModal}
+        handleClose={handleCloseAddMemberModal}
+        team={currentTeamForMember}
+      />
+      <CustomDeleteForm
+        open={!!memberToDelete}
+        handleClose={handleCloseDeleteMemberModal}
+        title={
+          memberToDelete
+            ? `Supprimer "${memberToDelete.fullName || memberToDelete.name}" de l’équipe "${currentTeamForMember?.title}" ?`
+            : ""
+        }
+        icon={<DeleteOutlineIcon sx={{ fontSize: 42 }} color="error" />}
+      >
+        <Box textAlign="center" mt={2}>
+          <ButtonComponent
+            color="error"
+            text="Retirer ce membre"
+            onClick={handleConfirmDeleteMember}
+          />
+        </Box>
+      </CustomDeleteForm>
+    </Box>
   );
 };
 

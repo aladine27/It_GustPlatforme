@@ -6,12 +6,14 @@ import { StyledPaper } from "../../style/style";
 import SprintList from "./SprintList";
 import SprintKanban from "./SprintKanban";
 import { useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
 
 const ProjectSprintIndex = () => {
-  // Gestion du rôle
+  const { projectId } = useParams();
   const { CurrentUser } = useSelector((state) => state.user);
   const role = CurrentUser?.role || CurrentUser?.user?.role;
-  const isAdminOrManager = role && (role.toLowerCase() === "admin" || role.toLowerCase() === "manager");
+  const isAdminOrManager = ["admin", "manager"].includes(role?.toLowerCase());
+
 
   // Navigation et sélection de sprint
   const [view, setView] = useState("sprintList");
@@ -59,11 +61,13 @@ const ProjectSprintIndex = () => {
             setSelectedSprint(sprint);
             setView("kanban");
           }}
+          projectId={projectId} // <-- Passe projectId à SprintList (pour les modals, déjà fait)
         />
       ) : view === "kanban" && selectedSprint ? (
         <SprintKanban
           sprint={selectedSprint}
           isAdminOrManager={isAdminOrManager}
+          projectId={projectId} // <-- Passe projectId à SprintKanban
         />
       ) : (
         <Typography sx={{ mt: 6, textAlign: "center", fontWeight: 700, color: "error.main" }}>

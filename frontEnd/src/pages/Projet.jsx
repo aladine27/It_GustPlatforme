@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 
 import {
+  deleteProject,
   fetchAllProjects,
 } from '../redux/actions/projectActions';
 import { clearProjectMessages } from '../redux/slices/projectSlice';
@@ -21,7 +22,7 @@ import { ButtonComponent } from '../components/Global/ButtonComponent';
 import CreateProjectModal from '../components/projet/CreateProjectModal';
 
 import DeleteProjectModal from '../components/projet/DeleteProjectModal';
-
+import EditProjectModal from '../components/projet/EditProjectModal';
 import ProjectSprintIndex from './Tache/ProjectSprintIndex';
 import { toast } from 'react-toastify';
 import { StyledPaper } from '../style/style';
@@ -33,6 +34,9 @@ const Projet = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const theme = useTheme();
+  const CurrentUser = useSelector((state) => state.user.CurrentUser);
+  const userRole = CurrentUser?.role || CurrentUser?.user?.role;
+  const isAdminOrManager = ["Admin", "Manager"].includes(userRole);
 
   const { projects: allRows, loading, error: loadError, success } = useSelector(state => state.project);
 
@@ -48,6 +52,7 @@ const Projet = () => {
   const [openDelete, setOpenDelete] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [openDetail, setOpenDetail] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
   const navigate = useNavigate();
 
   // Fetch projects on mount
@@ -55,7 +60,7 @@ const Projet = () => {
     dispatch(fetchAllProjects());
   }, [dispatch]);
 
-  // Notifications
+
   useEffect(() => {
     if (success) {
       toast.success(success);
@@ -86,6 +91,11 @@ const Projet = () => {
   const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
   const paginatedRows = filteredRows.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const handlePageChange = (_e, value) => setCurrentPage(value);
+  const handleEditProject = (project) => {
+  setSelectedProject(project);
+  setOpenEdit(true);
+};
+
 
   // Columns
   const columns = [
@@ -120,26 +130,29 @@ const Projet = () => {
     }
   ];
 
-  // Actions
   const actions = [
-    {
-      icon: <DeleteIcon />,
-      tooltip: t('Supprimer'),
-      onClick: project => { setSelectedProject(project); setOpenDelete(true); }
-    },
-    {
-      icon: <EditIcon sx={{ color: "#1976d2" }} />,
-      tooltip: t('Modifier'),
-     
-    },
- 
+    ...(isAdminOrManager
+      ? [
+        {
+          icon: <DeleteIcon />,
+          tooltip: t('Supprimer'),
+          onClick: project => { setSelectedProject(project); setOpenDelete(true); }
+        },
+        {
+          icon: <EditIcon sx={{ color: "#1976d2" }} />,
+          tooltip: t('Modifier'),
+          onClick: handleEditProject
+        }
+      ]
+      : []
+    ),
   {
     icon: <TimelineIcon sx={{ color: "#1273BA" }} />,
     tooltip: t('Sprints'),
     onClick: project => navigate(`/dashboard/tache/${project._id}`)
   }
-  ];
-  
+];
+
 
   // Loader
   if (loading) {
@@ -158,6 +171,11 @@ const Projet = () => {
       </Box>
     );
   }
+ const handleDeleteProject = (project) => {
+  dispatch(deleteProject(project._id));
+};
+
+
 
   // MAIN UI
   return (
@@ -174,15 +192,17 @@ const Projet = () => {
             gap: { xs: 2, md: 0 }
           }}
         >
-          <Grid container spacing={2} justifyContent="flex-end" alignItems="center" sx={{ width: 'fit-content' }}>
-            <Grid item>
-              <ButtonComponent
-                onClick={() => setOpenAdd(true)}
-                text={t('Ajouter')}
-                icon={<AddCircleOutline />}
-                color="primary"
-              />
-            </Grid>
+         <Grid container spacing={2} justifyContent="flex-end" alignItems="center" sx={{ width: 'fit-content' }}>
+            {isAdminOrManager && (
+              <Grid item>
+                <ButtonComponent
+                  onClick={() => setOpenAdd(true)}
+                  text={t('Ajouter')}
+                  icon={<AddCircleOutline />}
+                  color="primary"
+                />
+              </Grid>
+            )}
           </Grid>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <TextField
@@ -226,21 +246,24 @@ const Projet = () => {
           <PaginationComponent count={totalPages} page={currentPage} onChange={handlePageChange} />
         </Box>
       </StyledPaper>
-
-      {openDelete && selectedProject && (
-        <DeleteProjectModal
-          open={openDelete}
-          handleClose={() => setOpenDelete(false)}
-          project={selectedProject}
-          onDelete={handleDeleteProject}
-        />
-      )}
-      {openDetail && selectedProject && (
-        <ProjectSprintIndex
-          projectId={selectedProject._id}
-          onClose={() => setOpenDetail(false)}
-        />
-      )}
+{openAdd && (
+  <CreateProjectModal open={openAdd} handleClose={() => setOpenAdd(false)} />
+)}
+{openEdit && selectedProject && (
+  <EditProjectModal
+    open={openEdit}
+    handleClose={() => setOpenEdit(false)}
+    project={selectedProject}
+  />
+)}
+{openDelete && selectedProject && (
+  <DeleteProjectModal
+    open={openDelete}
+    handleClose={() => setOpenDelete(false)}
+    project={selectedProject}
+    onDelete={handleDeleteProject}
+  />
+)}
     </>
   );
 };

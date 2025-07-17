@@ -6,7 +6,7 @@ const NAVBAR_HEIGHT = 64;
 export default function PreviewModal({ open, onClose, html, theme, watermark }) {
   if (!open) return null;
   console.log("PreviewModal > html reçu :", html);
-// Tu peux même aller plus loin :
+
 if (html && html.includes("signature-placeholder")) {
   const reg = /<div[^>]*id="signature-placeholder"[^>]*>[\s\S]*?<\/div>/g;
   const matches = html.match(reg);

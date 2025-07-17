@@ -8,7 +8,9 @@ import {persistReducer} from 'redux-persist'
 import { persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import { leaveSlice, leaveTypeSlice } from './slices/leaveSlice';
-
+import teamReducer from './slices/teamSlice';
+import sprintReducer from './slices/sprintSlice';
+import taskReducer from './slices/taskSlice'
 
 const rootReducer = combineReducers({
     user:userReducer,
@@ -18,7 +20,11 @@ const rootReducer = combineReducers({
     leave:leaveSlice.reducer,
     leaveType:leaveTypeSlice.reducer,
     document: documentReducer,
-    project:projectReducer
+    team: teamReducer,     
+    sprint: sprintReducer, 
+    task:taskReducer,
+    project:projectReducer,
+  
     
 });
 const persistConfig={

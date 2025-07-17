@@ -9,7 +9,7 @@ import Projet from './pages/Projet';
 
 
 import Recrutement from './pages/Recrutement';
-import Frais from './pages/Frais';
+
 import Profile from './pages/Profile';
 import ResetPassword from './pages/ResetPassword';
 import ExportPage from './components/ExportModal';
@@ -27,7 +27,6 @@ import CongeEmploye from './pages/Conge/CongeEmploye';
 import CongeHistory from './pages/Conge/CongeHistory';
 import DocumentIndex from './pages/Documents/DocumentIndex';
 import DocumentPersonnalisationPage from './pages/Documents/DocumentPersonnalisationPage';
-import Tache from './pages/Tache/Tache';
 import ProjectSprintIndex from './pages/Tache/ProjectSprintIndex';
 function App() {
   const { CurrentUser } = useSelector((state) => state.user);
@@ -95,7 +94,6 @@ function App() {
               <Route path="conge" element={<CongeIndex />} />
               <Route path="employee/Conge" element={<CongeEmploye />} />
               <Route path="conge/history" element={<CongeHistory />} />
-              <Route path="frais" element={<Frais />} />
               <Route path="sprints" element={<ProjectSprintIndex />} />
             </Route>
 

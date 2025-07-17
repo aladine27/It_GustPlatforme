@@ -17,30 +17,13 @@ export class CreateTaskDto {
     @IsString() 
     @IsNotEmpty()
     description: string;
-
-    @ApiProperty({
-        type: String,
-        description: 'The duration of the task'
-    })
-    @IsNotEmpty()
-    @IsString()      
-    duration: string;
-
-    @ApiProperty({
-        type: Date,
-        description: 'The start date of the task'
-    })     
-    @IsDate()
-    @IsNotEmpty()
-    startDate: Date;
-
-    @ApiProperty({
-        type: Date,
-        description: 'The end date of the task'
-    })
-    @IsDate()
-    @IsNotEmpty()
-    endDate: Date;
+      @ApiProperty({
+    type: String,
+    description: "Priority of the task (high, medium, low)",
+    default: "medium"
+  })
+  @IsString() @IsNotEmpty()
+  priority: string;
 
     @ApiProperty({
         type: String,

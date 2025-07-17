@@ -84,12 +84,6 @@ const SidebarPro = ({ collapsed, setCollapsed }) => {
       roles: ['Admin', 'Manager', 'Rh']
     },
     {
-      text: t("Frais"),
-      icon: <WalletIcon />,
-      path: '/dashboard/frais',
-      roles: ['Admin', 'Manager', 'Rh', 'Employe']
-    },
-    {
       text: t("Profil"),
       icon: <PersonIcon />,
       path: '/dashboard/profile',

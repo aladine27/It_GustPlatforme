@@ -25,9 +25,10 @@ export class CreateSprintDto {
 
   @ApiProperty({ type: String, description: "Project ID" })
   @IsString() @IsNotEmpty()
-  project: string;
-
-  @ApiProperty({ type: [String], description: "Teams IDs", required: false })
+  project: string;@ApiProperty({ type: String, description: "Team ID", required: false })
   @IsOptional()
-  teams?: string[];
+  team: string; 
+
+
+
 }

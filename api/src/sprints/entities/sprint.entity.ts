@@ -22,8 +22,8 @@ export class Sprint extends Document {
   @Prop({ type: Types.ObjectId, ref: 'projects', required: true })
   project: Types.ObjectId;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'teams' }], default: [] })
-  teams: Types.ObjectId[];
+@Prop({ type: Types.ObjectId, ref: 'teams', required: false })
+team: Types.ObjectId; 
   @Prop([{ type: Types.ObjectId, ref: 'tasks' }])
   tasks: Types.ObjectId[];
 

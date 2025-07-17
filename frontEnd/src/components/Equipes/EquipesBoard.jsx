@@ -8,19 +8,22 @@ const EquipesBoard = ({
   onDeleteTeam,
   onEditMember,
   onDeleteMember,
-  onAddMember
+  onAddMember,
+  isAdminOrManager
 }) => (
   <Box sx={{ overflowX: "auto", pb: 2 }}>
     <Stack direction="row" spacing={4}>
       {teams.map((team) => (
         <EquipeCard
-          key={team.id}
+          key={team._id}
           team={team}
           onEditTeam={onEditTeam}
           onDeleteTeam={onDeleteTeam}
           onEditMember={onEditMember}
           onDeleteMember={onDeleteMember}
           onAddMember={onAddMember}
+          isAdminOrManager={isAdminOrManager}
+          
         />
       ))}
     </Stack>

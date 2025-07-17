@@ -14,8 +14,7 @@ export const fetchAllLeaves = createAsyncThunk(
       const res = await axios.get("http://localhost:3000/leave", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("----- [Frontend] Leaves récupérés depuis API -----");
-      console.log(res.data.data);
+   
       return res.data.data;
     } catch (err) {
       console.log("Erreur fetchAllLeaves", err?.response?.data || err.message);

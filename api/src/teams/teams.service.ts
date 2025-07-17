@@ -31,15 +31,15 @@ export class TeamsService {
   }
 
   async findAll(): Promise<ITeam[]> {
-    return this.teamModel.find().populate('employeeList project');
+    return this.teamModel.find().populate('employeeList');
   }
 
   async findByProject(projectId: string): Promise<ITeam[]> {
-    return this.teamModel.find({ project: projectId }).populate('employeeList project');
+    return this.teamModel.find({ project: projectId }).populate('employeeList');
   }
 
   async findOne(id: string): Promise<ITeam> {
-    const team = await this.teamModel.findById(id).populate('employeeList project');
+    const team = await this.teamModel.findById(id).populate('employeeList');
     if (!team) throw new NotFoundException('Team not found');
     return team;
   }

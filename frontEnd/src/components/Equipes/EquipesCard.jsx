@@ -1,7 +1,7 @@
 import React from "react";
 import {
-  Paper, Stack, Typography, Chip, Tooltip,
-  Divider, IconButton, Box
+  Stack, Typography, Chip, Tooltip,
+  Divider, IconButton
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -15,7 +15,8 @@ const EquipeCard = ({
   onDeleteTeam,
   onEditMember,
   onDeleteMember,
-  onAddMember
+  onAddMember,
+  isAdminOrManager
 }) => (
   <StyledCard
     sx={{
@@ -26,7 +27,6 @@ const EquipeCard = ({
       bgcolor: "#e3f2fd",
       boxShadow: "0 2px 14px #2196f312",
       mb: 1,
-      position: "relative",
       display: "flex",
       flexDirection: "column"
     }}
@@ -34,10 +34,10 @@ const EquipeCard = ({
     <Stack direction="row" alignItems="center" justifyContent="space-between">
       <Stack direction="row" alignItems="center" spacing={2}>
         <Typography fontWeight={800} fontSize={21} sx={{ color: team.color }}>
-          {team.name}
+          {team.title}
         </Typography>
         <Chip
-          label={team.members.length}
+          label={team.employeeList?.length ?? 0}
           sx={{
             bgcolor: "#fff",
             fontWeight: 700,
@@ -46,44 +46,51 @@ const EquipeCard = ({
           }}
         />
       </Stack>
-      <Stack direction="row" spacing={1}>
-        <Tooltip title="Modifier l'équipe">
-          <IconButton size="small" onClick={() => onEditTeam(team)}>
-            <EditIcon color="primary" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Supprimer l'équipe">
-          <IconButton size="small" onClick={() => onDeleteTeam(team)}>
-            <DeleteOutlineIcon color="error" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
+<Stack direction="row" spacing={1}>
+  {isAdminOrManager && (
+    <>
+      <Tooltip title="Modifier l'équipe">
+        <IconButton size="small" onClick={() => onEditTeam(team)}>
+          <EditIcon color="primary" />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title="Supprimer l'équipe">
+        <IconButton size="small" onClick={() => onDeleteTeam(team)}>
+          <DeleteOutlineIcon color="error" />
+        </IconButton>
+      </Tooltip>
+    </>
+  )}
+</Stack>
+
     </Stack>
     <Typography sx={{ color: "#777", ml: 1, mt: 0.2, mb: 1, fontSize: 14 }}>
-      {team.type}
+      {team.type || ""}
     </Typography>
     <Divider sx={{ my: 1 }} />
     <Stack spacing={1.7} sx={{ mt: 1 }}>
-      {team.members.map((m) => (
+      {(team.employeeList ?? []).map((m) => (
         <EquipeMemberCard
-          key={m.id}
+          key={m._id}
           member={m}
           teamColor={team.color}
-          onEdit={onEditMember}
-          onDelete={onDeleteMember}
+          onDelete={member => onDeleteMember && onDeleteMember(team, member)}
         />
       ))}
-      <IconButton
-        size="small"
-        color="primary"
-        sx={{ alignSelf: "flex-start", mt: 1 }}
-        onClick={() => onAddMember(team)}
-      >
-        <AddCircleOutlineIcon />
-        <Typography sx={{ ml: 0.5, fontWeight: 500, fontSize: 15 }}>
-          Ajouter un membre
-        </Typography>
-      </IconButton>
+      {isAdminOrManager && (
+  <IconButton
+    size="small"
+    color="primary"
+    sx={{ alignSelf: "flex-start", mt: 1 }}
+    onClick={() => onAddMember && onAddMember(team)}
+  >
+    <AddCircleOutlineIcon />
+    <Typography sx={{ ml: 0.5, fontWeight: 500, fontSize: 15 }}>
+      Ajouter un membre
+    </Typography>
+  </IconButton>
+)}
+
     </Stack>
   </StyledCard>
 );
