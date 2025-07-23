@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, Paper, Stack, Chip, Tooltip, IconButton } from "@mui/material";
+import { Box, Typography, Paper, Stack, Chip, Tooltip, IconButton, Divider, TextField, InputAdornment } from "@mui/material";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import GroupIcon from "@mui/icons-material/Group";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import fr from "date-fns/locale/fr";
 import { ButtonComponent } from "../../components/Global/ButtonComponent";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import SearchIcon from "@mui/icons-material/Search";
 
 const SprintSection = ({
   isAdminOrManager,
@@ -26,48 +27,110 @@ const SprintSection = ({
   handleEditSprint,
   handleDeleteSprint,
   blockCreateSprint,
-  handleOpenSprintModal
-}) => {
-  return (
-    <Paper elevation={2} sx={{ p: 2, mb: 2, borderRadius: 1.5, border: "1.5px solid #e6eafd", background: "#fafdff" }}>
-      <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-        <Typography fontWeight={700} fontSize={22} flex={2}>
-          Sprints du projet
-        </Typography>
-        {isAdminOrManager && (
+  handleOpenSprintModal,
+  projectTitle,
+  searchSprint,
+  setSearchSprint,
+}) => (
+  <Paper
+    elevation={2}
+    sx={{
+      p: 2,
+      mb: 2,
+      borderRadius: 1.5,
+      border: "1.5px solid #e6eafd",
+      background: "#fafdff"
+    }}
+  >
+  {/* Titre en haut */}
+  <Typography
+    fontWeight={700}
+    fontSize={22}
+    sx={{
+      textAlign: "center",
+      mb: 2
+    }}
+  >
+    {`Liste des Sprints du projet ${projectTitle ? `"${projectTitle}"` : ""}`}
+  </Typography>
+    {/* Header : Recherche (gauche), titre (centre), bouton (droite) */}
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 2,
+        flexWrap: "wrap",
+        mb: 2,
+      }}
+    >
+      {/* Recherche à gauche */}
+      <TextField
+        label="Rechercher un sprint"
+        value={searchSprint}
+        onChange={e => {
+          setSearchSprint(e.target.value);
+          setSprintPage && setSprintPage(1);
+        }}
+        placeholder="Titre du sprint..."
+        sx={{
+          width: { xs: "100%", md: 250 },
+          borderRadius: "50px",
+          bgcolor: "#fff",
+          minWidth: 140,
+        }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <IconButton size="small" color="primary"><SearchIcon /></IconButton>
+            </InputAdornment>
+          ),
+          sx: { borderRadius: "16px", fontSize: "1.03rem" }
+        }}
+      />
+
+
+      {/* Bouton à droite */}
+      {isAdminOrManager && (
         <ButtonComponent
           text="Créer un sprint"
           icon={<AddCircleOutlineIcon />}
           onClick={handleOpenSprintModal}
           color="primary"
           disabled={blockCreateSprint}
-          sx={blockCreateSprint ? { opacity: 0.7, pointerEvents: "none" } : {}}
+          sx={blockCreateSprint ? { opacity: 1, pointerEvents: "none" } : {}}
           tooltip={
             blockCreateSprint
               ? "Impossible : la durée totale ou la date de fin du projet est atteinte."
               : undefined
           }
         />
-        )}
-      </Stack>
-      {blockCreateSprint && (
-        <Typography color="error" sx={{ mb: 2, textAlign: "center" }}>
-          Impossible de créer un sprint : durée totale ou date projet dépassée !
-        </Typography>
       )}
-      {loadingSprint && <Typography color="info.main">Chargement...</Typography>}
-      {paginatedSprints.length === 0 && !loadingSprint && (
-        <Typography color="text.secondary" sx={{ textAlign: "center", my: 4 }}>
-          Aucun sprint créé pour ce projet.
-        </Typography>
-      )}
+    </Box>
+
+    <Divider sx={{ my: 2 }} />
+
+    {blockCreateSprint && (
+      <Typography color="error" sx={{ mb: 2, textAlign: "center" }}>
+        Impossible d'Ajouter un nouveau !
+      </Typography>
+    )}
+    {loadingSprint && <Typography color="info.main">Chargement...</Typography>}
+    {paginatedSprints.length === 0 && !loadingSprint && (
+      <Typography color="text.secondary" sx={{ textAlign: "center", my: 4 }}>
+        Aucun sprint créé pour ce projet.
+      </Typography>
+    )}
+
+    {/* Liste des sprints */}
+    <Box>
       {paginatedSprints.map((sprint) => {
         const teamObj = teamsForProject.find(
           t => t._id === (sprint.team?._id || sprint.team)
         );
         return (
           <Paper
-            elevation={0}
+            elevation={3}
             key={sprint._id}
             sx={{
               borderRadius: 3,
@@ -99,7 +162,7 @@ const SprintSection = ({
                   </Stack>
                   <Chip
                     icon={<CheckCircleIcon sx={{ color: "#32c48d" }} />}
-                    label="Actif"
+                    label={sprint.status}
                     size="small"
                     sx={{
                       background: "#e8f5e9",
@@ -123,51 +186,52 @@ const SprintSection = ({
                   </Stack>
                 </Stack>
               </Box>
-               <Tooltip title="Kanban Sprint">
-                    <IconButton
-                      color="primary"
-                      size="small"
-                      onClick={() => onSprintSelect && onSprintSelect(sprint)}
-                    >
-                      <ViewKanbanIcon />
-                    </IconButton>
-                  </Tooltip>
-              {isAdminOrManager && (
-                <Stack direction="row" spacing={1}>
-                 
-                  <Tooltip title="Modifier le sprint">
-                    <IconButton
-                      color="primary"
-                      size="small"
-                      onClick={() => handleEditSprint(sprint)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Supprimer le sprint">
-                    <IconButton
-                      color="error"
-                      size="small"
-                      onClick={() => handleDeleteSprint(sprint)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Stack>
-              )}
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Tooltip title="Kanban Sprint">
+                  <IconButton
+                    color="primary"
+                    size="small"
+                    onClick={() => onSprintSelect && onSprintSelect(sprint)}
+                  >
+                    <ViewKanbanIcon />
+                  </IconButton>
+                </Tooltip>
+                {isAdminOrManager && (
+                  <>
+                    <Tooltip title="Modifier le sprint">
+                      <IconButton
+                        color="primary"
+                        size="small"
+                        onClick={() => handleEditSprint(sprint)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Supprimer le sprint">
+                      <IconButton
+                        color="error"
+                        size="small"
+                        onClick={() => handleDeleteSprint(sprint)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </>
+                )}
+              </Stack>
             </Stack>
           </Paper>
         );
       })}
-      {sprintTotalPages > 1 && (
-        <PaginationComponent
-          count={sprintTotalPages}
-          page={sprintPage}
-          onChange={(_, value) => setSprintPage(value)}
-        />
-      )}
-    </Paper>
-  );
-};
+    </Box>
+    {sprintTotalPages > 0 && (
+      <PaginationComponent
+        count={sprintTotalPages}
+        page={sprintPage}
+        onChange={(_, value) => setSprintPage(value)}
+      />
+    )}
+  </Paper>
+);
 
 export default SprintSection;

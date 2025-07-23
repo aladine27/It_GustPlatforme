@@ -12,6 +12,7 @@ import { SprintSchema } from 'src/sprints/entities/sprint.entity';
     ,MongooseModule.forFeature([{ name: 'users', schema: projectSchema }]),
     MongooseModule.forFeature([{ name: 'sprints', schema: SprintSchema }]) 
 ],
+ exports: [MongooseModule],
   controllers: [TasksController],
   providers: [TasksService],
 })

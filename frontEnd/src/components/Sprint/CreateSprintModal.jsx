@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
-  Box, TextField, Button, Stack, Autocomplete, Typography
+  Box, TextField, Button, Stack, Autocomplete
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
@@ -14,6 +14,22 @@ import differenceInCalendarDays from "date-fns/differenceInCalendarDays";
 import ModelComponent from "../Global/ModelComponent";
 import { createSprint, updateSprint } from "../../redux/actions/sprintActions";
 
+// Vérifie si une date doit être désactivée pour l'équipe sélectionnée (true = désactivée)
+function shouldDisableDateForTeam(date, sprints, selectedTeamId, currentSprintId = null) {
+  if (!selectedTeamId) return false;
+  for (let sprint of sprints) {
+    if (currentSprintId && sprint._id === currentSprintId) continue;
+    const sStart = new Date(sprint.startDate);
+    const sEnd = new Date(sprint.endDate);
+    const sprintTeamId = (sprint.team?._id || sprint.team || "").toString();
+    if (sprintTeamId === selectedTeamId.toString() && date >= sStart && date <= sEnd) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Calcule le statut du sprint
 function computeSprintStatus(startDate, endDate) {
   const now = new Date();
   if (!startDate || !endDate) return "";
@@ -22,7 +38,8 @@ function computeSprintStatus(startDate, endDate) {
   return "Ongoing";
 }
 
-function makeSchema({ projectStartDate, projectEndDate, nextSprintStartDate, sprints, isEdit, sprintData }) {
+// Schéma de validation Yup (chevauchement = interdit que pour la même équipe)
+function makeSchema({ projectStartDate, projectEndDate, sprints, isEdit, sprintData }) {
   return Yup.object({
     title: Yup.string().required("Le titre est requis").min(3).max(100),
     team: Yup.object().nullable().required("L'équipe est requise"),
@@ -35,26 +52,28 @@ function makeSchema({ projectStartDate, projectEndDate, nextSprintStartDate, spr
         val => !projectStartDate || !val || new Date(val) >= new Date(projectStartDate)
       )
       .test(
-        "start-after-last-sprint",
-        "La date de début doit être le lendemain de la fin du dernier sprint",
-        function(val) {
-          if (!nextSprintStartDate || isEdit) return true;
-          if (!val) return true;
-          return new Date(val).toDateString() === new Date(nextSprintStartDate).toDateString();
-        }
-      )
-      .test(
-        "no-overlap",
-        "Le sprint se chevauche avec un autre sprint",
+        "no-overlap-same-team",
+        "Le sprint se chevauche avec un autre sprint de la même équipe",
         function(val) {
           if (!val || !sprints) return true;
           const endDate = this.parent.endDate;
-          const currentId = sprintData?._id;
+          const currentId = this?.options?.context?.sprintData?._id;
+          const selectedTeam = this.parent.team?._id || this.parent.team;
+          if (!selectedTeam) return true;
           for (let sprint of sprints) {
             if (currentId && sprint._id === currentId) continue;
             const sStart = new Date(sprint.startDate);
             const sEnd = new Date(sprint.endDate);
-            if (endDate && new Date(val) <= sEnd && new Date(endDate) >= sStart) return false;
+            const sprintTeam = (sprint.team?._id || sprint.team || "").toString();
+            // Vérifie le chevauchement que pour la même équipe
+            if (
+              endDate &&
+              new Date(val) <= sEnd &&
+              new Date(endDate) >= sStart &&
+              sprintTeam === selectedTeam.toString()
+            ) {
+              return false;
+            }
           }
           return true;
         }
@@ -69,17 +88,27 @@ function makeSchema({ projectStartDate, projectEndDate, nextSprintStartDate, spr
         val => !projectEndDate || !val || new Date(val) <= new Date(projectEndDate)
       )
       .test(
-        "no-overlap",
-        "Le sprint se chevauche avec un autre sprint",
+        "no-overlap-same-team",
+        "Le sprint se chevauche avec un autre sprint de la même équipe",
         function(val) {
           if (!val || !sprints) return true;
           const startDate = this.parent.startDate;
-          const currentId = sprintData?._id;
+          const currentId = this?.options?.context?.sprintData?._id;
+          const selectedTeam = this.parent.team?._id || this.parent.team;
+          if (!selectedTeam) return true;
           for (let sprint of sprints) {
             if (currentId && sprint._id === currentId) continue;
             const sStart = new Date(sprint.startDate);
             const sEnd = new Date(sprint.endDate);
-            if (startDate && new Date(startDate) <= sEnd && new Date(val) >= sStart) return false;
+            const sprintTeam = (sprint.team?._id || sprint.team || "").toString();
+            if (
+              startDate &&
+              new Date(startDate) <= sEnd &&
+              new Date(val) >= sStart &&
+              sprintTeam === selectedTeam.toString()
+            ) {
+              return false;
+            }
           }
           return true;
         }
@@ -99,19 +128,24 @@ export default function CreateSprintModal({
   sprintData = null,
   isEdit = false
 }) {
-  // Si modal non ouverte ou blocage création, on n'affiche rien
-  if (!open || (blockCreateSprint && !isEdit)) {
-    console.log("[CreateSprintModal] Blocage affichage modal : open =", open, "blockCreateSprint =", blockCreateSprint, "isEdit =", isEdit);
-    return null;
-  }
+  if (!open || (blockCreateSprint && !isEdit)) return null;
   const dispatch = useDispatch();
   const teams = useSelector(state => state.team.teams || []);
   const loadingTeams = useSelector(state => state.team.loading);
 
-  // Schema dynamique
-  const schema = makeSchema({ projectStartDate, projectEndDate, nextSprintStartDate, sprints, isEdit, sprintData });
+  // On filtre les équipes du projet courant
+  const projectTeams = useMemo(() => {
+    return teams.filter(
+      t => {
+        let teamProject = typeof t.project === "object" ? t.project?._id || t.project : t.project;
+        return String(teamProject) === String(projectId);
+      }
+    );
+  }, [teams, projectId]);
 
-  // Setup react-hook-form, reset sur changement de modal
+  // Schéma de validation
+  const schema = makeSchema({ projectStartDate, projectEndDate, sprints, isEdit, sprintData });
+
   const {
     register,
     control,
@@ -120,7 +154,7 @@ export default function CreateSprintModal({
     watch,
     formState: { errors }
   } = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema, { context: { sprintData } }),
     defaultValues: {
       title: "",
       team: null,
@@ -129,19 +163,19 @@ export default function CreateSprintModal({
     }
   });
 
-  // Remplit les valeurs du formulaire lors de l’édition
+  const selectedTeamId = watch("team")?._id || watch("team");
+  const currentSprintId = sprintData?._id;
+
   useEffect(() => {
     if (open && isEdit && sprintData) {
-      console.log("[CreateSprintModal] Reset form for EDIT :", sprintData);
       reset({
         title: sprintData.title || "",
-        team: teams.find(t => t._id === (sprintData.team?._id || sprintData.team)) || null,
+        team: projectTeams.find(t => t._id === (sprintData.team?._id || sprintData.team)) || null,
         startDate: sprintData.startDate ? new Date(sprintData.startDate) : nextSprintStartDate || new Date(),
         endDate: sprintData.endDate ? new Date(sprintData.endDate) : null,
       });
     }
     if (open && !isEdit) {
-      console.log("[CreateSprintModal] Reset form for CREATE");
       reset({
         title: "",
         team: null,
@@ -149,9 +183,8 @@ export default function CreateSprintModal({
         endDate: null,
       });
     }
-  }, [open, isEdit, sprintData, reset, teams, nextSprintStartDate]);
+  }, [open, isEdit, sprintData, reset, projectTeams, nextSprintStartDate]);
 
-  // Close & reset
   const closeAndReset = () => {
     reset({
       title: "",
@@ -162,9 +195,7 @@ export default function CreateSprintModal({
     handleClose();
   };
 
-  // Submit handler
   const onSubmit = async (data) => {
-    console.log("[CreateSprintModal] Submit (data):", data, "blockCreateSprint:", blockCreateSprint, "isEdit:", isEdit);
     if (blockCreateSprint && !isEdit) {
       toast.error("Impossible de créer plus de sprints, période du projet atteinte !");
       return;
@@ -185,21 +216,15 @@ export default function CreateSprintModal({
         project: projectId,
         team: data.team?._id,
       };
-      console.log("[CreateSprintModal] Sprint BODY envoyé au back :", body);
-
       if (isEdit && sprintData) {
-        // Update mode
-        const actionResult = await dispatch(updateSprint({ id: sprintData._id, updateData: body }));
-        console.log("[CreateSprintModal] UpdateSprint result:", actionResult);
+        const actionResult = dispatch(updateSprint({ id: sprintData._id, updateData: body }));
         if (actionResult?.error) {
           toast.error(actionResult?.payload || "Erreur lors de la modification du sprint.");
           return;
         }
         toast.success("Sprint modifié avec succès");
       } else {
-        // Create mode
         const actionResult = await dispatch(createSprint(body));
-        console.log("[CreateSprintModal] CreateSprint result:", actionResult);
         if (actionResult?.error) {
           toast.error(actionResult?.payload || "Erreur lors de la création du sprint.");
           return;
@@ -224,7 +249,6 @@ export default function CreateSprintModal({
       >
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Box sx={{ my: 2 }}>
-            {/* Titre */}
             <TextField
               label="Titre *"
               fullWidth
@@ -233,18 +257,17 @@ export default function CreateSprintModal({
               helperText={errors.title?.message}
               sx={{ mb: 2 }}
             />
-            {/* Sélecteur équipe */}
             <div style={{ marginBottom: 10, color: "#aaa", fontSize: 13 }}>
               {loadingTeams
                 ? "Chargement des équipes..."
-                : (teams.length === 0 ? "Aucune équipe trouvée pour ce projet." : "")}
+                : (projectTeams.length === 0 ? "Aucune équipe trouvée pour ce projet." : "")}
             </div>
             <Controller
               name="team"
               control={control}
               render={({ field }) => (
                 <Autocomplete
-                  options={teams}
+                  options={projectTeams}
                   getOptionLabel={option => {
                     if (!option) return "";
                     if (typeof option === "string") return option;
@@ -267,7 +290,6 @@ export default function CreateSprintModal({
                 />
               )}
             />
-            {/* Dates */}
             <Stack direction="row" spacing={2}>
               <Controller
                 name="startDate"
@@ -286,8 +308,16 @@ export default function CreateSprintModal({
                         }
                       }}
                       format="dd/MM/yyyy"
-                      minDate={nextSprintStartDate || projectStartDate}
+                      minDate={projectStartDate}
                       maxDate={projectEndDate}
+                      shouldDisableDate={date =>
+                        shouldDisableDateForTeam(
+                          date,
+                          sprints,
+                          selectedTeamId,
+                          currentSprintId
+                        )
+                      }
                       onChange={val => field.onChange(val)}
                     />
                   </LocalizationProvider>
@@ -312,13 +342,20 @@ export default function CreateSprintModal({
                       format="dd/MM/yyyy"
                       minDate={watch("startDate")}
                       maxDate={projectEndDate}
+                      shouldDisableDate={date =>
+                        shouldDisableDateForTeam(
+                          date,
+                          sprints,
+                          selectedTeamId,
+                          currentSprintId
+                        )
+                      }
                       onChange={val => field.onChange(val)}
                     />
                   </LocalizationProvider>
                 )}
               />
             </Stack>
-            {/* Bouton submit */}
             <Box mt={3} display="flex" justifyContent="flex-end">
               <Button
                 variant="contained"

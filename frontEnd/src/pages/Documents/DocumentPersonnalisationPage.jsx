@@ -119,16 +119,33 @@ export default function DocumentPersonnalisationPage() {
     );
     toast.success("Signature ajoutée !");
   };
-  const handleGeneratePdf = async () => {
-    try {
-      await dispatch(generatePdfFromHtml({ id: docId, html: editedHtml })).unwrap();
-      toast.success("Document PDF généré et stocké !");
-      dispatch(fetchAllDocuments());
-      navigate(-1);
-    } catch (err) {
-      toast.error(err || "Erreur lors de la génération du PDF");
-    }
-  };
+ const handleGeneratePdf = async () => {
+  const currentHtml = editorRef.current?.getHTML() || editedHtml;
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = currentHtml;
+  const signatureImg = tempDiv.querySelector('#signature-placeholder');
+  if (signatureImg && signatureData) {
+    // Remplacer le src de l'image si elle existe déjà
+    signatureImg.setAttribute("src", signatureData);
+    console.log("[DEBUG] Signature remplacée dans le placeholder.");
+  } else if (signatureData) {
+    // Si l'image n'existe pas dans le HTML, on l'ajoute à la fin
+    const p = document.createElement("p");
+    const img = document.createElement("img");
+    img.src = signatureData;
+    img.alt = "Signature";
+    img.style.maxWidth = "200px"; // optionnel, à adapter selon rendu PDF
+    img.style.height = "auto";
+    p.appendChild(img);
+    tempDiv.appendChild(p);
+    console.log("[DEBUG] Signature ajoutée à la fin du document.");
+  } else {
+    console.warn("[WARNING] Signature manquante, rien inséré dans le document.");
+  }
+  const finalHtml = tempDiv.innerHTML;
+  console.log("[DEBUG] HTML final avant génération PDF:", finalHtml);
+  dispatch(generatePdfFromHtml({ id: docId, html: finalHtml }));
+};
 
   const renderContent = () => (
     <Box sx={{

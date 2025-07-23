@@ -258,8 +258,13 @@ const resources = {
       "emailRequired": "Email required",
       "passwordRequired": "Password required",
       "fr": "French",
-      "en": "English"
-      
+      "en": "English",
+      "Fichier": "File",
+      "Date début": "Start date",
+      "Date fin": "End date",
+      "Ongoing": "Ongoing",
+      "Crée par": "Created by",
+        
                   
       
     }
@@ -504,7 +509,13 @@ const resources = {
     "Email requis": "Email requis",
     "Le mot de passe est requis": "Le mot de passe est requis",
     "GitHub": "GitHub",
-    "Google": "Google"
+    "Google": "Google",
+    "Fichier": "Fichier",
+    "Date début": "Date début",
+    "Date fin": "Date fin",
+    "Ongoing": "En cours",
+    "Crée par": "Crée par"
+
 
 
   

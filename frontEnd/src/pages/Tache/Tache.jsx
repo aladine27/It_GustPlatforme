@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Box, LinearProgress, Avatar, AvatarGroup, Typography } from "@mui/material";
+import {
+  Box, LinearProgress, Avatar, AvatarGroup, Typography,
+  TextField, MenuItem, Tooltip
+} from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 import { ButtonComponent } from "../../components/Global/ButtonComponent";
 import { StyledCard, Title } from "../../style/style";
 import KanbanBoard from "../../components/Tache/kanbanBoard";
-import { Tooltip } from "@mui/material";
 import { DragDropContext } from "@hello-pangea/dnd";
 import {
   fetchTasksBySprint,
@@ -13,7 +15,7 @@ import {
 } from "../../redux/actions/taskAction";
 import CreateTaskModal from "../../components/Tache/CreateTaskModal";
 import { moveTaskColumn } from "../../redux/slices/taskSlice";
-
+import { CircularProgress } from "@mui/material";
 const columns = [
   { id: "backlog", title: "Backlog", color: "#f44336" },
   { id: "inProgress", title: "In Progress", color: "#ff9800" },
@@ -23,7 +25,6 @@ const columns = [
 
 const getAvatarUrl = (user) => {
   if (!user) return "";
-
   if (user.image && user.image.startsWith("http")) return user.image + "?t=" + Date.now();
   if (user.image) return `http://localhost:3000/uploads/users/${encodeURIComponent(user.image)}?t=${Date.now()}`;
   if (user.avatar && user.avatar.startsWith("http")) return user.avatar + "?t=" + Date.now();
@@ -57,6 +58,9 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
     teamMembers = employes;
   }
 
+  // Etat du filtre de priorité
+  const [priorityFilter, setPriorityFilter] = useState(""); // "" = toutes
+
   // Charger les tâches à chaque changement de sprint
   useEffect(() => {
     if (sprintId) {
@@ -72,7 +76,7 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
   // Modal Task
   const [openTaskModal, setOpenTaskModal] = useState(false);
 
-  // Drag and drop handler
+  // Handler drag and drop
   const handleDragEnd = (result) => {
     const { source, destination, draggableId } = result;
     if (!destination) return;
@@ -96,6 +100,16 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
     }
   };
 
+  // Applique le filtre sur toutes les colonnes
+  const filteredTasksByColumn = {};
+  Object.keys(tasksByColumn || {}).forEach(col => {
+    filteredTasksByColumn[col] = priorityFilter
+      ? (tasksByColumn[col] || []).filter(
+          task => (task.priority || "").toLowerCase() === priorityFilter
+        )
+      : (tasksByColumn[col] || []);
+  });
+
   return (
     <Box
       sx={{
@@ -117,6 +131,7 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
       >
         {/* HEADER */}
         <Box sx={{ mb: 4 }}>
+          {/* Titre centré */}
           <Box
             sx={{
               display: "flex",
@@ -130,57 +145,114 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
               Sprint Planning & Task Management
             </Title>
           </Box>
+
+          {/* Ligne : filtre à gauche, avatars + bouton à droite */}
           <Box
             sx={{
               display: "flex",
-              justifyContent: "flex-end",
               alignItems: "center",
               width: "100%",
               gap: 2,
+              justifyContent: "space-between",
+              mb: 2,
             }}
           >
-           <AvatarGroup max={5} sx={{ "& .MuiAvatar-root": { width: 38, height: 38, fontWeight: 700, fontSize: 17 } }}>
-  {teamMembers && teamMembers.map((u) => (
-    <Tooltip
-      key={u._id}
-      title={u.fullName }
-      arrow
-      placement="top"
-    >
-      <Avatar
-        src={getAvatarUrl(u)}
-        alt={u.fullName || u.name || "user"}
-        sx={{
-          bgcolor: "#1976d2",
-          fontWeight: 700,
-          textTransform: "uppercase"
-        }}
-      >
-        {getAvatarUrl(u) ? null : getInitials(u)}
-      </Avatar>
-    </Tooltip>
-  ))}
-</AvatarGroup>
-           {isAdminOrManager && (
+            {/* Filtre à gauche */}
+            <Box sx={{ display: "flex", gap: 1.2, alignItems: "center" }}>
+              <Typography variant="body2" fontWeight={700} sx={{ color: "#1976d2" }}>
+                Filtrer par priorité :
+              </Typography>
+              <TextField
+                select
+                size="small"
+                label="Priorité"
+                value={priorityFilter}
+                onChange={e => setPriorityFilter(e.target.value)}
+                sx={{ width: 160, background: "#fff" }}
+              >
+                <MenuItem value="">Toutes</MenuItem>
+                <MenuItem value="high">Haute</MenuItem>
+                <MenuItem value="medium">Moyenne</MenuItem>
+                <MenuItem value="low">Faible</MenuItem>
+              </TextField>
+            </Box>
+
+            {/* Avatars + bouton à droite */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <AvatarGroup max={5} sx={{ "& .MuiAvatar-root": { width: 38, height: 38, fontWeight: 700, fontSize: 17 } }}>
+                {teamMembers && teamMembers.map((u) => (
+                  <Tooltip
+                    key={u._id}
+                    title={u.fullName}
+                    arrow
+                    placement="top"
+                  >
+                    <Avatar
+                      src={getAvatarUrl(u)}
+                      alt={u.fullName || u.name || "user"}
+                      sx={{
+                        bgcolor: "#1976d2",
+                        fontWeight: 700,
+                        textTransform: "uppercase"
+                      }}
+                    >
+                      {getAvatarUrl(u) ? null : getInitials(u)}
+                    </Avatar>
+                  </Tooltip>
+                ))}
+              </AvatarGroup>
+
+              {isAdminOrManager && (
                 <ButtonComponent
                   text="Add Task"
                   icon={<AddIcon />}
                   onClick={() => setOpenTaskModal(true)}
                 />
               )}
+            </Box>
           </Box>
         </Box>
 
         {/* Progress Bar */}
-        <Box sx={{ mb: 4 }}>
+        <Box sx={{ mb: 2 }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
             <Typography variant="body1" fontWeight={700} sx={{ color: "#1976d2" }}>
               Sprint Progress
             </Typography>
+            
             <Typography variant="body1" fontWeight={700} sx={{ color: "#1976d2" }}>
               {completedTasks}/{totalTasks} tasks completed
             </Typography>
           </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1 }}>
+
+    <Box sx={{ position: "relative", display: "inline-flex" }}>
+      <CircularProgress
+        variant="determinate"
+        value={progress}
+        size={31}
+        thickness={4.2}
+        sx={{
+          color: "#6366f1",
+          background: "#ede9fe",
+          borderRadius: "50%",
+        }}
+      />
+      <Box
+        sx={{
+          top: 0, left: 0, bottom: 0, right: 0,
+          position: "absolute",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Typography variant="caption" sx={{ fontWeight: 700, color: "#555", fontSize: "0.96rem" }}>
+          {Math.round(progress)}%
+        </Typography>
+      </Box>
+    </Box>
+  </Box>
           <LinearProgress
             variant="determinate"
             value={progress}
@@ -200,7 +272,7 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
         <DragDropContext onDragEnd={handleDragEnd}>
           <KanbanBoard
             columns={columns}
-            tasksByColumn={tasksByColumn || { backlog: [], inProgress: [], review: [], done: [] }}
+            tasksByColumn={filteredTasksByColumn}
             isDragging={false}
           />
         </DragDropContext>

@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { toast } from "react-toastify";
 import { StyledButton } from "../../style/style";
-
 import PendingRequests from "./PendingRequests";
 import TypeCongeFormModal from "../../components/Conge/TypeCongeFormModal";
 import CongeDetailModal from "../../components/Conge/CongeDetailDemandeModal";
@@ -18,49 +17,37 @@ import {
   updateLeaveType
 } from "../../redux/actions/LeaveAction";
 import { clearLeaveTypeMessages } from "../../redux/slices/leaveSlice";
-
-
+import { Box } from "@mui/material";
 const Conge = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const { leaves } = useSelector((state) => state.leave);
   const { leaveTypes } = useSelector((state) => state.leaveType);
-  
-
   // Etat UI
   const [selectedType, setSelectedType] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
-
   // Détail d'une demande
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState(null);
-
   // Fetch au mount + après toute modification
   useEffect(() => {
     console.log("[Conge] useEffect []: fetchAllLeaves, fetchAllLeaveTypes");
     dispatch(fetchAllLeaves());
     dispatch(fetchAllLeaveTypes());
-
 console.log("[Composant] leaveTypes du state redux:", leaveTypes);
-
   }, [dispatch]);
-
   // Rafraîchit les types à chaque ouverture de modal type
   useEffect(() => {
     if (modalOpen) {
       console.log("[Conge] Modal open → fetchAllLeaveTypes()");
       dispatch(fetchAllLeaveTypes());
-
 console.log("[Composant] leaveTypes du state redux:", leaveTypes);
-
     }
   }, [modalOpen, dispatch]);
-
   // Pending = demandes en attente
   const pendingRequests = leaves.filter((l) => l.status === "pending");
   console.log("[Conge] leaves:", leaves);
   console.log("[Conge] leaveTypes:", leaveTypes);
-
   // Handler CRUD Type de congé
   const handleCreateType = async ({ name, limitDuration }) => {
     console.log("[Conge] handleCreateType", { name, limitDuration });
@@ -73,7 +60,6 @@ console.log("[Composant] leaveTypes du state redux:", leaveTypes);
       toast.error(err?.toString() || t("Erreur lors de la création du type"));
     }
   };
-
   const handleDeleteType = async (typeId) => {
     console.log("[Conge] handleDeleteType", typeId);
     try {
@@ -85,7 +71,6 @@ console.log("[Composant] leaveTypes du state redux:", leaveTypes);
       toast.error(err?.toString() || t("Erreur lors de la suppression du type"));
     }
   };
-
   const handleEditType = async (typeId, updateData) => {
     console.log("[Conge] handleEditType", typeId, updateData);
     try {
@@ -97,14 +82,12 @@ console.log("[Composant] leaveTypes du state redux:", leaveTypes);
       toast.error(err?.toString() || t("Erreur lors de la modification du type"));
     }
   };
-
   // Reset modal + messages Redux lors de fermeture
   const handleCloseModal = () => {
     console.log("[Conge] handleCloseModal");
     setModalOpen(false);
     dispatch(clearLeaveTypeMessages());
   };
-
   // Modal détail demande
   const handleOpenDetail = (leave) => {
     console.log("[Conge] handleOpenDetail", leave);
@@ -116,7 +99,6 @@ console.log("[Composant] leaveTypes du state redux:", leaveTypes);
     setSelectedLeave(null);
     setDetailModalOpen(false);
   };
-
   // Actions Accepter/Refuser sur demande de congé
   const handleApprove = async (id) => {
     console.log("[Conge] handleApprove", id);
@@ -142,11 +124,10 @@ console.log("[Composant] leaveTypes du state redux:", leaveTypes);
       toast.error(t("Erreur") + " : " + err);
     }
   };
-
   return (
-    <div style={{ background: "#f6f8fa", minHeight: "100vh", padding: "24px 12px" }}>
+    <Box style={{ background: "#F6F8FA", minHeight: "100vh", padding: "24px 12px",border:"1px solid red" }}>
       {/* bouton Ajouter type */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
+      <Box style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
         <StyledButton
           startIcon={<AddCircleOutlineIcon />}
           variant="contained"
@@ -157,8 +138,7 @@ console.log("[Composant] leaveTypes du state redux:", leaveTypes);
         >
           {t("Ajouter un nouveau type")}
         </StyledButton>
-      </div>
-
+      </Box>
       {/* Section Who's on leave */}
       <WhoIsOnLeave
         leaves={leaves}
@@ -166,13 +146,11 @@ console.log("[Composant] leaveTypes du state redux:", leaveTypes);
         selectedType={selectedType}
         setSelectedType={setSelectedType}
       />
-
       {/* Section Pending Requests */}
       <PendingRequests
         pendingRequests={pendingRequests}
         onDetail={handleOpenDetail}
       />
-
       {/* Modal Type de congé */}
       <TypeCongeFormModal
         open={modalOpen}
@@ -182,7 +160,6 @@ console.log("[Composant] leaveTypes du state redux:", leaveTypes);
         onDeleteType={handleDeleteType}
         onEditType={handleEditType}
       />
-
       {/* Modal détail demande */}
       <CongeDetailModal
         open={detailModalOpen}
@@ -191,8 +168,7 @@ console.log("[Composant] leaveTypes du state redux:", leaveTypes);
         onApprove={handleApprove}
         onReject={handleReject}
       />
-    </div>
+    </Box>
   );
 };
-
 export default Conge;

@@ -12,6 +12,7 @@ export class SprintService {
   constructor(
     @InjectModel('sprints') private sprintModel: Model<ISprint>,
     @InjectModel('projects') private projectModel: Model<IProject>,
+    @InjectModel('tasks') private taskModel: Model<ITask>
 
   ) {}
 
@@ -44,15 +45,17 @@ export class SprintService {
     return sprint;
   }
 
-  async remove(id: string): Promise<ISprint> {
-    const sprint = await this.sprintModel.findByIdAndDelete(id);
-    if (!sprint) throw new NotFoundException('Sprint not found');
-    await this.projectModel.updateOne(
-      { _id: sprint.project },
-      { $pull: { sprints: sprint._id } }
-    );
-    return sprint;
-  }
+async remove(id: string): Promise<ISprint> {
+  const sprint = await this.sprintModel.findByIdAndDelete(id);
+  if (!sprint) throw new NotFoundException('Sprint not found');
+
+  await this.taskModel.deleteMany({ sprint: id });
+  await this.projectModel.updateOne(
+    { _id: sprint.project },
+    { $pull: { sprints: sprint._id } }
+  );
+  return sprint;
+}
 
 
 }
