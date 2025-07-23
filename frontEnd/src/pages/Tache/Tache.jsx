@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Box, LinearProgress, Avatar, AvatarGroup, Typography,
-  TextField, MenuItem, Tooltip
+  TextField, MenuItem, Tooltip, CircularProgress
 } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
+import { Add as AddIcon, DeleteOutline } from "@mui/icons-material";
 import { ButtonComponent } from "../../components/Global/ButtonComponent";
 import { StyledCard, Title } from "../../style/style";
 import KanbanBoard from "../../components/Tache/kanbanBoard";
@@ -12,10 +12,12 @@ import { DragDropContext } from "@hello-pangea/dnd";
 import {
   fetchTasksBySprint,
   updateTaskStatus,
+  deleteTask
 } from "../../redux/actions/taskAction";
 import CreateTaskModal from "../../components/Tache/CreateTaskModal";
+import CustomDeleteForm from "../../components/Global/CustomDeleteForm";
 import { moveTaskColumn } from "../../redux/slices/taskSlice";
-import { CircularProgress } from "@mui/material";
+
 const columns = [
   { id: "backlog", title: "Backlog", color: "#f44336" },
   { id: "inProgress", title: "In Progress", color: "#ff9800" },
@@ -46,7 +48,7 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
   const sprint = (sprints || []).find(s => s._id === sprintId);
   const team = teams?.find(t => t._id === sprint?.team);
 
-  // Extraction des membres (robuste)
+  // Extraction robuste
   let teamMembers = [];
   if (team && Array.isArray(team.members) && team.members.length > 0) {
     teamMembers = team.members;
@@ -58,25 +60,68 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
     teamMembers = employes;
   }
 
-  // Etat du filtre de priorité
-  const [priorityFilter, setPriorityFilter] = useState(""); // "" = toutes
+  // Filtre
+  const [priorityFilter, setPriorityFilter] = useState("");
 
-  // Charger les tâches à chaque changement de sprint
   useEffect(() => {
     if (sprintId) {
       dispatch(fetchTasksBySprint(sprintId));
     }
   }, [sprintId, dispatch]);
 
-  // Calcul du progrès
   const totalTasks = Object.values(tasksByColumn || {}).flat().length || 0;
   const completedTasks = (tasksByColumn?.done || []).length || 0;
   const progress = totalTasks ? (completedTasks / totalTasks) * 100 : 0;
 
-  // Modal Task
+  // Modals
   const [openTaskModal, setOpenTaskModal] = useState(false);
 
-  // Handler drag and drop
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState(null);
+  const handleEditTask = (task) => {
+    setTaskToEdit(task);
+    setOpenEditModal(true);
+  };
+  const handleCloseEditModal = () => {
+    setTaskToEdit(null);
+    setOpenEditModal(false);
+  };
+
+  // Modal delete
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+
+  const handleDeleteTask = (task) => {
+    setTaskToDelete(task);
+    setOpenDeleteModal(true);
+  };
+  const handleCloseDeleteModal = () => {
+    setTaskToDelete(null);
+    setOpenDeleteModal(false);
+    setLoadingDelete(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!taskToDelete || !taskToDelete._id) {
+      alert("Tâche introuvable !");
+      return;
+    }
+    setLoadingDelete(true);
+    try {
+      const result = await dispatch(deleteTask(taskToDelete._id));
+      if (result?.error) {
+        alert(result?.payload || "Erreur lors de la suppression !");
+      } else {
+        setOpenDeleteModal(false);
+      }
+    } catch (err) {
+      alert("Erreur réseau");
+    }
+    setLoadingDelete(false);
+  };
+
+  // Drag n drop
   const handleDragEnd = (result) => {
     const { source, destination, draggableId } = result;
     if (!destination) return;
@@ -100,7 +145,7 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
     }
   };
 
-  // Applique le filtre sur toutes les colonnes
+  // Filtre sur toutes les colonnes
   const filteredTasksByColumn = {};
   Object.keys(tasksByColumn || {}).forEach(col => {
     filteredTasksByColumn[col] = priorityFilter
@@ -131,7 +176,6 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
       >
         {/* HEADER */}
         <Box sx={{ mb: 4 }}>
-          {/* Titre centré */}
           <Box
             sx={{
               display: "flex",
@@ -145,8 +189,6 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
               Sprint Planning & Task Management
             </Title>
           </Box>
-
-          {/* Ligne : filtre à gauche, avatars + bouton à droite */}
           <Box
             sx={{
               display: "flex",
@@ -157,7 +199,6 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
               mb: 2,
             }}
           >
-            {/* Filtre à gauche */}
             <Box sx={{ display: "flex", gap: 1.2, alignItems: "center" }}>
               <Typography variant="body2" fontWeight={700} sx={{ color: "#1976d2" }}>
                 Filtrer par priorité :
@@ -176,8 +217,6 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
                 <MenuItem value="low">Faible</MenuItem>
               </TextField>
             </Box>
-
-            {/* Avatars + bouton à droite */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <AvatarGroup max={5} sx={{ "& .MuiAvatar-root": { width: 38, height: 38, fontWeight: 700, fontSize: 17 } }}>
                 {teamMembers && teamMembers.map((u) => (
@@ -201,7 +240,6 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
                   </Tooltip>
                 ))}
               </AvatarGroup>
-
               {isAdminOrManager && (
                 <ButtonComponent
                   text="Add Task"
@@ -212,47 +250,44 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
             </Box>
           </Box>
         </Box>
-
-        {/* Progress Bar */}
+        {/* Progress */}
         <Box sx={{ mb: 2 }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
             <Typography variant="body1" fontWeight={700} sx={{ color: "#1976d2" }}>
               Sprint Progress
             </Typography>
-            
             <Typography variant="body1" fontWeight={700} sx={{ color: "#1976d2" }}>
               {completedTasks}/{totalTasks} tasks completed
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1 }}>
-
-    <Box sx={{ position: "relative", display: "inline-flex" }}>
-      <CircularProgress
-        variant="determinate"
-        value={progress}
-        size={31}
-        thickness={4.2}
-        sx={{
-          color: "#6366f1",
-          background: "#ede9fe",
-          borderRadius: "50%",
-        }}
-      />
-      <Box
-        sx={{
-          top: 0, left: 0, bottom: 0, right: 0,
-          position: "absolute",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Typography variant="caption" sx={{ fontWeight: 700, color: "#555", fontSize: "0.96rem" }}>
-          {Math.round(progress)}%
-        </Typography>
-      </Box>
-    </Box>
-  </Box>
+            <Box sx={{ position: "relative", display: "inline-flex" }}>
+              <CircularProgress
+                variant="determinate"
+                value={progress}
+                size={31}
+                thickness={4.2}
+                sx={{
+                  color: "#6366f1",
+                  background: "#ede9fe",
+                  borderRadius: "50%",
+                }}
+              />
+              <Box
+                sx={{
+                  top: 0, left: 0, bottom: 0, right: 0,
+                  position: "absolute",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Typography variant="caption" sx={{ fontWeight: 700, color: "#555", fontSize: "0.96rem" }}>
+                  {Math.round(progress)}%
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
           <LinearProgress
             variant="determinate"
             value={progress}
@@ -274,11 +309,14 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
             columns={columns}
             tasksByColumn={filteredTasksByColumn}
             isDragging={false}
+            isAdminOrManager={isAdminOrManager}
+            onEditTask={handleEditTask}
+            onDeleteTask={handleDeleteTask}
           />
         </DragDropContext>
       </StyledCard>
 
-      {/* ==== MODAL TASK ==== */}
+      {/* MODALS */}
       <CreateTaskModal
         open={openTaskModal}
         handleClose={() => setOpenTaskModal(false)}
@@ -286,6 +324,39 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
         sprintId={sprintId}
         users={teamMembers}
       />
+
+      <CreateTaskModal
+        open={openEditModal}
+        handleClose={handleCloseEditModal}
+        projectId={projectId}
+        sprintId={sprintId}
+        users={teamMembers}
+        isEdit={true}
+        task={taskToEdit}
+      />
+
+      <CustomDeleteForm
+        open={openDeleteModal}
+        handleClose={handleCloseDeleteModal}
+        title="Confirmer la suppression de la tâche ?"
+        icon={<DeleteOutline color="error" sx={{ fontSize: 40 }} />}
+      >
+        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 2 }}>
+          <ButtonComponent
+            text="Annuler"
+            variant="outlined"
+            color="secondary"
+            onClick={handleCloseDeleteModal}
+          />
+          <ButtonComponent
+            text={loadingDelete ? "Suppression..." : "Supprimer"}
+            variant="contained"
+            color="error"
+            disabled={loadingDelete}
+            onClick={handleConfirmDelete}
+          />
+        </Box>
+      </CustomDeleteForm>
     </Box>
   );
 };

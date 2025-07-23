@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -6,9 +7,11 @@ import {
   IconButton,
   Tooltip,
   Button,
-  Paper
+  Paper,
+  Menu,
+  MenuItem
 } from "@mui/material";
-import { MoreVert as MoreVertIcon, InfoOutlined } from "@mui/icons-material";
+import { MoreVert as MoreVertIcon, InfoOutlined, EditOutlined, DeleteOutline } from "@mui/icons-material";
 import LabelIcon from "@mui/icons-material/Label";
 
 const categoryColors = {
@@ -31,31 +34,29 @@ const getUserAvatar = (user) => {
   return "U";
 };
 
-const KanbanTaskCard = ({ task, isDragging, onDetails }) => {
+const KanbanTaskCard = ({
+  task,
+  isDragging,
+  onDetails,
+  isAdminOrManager,
+  onEdit,
+  onDelete,
+}) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
   return (
     <Paper
       elevation={isDragging ? 6 : 3}
       sx={{
-        mb: 2.3,
-        px: 2.3,
-        pt: 2,
-        pb: 1.5,
-        borderRadius: 2,
-        minHeight: 110,
-        maxWidth: 320,
-        width: "100%",
-        border: "1.5px solid #e6eafd",
-        background: "#fafdff",
-        position: "relative",
-        cursor: isDragging ? "grabbing" : "pointer",
-        // === AUCUN boxShadow custom ici ===
+        mb: 2.3, px: 2.3, pt: 2, pb: 1.5,
+        borderRadius: 2, minHeight: 110, maxWidth: 320, width: "100%",
+        border: "1.5px solid #e6eafd", background: "#fafdff",
+        position: "relative", cursor: isDragging ? "grabbing" : "pointer",
         transition: "box-shadow 0.18s, border-color 0.17s",
-        "&:hover": {
-          borderColor: "#1976d2",
-        },
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between"
+        "&:hover": { borderColor: "#1976d2" },
+        display: "flex", flexDirection: "column", justifyContent: "space-between"
       }}
     >
       {/* Header Statut + Priorité + Menu */}
@@ -67,13 +68,10 @@ const KanbanTaskCard = ({ task, isDragging, onDetails }) => {
               label={task.status.toUpperCase()}
               size="small"
               sx={{
-                fontWeight: 700,
-                fontSize: "0.74rem",
+                fontWeight: 700, fontSize: "0.74rem",
                 bgcolor: "#f1f4fc",
                 color: categoryColors[task.status.toUpperCase()] || "#1976d2",
-                px: 0.7,
-                height: 24,
-                borderRadius: 1.5,
+                px: 0.7, height: 24, borderRadius: 1.5,
               }}
             />
           )}
@@ -84,17 +82,43 @@ const KanbanTaskCard = ({ task, isDragging, onDetails }) => {
               sx={{
                 bgcolor: priorityColors[task.priority] || "#e0e0e0",
                 color: "#fff",
-                fontWeight: 700,
-                fontSize: "0.75rem",
-                height: 24,
-                borderRadius: 1,
+                fontWeight: 700, fontSize: "0.75rem",
+                height: 24, borderRadius: 1,
               }}
             />
           )}
         </Box>
-        <IconButton size="small" sx={{ opacity: 0.5, "&:hover": { opacity: 1 } }}>
-          <MoreVertIcon fontSize="small" />
-        </IconButton>
+        {isAdminOrManager && (
+          <>
+            <IconButton size="small" sx={{ opacity: 0.5, "&:hover": { opacity: 1 } }} onClick={handleMenuOpen}>
+              <MoreVertIcon fontSize="small" />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={!!anchorEl}
+              onClose={handleMenuClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  onEdit && onEdit(task);
+                }}
+              >
+                <EditOutlined sx={{ mr: 1, fontSize: 18 }} /> Modifier
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  onDelete && onDelete(task);
+                }}
+              >
+                <DeleteOutline sx={{ mr: 1, fontSize: 18 }} color="error" /> Supprimer
+              </MenuItem>
+            </Menu>
+          </>
+        )}
       </Box>
 
       {/* Titre */}
@@ -102,11 +126,8 @@ const KanbanTaskCard = ({ task, isDragging, onDetails }) => {
         fontWeight={800}
         fontSize={16}
         sx={{
-          color: "#222f43",
-          mb: 0.22,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
+          color: "#222f43", mb: 0.22,
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}
         title={task.title}
       >
@@ -120,9 +141,7 @@ const KanbanTaskCard = ({ task, isDragging, onDetails }) => {
           fontSize={13.5}
           sx={{
             mb: 0.5,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
           }}
           title={task.description}
         >
@@ -133,21 +152,16 @@ const KanbanTaskCard = ({ task, isDragging, onDetails }) => {
       {/* Footer: avatar + bouton détails */}
       <Box
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mt: 1.4,
+          display: "flex", justifyContent: "space-between",
+          alignItems: "center", mt: 1.4,
         }}
       >
         <Tooltip title={task.user?.fullName || task.user?.name || "Utilisateur"}>
           <Avatar
             sx={{
-              width: 31,
-              height: 31,
-              bgcolor: "#e4eaf6",
-              color: "#1976d2",
-              fontWeight: 700,
-              fontSize: "1.07rem",
+              width: 31, height: 31,
+              bgcolor: "#e4eaf6", color: "#1976d2",
+              fontWeight: 700, fontSize: "1.07rem",
               boxShadow: "0 1px 3px #eaeaea",
             }}
           >
@@ -162,17 +176,10 @@ const KanbanTaskCard = ({ task, isDragging, onDetails }) => {
           sx={{
             fontSize: "0.85rem",
             textTransform: "none",
-            ml: 1,
-            px: 1.5,
-            py: 0.4,
-            minWidth: 0,
+            ml: 1, px: 1.5, py: 0.4, minWidth: 0,
             borderRadius: 1.7,
-            borderColor: "#1976d2",
-            color: "#1976d2",
-            '&:hover': {
-              bgcolor: "#e3edfc",
-              borderColor: "#1976d2"
-            }
+            borderColor: "#1976d2", color: "#1976d2",
+            '&:hover': { bgcolor: "#e3edfc", borderColor: "#1976d2" }
           }}
         >
           Détails
