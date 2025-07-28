@@ -140,7 +140,6 @@ export const updateUserAction = createAsyncThunk(
           );
           return response.data;
         } catch (error) {
-          // Si 401, renvoyer le message ou code pour gérer en front
           return rejectWithValue(error.response?.data || error.message);
         }
       }
@@ -187,6 +186,7 @@ export const updateUserAction = createAsyncThunk(
         }
       }
     );
+
     
     
     

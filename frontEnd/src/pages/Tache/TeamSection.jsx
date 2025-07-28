@@ -161,6 +161,7 @@ const TeamSection = ({
         open={openTeamModal}
         handleClose={() => setOpenTeamModal(false)}
         projectId={projectId}
+        allProjectTeams={teamsForProject}
       />
       <CreateTeamModal
         open={openEditTeamModal}
@@ -168,6 +169,7 @@ const TeamSection = ({
         projectId={projectId}
         teamData={teamToEdit}
         isEdit
+        allProjectTeams={teamsForProject}
       />
       <CustomDeleteForm
         open={!!teamToDelete}

@@ -323,7 +323,6 @@ moment.updateLocale('fr', {
               fontWeight: 600,
               fontSize: '0.98rem',
               boxShadow: '0 2px 8px rgba(30,40,120,0.07)',
-              minHeight: '44px',
               margin: '4px 0',
               padding: '10px 14px',
               borderLeft: '5px solid #FFF',

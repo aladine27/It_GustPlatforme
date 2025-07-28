@@ -21,8 +21,8 @@ export default function TaskDetailsModal({
   open,
   handleClose,
   task,
-  onEdit,      // facultatif (pour Admin)
-  onDelete,    // facultatif (pour Admin)
+  onEdit,      
+  onDelete,    
   userRole,    // "Admin", "Manager", "Employé"
 }) {
   const { t } = useTranslation();

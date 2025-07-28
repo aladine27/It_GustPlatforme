@@ -47,7 +47,7 @@ const KanbanColumn = ({
       variant="elevation"
       sx={{
         minWidth: colWidth,
-        bgcolor: "#fbfbfbff",
+         background:"#e3f2fd",
         borderRadius: 2,
         p: 3,
         border: "1.5px solid #e6eafd",

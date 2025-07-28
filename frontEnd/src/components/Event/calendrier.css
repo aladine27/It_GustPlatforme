@@ -12,10 +12,7 @@
     letter-spacing: 0.3px;
     box-shadow: 0 2px 8px rgba(99, 102, 241, 0.09);
     position: relative;
-    overflow: hidden;
-    /* Important: N'ajoute PAS de justify-content ni align-items */
     display: table-cell;
-    /* Par défaut sur big-calendar, NE PAS mettre flex */
     vertical-align: middle;
     padding: 0 8px;
 }
@@ -48,13 +45,38 @@
 
 /* Buttons & toolbar */
 .rbc-toolbar {
-    background: #F3FAFF;
-    border-radius: 14px 14px 0 0;
-    margin-bottom: 0px;
-    padding: 12px 10px 2px 10px;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid !important;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    background: #f6fbff;
+    border-radius: 16px 16px 0 0;
+    padding: 0.7rem 1.5rem;
+    margin-bottom: 0 !important;
     gap: 5px;
+}
+
+.rbc-toolbar .rbc-btn-group:first-child {
+    justify-self: start;
+}
+
+.rbc-toolbar .rbc-btn-group:last-child {
+    justify-self: end;
+}
+
+.rbc-toolbar .rbc-btn-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.rbc-toolbar .rbc-toolbar-label {
+    justify-self: center;
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: #10164a;
+    letter-spacing: 0.03em;
+    margin: 0;
+    padding: 0 0.8rem;
+    background: transparent !important;
 }
 
 .rbc-toolbar button {
@@ -135,25 +157,45 @@
 
 /* Grille, calendrier, conteneur */
 .CalendarContainer {
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    height:120vh;
+    height: 120vh;
+    /* Hauteur fixe demandée */
     width: 75vw;
-   
+    /* Largeur fixe */
+    overflow-y: auto;
+    /* Scroll vertical visible si dépasse */
+    overflow-x: hidden;
     margin: 0 auto;
     background: #FFFFFF;
     border-radius: 16px;
     box-shadow: 0 12px 36px -10px rgba(99, 102, 241, 0.09);
-    overflow-y: hidden;
     border: 1px solid #E5E7EB;
     position: relative;
     padding: 0;
+    scroll-behavior: smooth;
 }
 
 .rbc-calendar {
     background: #FFFFFF !important;
     font-family: 'Segoe UI', 'Roboto', Arial, sans-serif !important;
     height: 100% !important;
+}
+
+/* Scrollbar personnalisée */
+.CalendarContainer::-webkit-scrollbar {
+    width: 8px;
+    background: #F3FAFF;
+}
+
+.CalendarContainer::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #6366F1, #8B5CF6);
+    border-radius: 4px;
+}
+
+/* Focus accessibility */
+.rbc-calendar *:focus {
+    outline: 2px solid #06B6D4 !important;
+    outline-offset: 2px !important;
+    border-radius: 4px !important;
 }
 
 /* Responsive */
@@ -184,61 +226,4 @@
         height: 34px !important;
         padding: 0 3px !important;
     }
-}
-
-/* Optionnel : scrollbar et accessibilité */
-.CalendarContainer {
-    scroll-behavior: smooth;
-}
-
-.CalendarContainer::-webkit-scrollbar {
-    width: 8px;
-    background: #F3FAFF;
-}
-
-.CalendarContainer::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #6366F1, #8B5CF6);
-    border-radius: 4px;
-}
-
-/* Focus accessibility */
-.rbc-calendar *:focus {
-    outline: 2px solid #06B6D4 !important;
-    outline-offset: 2px !important;
-    border-radius: 4px !important;
-}
-/* Organise la toolbar en Grid, met chaque groupe dans une colonne */
-.rbc-toolbar {
-    display: grid !important;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    background: #f6fbff;
-    border-radius: 16px 16px 0 0;
-    padding: 0.7rem 1.5rem;
-    margin-bottom: 0 !important;
-}
-
-.rbc-toolbar .rbc-btn-group:first-child {
-    justify-self: start;
-}
-
-.rbc-toolbar .rbc-btn-group:last-child {
-    justify-self: end;
-}
-
-.rbc-toolbar .rbc-btn-group {
-    display: flex;
-    gap: 0.5rem;
-    /* Ajoute de l'espacement horizontal entre les boutons */
-}
-
-.rbc-toolbar .rbc-toolbar-label {
-    justify-self: center;
-    font-size: 1.3rem;
-    font-weight: 500;
-    color: #10164a;
-    letter-spacing: 0.03em;
-    margin: 0;
-    padding: 0 0.8rem;
-    background: transparent !important;
 }

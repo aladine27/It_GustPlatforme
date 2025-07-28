@@ -25,6 +25,7 @@ import { StyledPaper } from '../style/style';
 import axios from 'axios';
 import CustomDeleteForm from '../components/Global/CustomDeleteForm';
 import EmployeeDetailsModal from '../components/Employe/EmployDetailModal';
+import { EditIcon } from 'lucide-react';
 
 const Employe = () => {
   const { t } = useTranslation();
@@ -37,6 +38,12 @@ const Employe = () => {
   const itemsPerPage = 5;
   const fileInputRef = useRef();
   const [openDetail, setOpenDetail] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const handleCloseAdd = () => {
+  setOpenAdd(false);
+  setIsEdit(false); 
+  setSelectedEmploye(null); 
+};
 
 
 
@@ -133,8 +140,20 @@ const Employe = () => {
       onClick: (emp) => {
         setSelectedEmploye(emp);
         setOpenDetail(true);
-      }
+    }
+
     },
+    {
+  icon: <EditIcon sx={{ color: "#2e7d32" }} />,
+  tooltip: t('Editer'),
+  onClick: (emp) => {
+    console.log("🟢 [Edit Click] Employé à éditer :", emp); // 👈 LOG AJOUTÉ
+    setSelectedEmploye(emp);
+    setIsEdit(true);
+    setOpenAdd(true);
+  }
+}
+
   ];
   const handleImportClick = () => fileInputRef.current.click();
 
@@ -247,11 +266,11 @@ const Employe = () => {
       </StyledPaper>
 
       <AddEmployeModal
-        open={openAdd}
-        handleClose={() => setOpenAdd(false)}
-        onSubmit={employe => { }}
-      />
-
+  open={openAdd}
+  handleClose={handleCloseAdd}
+  isEdit={isEdit}
+  employeToEdit={selectedEmploye}
+/>
       {openDelete && selectedEmploye && (
         <CustomDeleteForm
           open={openDelete}

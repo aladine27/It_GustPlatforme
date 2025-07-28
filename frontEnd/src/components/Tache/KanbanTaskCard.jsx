@@ -11,9 +11,15 @@ import {
   Menu,
   MenuItem
 } from "@mui/material";
-import { MoreVert as MoreVertIcon, InfoOutlined, EditOutlined, DeleteOutline } from "@mui/icons-material";
+import {
+  MoreVert as MoreVertIcon,
+  InfoOutlined,
+  EditOutlined,
+  DeleteOutline
+} from "@mui/icons-material";
 import LabelIcon from "@mui/icons-material/Label";
 
+// 🟡 Couleurs de statut
 const categoryColors = {
   BACKLOG: "#3f51b5",
   PLANNED: "#388e3c",
@@ -21,17 +27,25 @@ const categoryColors = {
   DONE: "#5c5c5c",
   REVIEW: "#fbc02d",
 };
+
+// 🔴 Couleurs de priorité
 const priorityColors = {
   high: "#d32f2f",
   medium: "#ed6c02",
   low: "#388e3c",
 };
 
-const getUserAvatar = (user) => {
+// ✅ Récupération de l'image de profil comme EquipeMemberCard
+const getAvatarSrc = (image) => {
+  if (!image) return '';
+  if (image.startsWith('http')) return `${image}?t=${Date.now()}`;
+  return `http://localhost:3000/uploads/users/${encodeURIComponent(image)}?t=${Date.now()}`;
+};
+
+const getUserAvatarLetter = (user) => {
   if (!user) return "U";
-  if (user.fullName) return user.fullName.charAt(0).toUpperCase();
-  if (user.name) return user.name.charAt(0).toUpperCase();
-  return "U";
+  const full = user.fullName || user.name || "";
+  return full.charAt(0).toUpperCase();
 };
 
 const KanbanTaskCard = ({
@@ -46,6 +60,8 @@ const KanbanTaskCard = ({
   const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
+  const avatarSrc = getAvatarSrc(task.user?.image);
+
   return (
     <Paper
       elevation={isDragging ? 6 : 3}
@@ -59,7 +75,7 @@ const KanbanTaskCard = ({
         display: "flex", flexDirection: "column", justifyContent: "space-between"
       }}
     >
-      {/* Header Statut + Priorité + Menu */}
+      {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.6 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.85 }}>
           {task.status && (
@@ -149,7 +165,7 @@ const KanbanTaskCard = ({
         </Typography>
       )}
 
-      {/* Footer: avatar + bouton détails */}
+      {/* Footer */}
       <Box
         sx={{
           display: "flex", justifyContent: "space-between",
@@ -158,6 +174,7 @@ const KanbanTaskCard = ({
       >
         <Tooltip title={task.user?.fullName || task.user?.name || "Utilisateur"}>
           <Avatar
+            src={avatarSrc}
             sx={{
               width: 31, height: 31,
               bgcolor: "#e4eaf6", color: "#1976d2",
@@ -165,9 +182,10 @@ const KanbanTaskCard = ({
               boxShadow: "0 1px 3px #eaeaea",
             }}
           >
-            {getUserAvatar(task.user)}
+            {(!task.user?.image || !avatarSrc) && getUserAvatarLetter(task.user)}
           </Avatar>
         </Tooltip>
+
         <Button
           size="small"
           variant="outlined"

@@ -514,7 +514,11 @@ const resources = {
     "Date début": "Date début",
     "Date fin": "Date fin",
     "Ongoing": "En cours",
-    "Crée par": "Crée par"
+    "Crée par": "Crée par",
+    "Editer": "Éditer",
+    "Date d'ajout": "Date d'ajout",
+    "fr-FR": "Français (France)"
+
 
 
 

@@ -157,5 +157,45 @@ export const ImportEmployesExcel = createAsyncThunk(
     }
   }
 );
+export const UpdateEmployeAction = createAsyncThunk(
+  "employe/update",
+  async ({ id, userData }, { rejectWithValue }) => {
+    try {
+      console.log("[UpdateEmployeAction] → Reçu :", { id, userData });
+
+      const formData = new FormData();
+      formData.append("fullName", userData.fullName);
+      formData.append("address", userData.address);
+      formData.append("phone", userData.phone);
+      formData.append("role", userData.role);
+      formData.append("domain", userData.domain);
+
+      if (userData.image instanceof File) {
+        formData.append("image", userData.image);
+        console.log("[UpdateEmployeAction] → Image file ajoutée :", userData.image.name);
+      } else {
+        console.log("[UpdateEmployeAction] → Aucun nouveau fichier image.");
+      }
+
+      const response = await axios.patch(
+        `http://localhost:3000/users/${id}`,
+        formData,
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      console.log("[UpdateEmployeAction] → Réponse du backend :", response.data);
+      return response.data.data;
+    } catch (error) {
+      console.error("[UpdateEmployeAction] → Erreur :", error);
+      return rejectWithValue(
+        error.response?.data?.message || "Erreur lors de la modification"
+      );
+    }
+  }
+);
+
 
 

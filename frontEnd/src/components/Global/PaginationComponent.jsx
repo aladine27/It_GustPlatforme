@@ -3,7 +3,6 @@ import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
-
 const PaginationComponent = ({
   count,
   page,
@@ -16,12 +15,12 @@ const PaginationComponent = ({
   showLastButton = true,
 }) => {
   return (
-    <Box mt={4} display="flex" justifyContent="center">
+    <Box  display="flex" justifyContent="center">
       <Paper
         elevation={3}
         sx={{
-          px: 3,
-          py: 2,
+          px: 1,
+          py: 1,
           borderRadius: 3,
           backgroundColor: '#fefefe',
           boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
@@ -44,5 +43,4 @@ const PaginationComponent = ({
     </Box>
   );
 };
-
 export default PaginationComponent;

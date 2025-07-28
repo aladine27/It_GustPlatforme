@@ -139,6 +139,7 @@ const SprintSection = ({
               minWidth: 350,
               mb: 2,
               border: "1px solid #ececec",
+              background:"#e3f2fd",
             }}
           >
             <Stack direction="row" alignItems="center" justifyContent="space-between">

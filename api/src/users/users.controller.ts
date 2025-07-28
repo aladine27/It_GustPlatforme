@@ -203,11 +203,17 @@ async findAll( @Res() res) {
   @Roles('Admin')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Res() res,@UploadedFile()image: Express.Multer.File) {
     try {
+          console.log('=== PATCH /users/:id ===');
+    console.log('[Controller] id reçu:', id);
+    console.log('[Controller] updateUserDto reçu:', updateUserDto);
+    console.log('[Controller] image reçue:', image);
       updateUserDto.image = image?.filename
       const user = await this.usersService.update(id, updateUserDto);
+          console.log('[Controller] Utilisateur mis à jour:', user);
       return res.status(HttpStatus.OK).json({message: 'Users updated successfully',data:user, status: HttpStatus.OK
       
     });} catch (error) {
+          console.error('[Controller] ERREUR lors du PATCH /users/:id:', error);
        return res.status(HttpStatus.BAD_REQUEST).json({
         data:null, 
         status: HttpStatus.BAD_REQUEST,

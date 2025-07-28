@@ -12,7 +12,7 @@ import * as ExcelJS from 'exceljs';
 import * as PDFDocument from 'pdfkit';
 import axios from 'axios';
 import * as nodemailer from 'nodemailer';
-import { Toast } from 'react-bootstrap';
+
 
 @Injectable()
 export class UsersService {
@@ -158,7 +158,7 @@ export class UsersService {
   }
 
  async update(id: string, updateUserDto: UpdateUserDto):Promise<IUser> {
-  
+  console.log('[Service] Appel de updateUserDto:', updateUserDto);
   const user = await this.userModel.findByIdAndUpdate(id, updateUserDto, {new: true})
   if(!user){ 
       throw new NotFoundException('No user found')

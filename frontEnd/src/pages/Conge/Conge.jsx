@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+
 import { toast } from "react-toastify";
 import { StyledButton } from "../../style/style";
 import PendingRequests from "./PendingRequests";
@@ -17,7 +17,7 @@ import {
   updateLeaveType
 } from "../../redux/actions/LeaveAction";
 import { clearLeaveTypeMessages } from "../../redux/slices/leaveSlice";
-import { Box } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 const Conge = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -125,20 +125,9 @@ console.log("[Composant] leaveTypes du state redux:", leaveTypes);
     }
   };
   return (
-    <Box style={{ background: "#F6F8FA", minHeight: "100vh", padding: "24px 12px",border:"1px solid red" }}>
-      {/* bouton Ajouter type */}
-      <Box style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
-        <StyledButton
-          startIcon={<AddCircleOutlineIcon />}
-          variant="contained"
-          onClick={() => {
-            console.log("[Conge] Open modal type");
-            setModalOpen(true);
-          }}
-        >
-          {t("Ajouter un nouveau type")}
-        </StyledButton>
-      </Box>
+    <Box style={{ background: "#F6F8FA", minHeight: "100vh", padding: "24px 12px"}}>
+      <Grid sx={{display:"flex",flexDirection:"row"}}>
+     
       {/* Section Who's on leave */}
       <WhoIsOnLeave
         leaves={leaves}
@@ -146,6 +135,8 @@ console.log("[Composant] leaveTypes du state redux:", leaveTypes);
         selectedType={selectedType}
         setSelectedType={setSelectedType}
       />
+     
+      </Grid>
       {/* Section Pending Requests */}
       <PendingRequests
         pendingRequests={pendingRequests}

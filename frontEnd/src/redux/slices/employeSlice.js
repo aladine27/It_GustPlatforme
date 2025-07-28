@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { FetchEmployesAction,CreateUserAction,FetchEmployesBySearchAction,ExportEmployesExcel,ExportEmployesPdf,deleteEmployeAction,ImportEmployesExcel} from "../actions/employeAction";
+import { FetchEmployesAction,CreateUserAction,FetchEmployesBySearchAction,ExportEmployesExcel,ExportEmployesPdf,deleteEmployeAction,ImportEmployesExcel, UpdateEmployeAction} from "../actions/employeAction";
 
 const initialState = {
   list: [],           // liste des employés
@@ -124,6 +124,24 @@ const employeSlice = createSlice({
         state.loading = false;
         state.error = true;
         state.errorMessage = action.payload || "Erreur lors de l'import Excel";
+      })
+      .addCase(UpdateEmployeAction.pending, (state) => {
+        state.loading = true;
+        state.error = false;
+        state.errorMessage = null;
+      })
+      .addCase(UpdateEmployeAction.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = false;
+        state.errorMessage = null;
+        state.list = state.list.map(emp =>
+          emp._id === action.payload._id ? action.payload : emp
+        );
+      })
+      .addCase(UpdateEmployeAction.rejected, (state, action) => {
+        state.loading = false;
+        state.error = true;
+        state.errorMessage = action.payload || "Erreur lors de la modification";
       })
   },
 });

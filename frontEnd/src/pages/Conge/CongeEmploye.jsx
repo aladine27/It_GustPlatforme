@@ -31,7 +31,6 @@ export default function CongeEmploye() {
   const dispatch = useDispatch();
   const { CurrentUser } = useSelector((state) => state.user);
   const userId = CurrentUser?.user?._id || CurrentUser?._id;
-
   const [openModal, setOpenModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [view, setView] = useState("demande");

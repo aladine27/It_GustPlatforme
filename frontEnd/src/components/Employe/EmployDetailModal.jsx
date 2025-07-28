@@ -116,7 +116,7 @@ export default function EmployeeDetailsModal({ open, handleClose, employe }) {
           <DetailRow label={t("Date d'ajout")}>
             <Typography>
               {employe.createdAt
-                ? new Date(employe.createdAt).toLocaleDateString(t('fr-FR'))
+                ? new Date(employe.createdAt)
                 : <span style={{ color: "#aaa" }}>{t("N/A")}</span>}
             </Typography>
           </DetailRow>

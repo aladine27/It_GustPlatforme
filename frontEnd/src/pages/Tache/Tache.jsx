@@ -172,6 +172,7 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
           background: "#fff",
           p: { xs: 1, md: 4 },
           width: "100%",
+          
         }}
       >
         {/* HEADER */}

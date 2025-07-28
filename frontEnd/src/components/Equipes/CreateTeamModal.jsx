@@ -12,7 +12,7 @@ import ModelComponent from "../Global/ModelComponent";
 import { createTeam, updateTeam, fetchAllTeams } from "../../redux/actions/teamActions";
 import { FetchEmployesAction } from "../../redux/actions/employeAction";
 
-export default function CreateTeamModal({ open, handleClose, projectId, teamData, isEdit }) {
+export default function CreateTeamModal({ open, handleClose, projectId, teamData, isEdit,allProjectTeams }) {
   const dispatch = useDispatch();
   const { list: allEmployes, loading } = useSelector(state => state.employe);
 
@@ -66,6 +66,22 @@ export default function CreateTeamModal({ open, handleClose, projectId, teamData
       employeeList: [],
     }
   });
+  const alreadyAssignedIds = useMemo(() => {
+  // On ignore l’équipe en cours d’édition si c’est un edit
+  const exceptThisTeam = allProjectTeams.filter(
+    t => !isEdit || t._id !== teamData?._id
+  );
+  return exceptThisTeam
+    .flatMap(team => team.employeeList.map(e => typeof e === "string" ? e : e._id));
+}, [allProjectTeams, isEdit, teamData]);
+
+const employeesFiltered = useMemo(() => {
+  return employees.filter(emp =>
+    !alreadyAssignedIds.includes(emp._id)
+    || (isEdit && (teamData?.employeeList || []).some(e => (typeof e === "string" ? e : e._id) === emp._id))
+  );
+}, [employees, alreadyAssignedIds, isEdit, teamData]);
+
 
   useEffect(() => {
     if (open && isEdit && teamData) {
@@ -168,8 +184,8 @@ export default function CreateTeamModal({ open, handleClose, projectId, teamData
                   multiple
                   options={
                     selectedDomaine
-                      ? employees.filter(emp => emp.domain === selectedDomaine)
-                      : employees
+                      ? employeesFiltered.filter(emp => emp.domain === selectedDomaine)
+                      : employeesFiltered
                   }
                   getOptionLabel={option => option.fullName || option.name}
                   value={field.value}
