@@ -8,3 +8,10 @@ body,
     padding: 0;
     background: #b4bcc5 !important;
     /* Mets la même couleur que le fond dashboard */ }
+button:disabled,
+.Mui-disabled {
+    color: #bbb !important;
+    background: #f6f9fc !important;
+    border-color: #eee !important;
+    box-shadow: none !important;
+}

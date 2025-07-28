@@ -92,19 +92,25 @@ const SprintSection = ({
 
       {/* Bouton à droite */}
       {isAdminOrManager && (
-        <ButtonComponent
-          text="Créer un sprint"
-          icon={<AddCircleOutlineIcon />}
-          onClick={handleOpenSprintModal}
-          color="primary"
-          disabled={blockCreateSprint}
-          sx={blockCreateSprint ? { opacity: 1, pointerEvents: "none" } : {}}
-          tooltip={
-            blockCreateSprint
-              ? "Impossible : la durée totale ou la date de fin du projet est atteinte."
-              : undefined
-          }
-        />
+     <ButtonComponent
+  text="Créer un sprint"
+  icon={<AddCircleOutlineIcon />}
+  onClick={handleOpenSprintModal}
+  color="primary"
+  disabled={blockCreateSprint}
+  sx={blockCreateSprint ? {
+    color: "#bbb !important",
+    bgcolor: "#f6f9fc !important",
+    borderColor: "#eee !important",
+    boxShadow: "none",
+    '& .MuiSvgIcon-root': { color: "#bbb" }
+  } : {}}
+  tooltip={blockCreateSprint
+    ? "Impossible : la durée totale ou la date de fin du projet est atteinte."
+    : undefined
+  }
+/>
+
       )}
     </Box>
 
@@ -112,7 +118,7 @@ const SprintSection = ({
 
     {blockCreateSprint && (
       <Typography color="error" sx={{ mb: 2, textAlign: "center" }}>
-        Impossible d'Ajouter un nouveau !
+        Impossible d'Ajouter un nouveau Sprint !
       </Typography>
     )}
     {loadingSprint && <Typography color="info.main">Chargement...</Typography>}

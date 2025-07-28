@@ -52,7 +52,8 @@ export default function Evenement() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('week');
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-moment.locale(i18n.language);
+
+  moment.locale(i18n.language);
   useMomentLocale(i18n);
 
   useEffect(() => {
@@ -74,19 +75,19 @@ moment.locale(i18n.language);
         .map(t => (typeof t === "object" && t !== null && t.name) ? t : eventTypes.find(et => et._id === (t._id || t)))
         .filter(Boolean);
     }
-  let invitedFullObjects = [];
-if (Array.isArray(ext.invited) && employes?.length) {
-  invitedFullObjects = ext.invited.map(inv => {
-    if (typeof inv === "object" && inv._id) {
-      const found = employes.find(emp => emp._id === inv._id);
-      return found || inv;
+    let invitedFullObjects = [];
+    if (Array.isArray(ext.invited) && employes?.length) {
+      invitedFullObjects = ext.invited.map(inv => {
+        if (typeof inv === "object" && inv._id) {
+          const found = employes.find(emp => emp._id === inv._id);
+          return found || inv;
+        }
+        if (typeof inv === "string" || typeof inv === "number") {
+          return employes.find(emp => emp._id === inv) || null;
+        }
+        return null;
+      }).filter(Boolean);
     }
-    if (typeof inv === "string" || typeof inv === "number") {
-      return employes.find(emp => emp._id === inv) || null;
-    }
-    return null;
-  }).filter(Boolean);
-}
 
     const fullEvent = {
       _id: calEvent._id,
@@ -111,7 +112,6 @@ if (Array.isArray(ext.invited) && employes?.length) {
 
   // Conflit de salle (bloque SEULEMENT lors de la création)
   const hasRoomConflict = (eventData) => {
-    console.log("[RoomConflict] Checking for:", eventData);
     return calendarEvents.some(ev => {
       if (
         !ev.extendedProps.location ||
@@ -132,22 +132,12 @@ if (Array.isArray(ext.invited) && employes?.length) {
       if (mMatch) totalMin += parseInt(mMatch[1], 10);
       const end2 = new Date(start2.getTime() + totalMin * 60000);
 
-      // Log de chaque case
-      console.log("[RoomConflict] VS", {
-        evId, eventDataId,
-        start1: start1.toISOString(), end1: end1.toISOString(),
-        start2: start2.toISOString(), end2: end2.toISOString(),
-        overlap: start1 < end2 && start2 < end1
-      });
       return start1 < end2 && start2 < end1;
     });
   };
 
   const handleSaveEvent = async (eventData) => {
     const isEditMode = !!eventData.id || !!eventData._id;
-    console.log("[SaveEvent] Payload envoyé:", { eventData, isEditMode });
-
-    // Test conflit de salle uniquement à la création
     if (!isEditMode && eventData.location && hasRoomConflict(eventData)) {
       toast.error("Conflit de salle : cette salle est déjà réservée...");
       return;
@@ -224,11 +214,12 @@ if (Array.isArray(ext.invited) && employes?.length) {
     agenda: t('agenda'),
     noEventsInRange: t('noEventsInRange')
   };
-moment.updateLocale('fr', {
-  week: {
-    dow: 1,
-  }
-});
+
+  moment.updateLocale('fr', {
+    week: {
+      dow: 1,
+    }
+  });
 
   const today = moment().format('dddd DD MMMM YYYY');
   const handleNavigate = (date) => setCurrentDate(date);
@@ -242,6 +233,7 @@ moment.updateLocale('fr', {
     dispatch(deleteEventType(typeId));
     dispatch(fetchEventTypes());
   };
+
   const handleAddType = async (name) => {
     try {
       dispatch(createEventType({ name }));
@@ -252,7 +244,51 @@ moment.updateLocale('fr', {
   };
 
   return (
-    <StyledPaper elevation={3} sx={{ p: 0, borderRadius: 3, overflow: 'hidden' }}>
+     <Box sx={{ width: "100%", p: 0, mt: 0 }}>
+      {/* BARRE DE BOUTONS EN HAUT DE PAGE */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          gap: 2,
+          width: "100%",
+          mt: 2,
+          mb: 1,
+          pr: 5, // ajuste le padding droit si besoin
+        }}
+      >
+        {["Admin", "RH"].includes(userRole) && (
+          <>
+            <Button
+              onClick={() => setTypeModalOpen(true)}
+              variant="outlined"
+              color="secondary"
+              startIcon={<AddCircleOutlineIcon />}
+              sx={{ fontWeight: 600, borderRadius: 8, px: 3, py: 1, fontSize: '1rem' }}
+            >
+              {t("Créer un type d'événement")}
+            </Button>
+            <ButtonComponent
+              onClick={() => {
+                setSelectedEvent(null);
+                setModalOpen(true);
+              }}
+              text={t("Ajouter un évènement")}
+              icon={<AddCircleOutlineIcon />}
+              sx={{
+                borderRadius: 8,
+                px: 3,
+                py: 1,
+                fontWeight: 700,
+                fontSize: '1rem'
+              }}
+            />
+          </>
+        )}
+      </Box>
+    
+    <StyledPaper elevation={3} sx={{ p: 0, borderRadius: 1.5, overflow: 'hidden' }}>
       <Divider sx={{ mb: 3, mx: 4 }} />
       <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 4, mb: 2 }}>
         <Typography sx={{
@@ -268,138 +304,118 @@ moment.updateLocale('fr', {
           {t('Aujourd\'hui')}: {today}
         </Typography>
       </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, px: 4 }}>
-        {["Admin", "RH"].includes(userRole) && (
-          <>
-            <Button
-              onClick={() => setTypeModalOpen(true)}
-              variant="outlined"
-              color="secondary"
-              startIcon={<AddCircleOutlineIcon />}
-              sx={{ mr: 2 }}
-            >
-              {t('Créer un type d\'événement')}
-            </Button>
-            <ButtonComponent
-              onClick={() => {
-                setSelectedEvent(null);
-                setModalOpen(true);
-              }}
-              text={t('Ajouter un évènement')}
-              icon={<AddCircleOutlineIcon />}
-            />
-          </>
-        )}
-      </Box>
+      
       <Box className="CalendarContainer">
-        <Calendar
-          messages={calendarMessages}
-          localizer={localizer}
-          events={calendarEvents}
-          culture={i18n.language.startsWith('fr') ? 'fr' : 'en'}
-          startAccessor="start"
-          endAccessor="end"
-          selectable
-          style={{ height: '85vh', minHeight: 470, background: 'transparent' ,width:'100%'}}
-          min={new Date(1970, 0, 1, 7, 0)}
-          max={new Date(1970, 0, 1, 22, 0)}
-          onSelectSlot={["Admin", "RH"].includes(userRole) ? handleSelectSlot : undefined}
-          onSelectEvent={handleSelectEvent}
-          views={['month', 'week', 'day', 'agenda']}
-          view={view}
-          onView={setView}
-          date={currentDate}
-          onNavigate={handleNavigate}
-          defaultView="week"
-          eventPropGetter={(event) => ({
-            style: {
-              backgroundColor:
-                event.extendedProps.status === 'Terminé' ? '#4caf50'
-                  : event.extendedProps.status === 'Planifié' ? '#f44336'
-                    : event.extendedProps.status === 'En cours' ? '#ff9800'
-                      : '#1976d2',
-              borderRadius: '10px',
-              color: 'white',
-              fontWeight: 600,
-              fontSize: '0.98rem',
-              boxShadow: '0 2px 8px rgba(30,40,120,0.07)',
-              margin: '4px 0',
-              padding: '10px 14px',
-              borderLeft: '5px solid #FFF',
-              transition: 'all 0.12s'
-            }
-          })}
-          components={{
-            event: ({ event }) => {
-              const ext = event.extendedProps;
-              return (
-                <Box sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  height: '100%',
-                  p: 0,
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    opacity: 0.88,
-                    filter: 'brightness(1.08) contrast(1.03)',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.13)'
-                  }
-                }}>
-                  <span style={{
-                    fontSize: '0.82em',
-                    color: '#ffc107',
-                    fontWeight: 700,
-                    display: 'block'
+        <div className="CalendarScrollWrapper">
+          <Calendar
+            messages={calendarMessages}
+            localizer={localizer}
+            events={calendarEvents}
+            culture={i18n.language.startsWith('fr') ? 'fr' : 'en'}
+            startAccessor="start"
+            endAccessor="end"
+            selectable
+            style={{ minHeight: 1100, height: 'auto', background: 'transparent', width: '100%' }}
+            min={new Date(1970, 0, 1, 7, 0)}
+            max={new Date(1970, 0, 1, 22, 0)}
+            onSelectSlot={["Admin", "RH"].includes(userRole) ? handleSelectSlot : undefined}
+            onSelectEvent={handleSelectEvent}
+            views={['month', 'week', 'day', 'agenda']}
+            view={view}
+            onView={setView}
+            date={currentDate}
+            onNavigate={handleNavigate}
+            defaultView="week"
+            eventPropGetter={(event) => ({
+              style: {
+                backgroundColor:
+                  event.extendedProps.status === 'Terminé' ? '#4caf50'
+                    : event.extendedProps.status === 'Planifié' ? '#f44336'
+                      : event.extendedProps.status === 'En cours' ? '#ff9800'
+                        : '#1976d2',
+                borderRadius: '10px',
+                color: 'white',
+                fontWeight: 600,
+                fontSize: '0.98rem',
+                boxShadow: '0 2px 8px rgba(30,40,120,0.07)',
+                margin: '4px 0',
+                padding: '10px 14px',
+                borderLeft: '5px solid #FFF',
+                transition: 'all 0.12s'
+              }
+            })}
+            components={{
+              event: ({ event }) => {
+                const ext = event.extendedProps;
+                return (
+                  <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    height: '100%',
+                    p: 0,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      opacity: 0.88,
+                      filter: 'brightness(1.08) contrast(1.03)',
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.13)'
+                    }
                   }}>
-                    {moment(event.start).format('HH:mm')} - {moment(event.end).format('HH:mm')}
-                  </span>
-                  <span style={{ fontWeight: 700, fontSize: '1rem' }}>
-                    {event.title}
-                    {ext.types && ext.types[0]?.name && (
-                      <span style={{
-                        fontSize: '0.79em',
-                        color: '#fff',
-                        background: '#607d8b',
-                        borderRadius: 5,
-                        padding: '1px 6px',
-                        marginLeft: 8,
-                        fontWeight: 500
-                      }}>
-                        {ext.types[0]?.name}
+                    <span style={{
+                      fontSize: '0.82em',
+                      color: '#ffc107',
+                      fontWeight: 700,
+                      display: 'block'
+                    }}>
+                      {moment(event.start).format('HH:mm')} - {moment(event.end).format('HH:mm')}
+                    </span>
+                    <span style={{ fontWeight: 700, fontSize: '1rem' }}>
+                      {event.title}
+                      {ext.types && ext.types[0]?.name && (
+                        <span style={{
+                          fontSize: '0.79em',
+                          color: '#fff',
+                          background: '#607d8b',
+                          borderRadius: 5,
+                          padding: '1px 6px',
+                          marginLeft: 8,
+                          fontWeight: 500
+                        }}>
+                          {ext.types[0]?.name}
+                        </span>
+                      )}
+                    </span>
+                    <span style={{ fontSize: '0.85em', opacity: 0.88 }}>
+                      {ext.location && <>📍 {ext.location}</>}
+                    </span>
+                    <span style={{ fontSize: '0.80em', opacity: 0.72 }}>
+                      {ext.duration && <>⏱️ {ext.duration}</>}
+                    </span>
+                    {(ext.invited?.length > 0) && (
+                      <span style={{ fontSize: '0.79em', color: '#ffd54f', fontWeight: 600 }}>
+                        👥 {ext.invited.length} invité{ext.invited.length > 1 ? 's' : ''}
                       </span>
                     )}
-                  </span>
-                  <span style={{ fontSize: '0.85em', opacity: 0.88 }}>
-                    {ext.location && <>📍 {ext.location}</>}
-                  </span>
-                  <span style={{ fontSize: '0.80em', opacity: 0.72 }}>
-                    {ext.duration && <>⏱️ {ext.duration}</>}
-                  </span>
-                  {(ext.invited?.length > 0) && (
-                    <span style={{ fontSize: '0.79em', color: '#ffd54f', fontWeight: 600 }}>
-                      👥 {ext.invited.length} invité{ext.invited.length > 1 ? 's' : ''}
-                    </span>
-                  )}
-                  {ext.description && (
-                    <span style={{
-                      fontSize: '0.75em',
-                      opacity: 0.78,
-                      whiteSpace: 'nowrap',
-                      textOverflow: 'ellipsis',
-                      overflow: 'hidden',
-                      marginTop: 2
-                    }}>
-                      {ext.description}
-                    </span>
-                  )}
-                </Box>
-              );
-            },
-            toolbar: CustomToolbar,
-          }}
-        />
+                    {ext.description && (
+                      <span style={{
+                        fontSize: '0.75em',
+                        opacity: 0.78,
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        marginTop: 2
+                      }}>
+                        {ext.description}
+                      </span>
+                    )}
+                  </Box>
+                );
+              },
+              toolbar: CustomToolbar,
+            }}
+          />
+        </div>
       </Box>
       <TypeFormModal
         open={typeModalOpen}
@@ -437,5 +453,6 @@ moment.updateLocale('fr', {
         currentUserId={userId}
       />
     </StyledPaper>
+     </Box> 
   );
 }

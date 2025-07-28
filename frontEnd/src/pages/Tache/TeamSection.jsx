@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Box, Typography, Paper, Stack } from "@mui/material";
 import PaginationComponent from "../../components/Global/PaginationComponent";
 import { ButtonComponent } from "../../components/Global/ButtonComponent";
@@ -9,9 +9,9 @@ import CreateTeamModal from "../../components/Equipes/CreateTeamModal";
 import CustomDeleteForm from "../../components/Global/CustomDeleteForm";
 import AddMemberModal from "../../components/Equipes/AddMembreModal";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 
 // Ce composant peut maintenant être utilisé seul dans la vue "teamList" (onglet équipe)
 const TeamSection = ({
@@ -24,6 +24,7 @@ const TeamSection = ({
   const projectId = propProjectId || urlProjectId;
 
   const { teams, loading: loadingTeam } = useSelector((state) => state.team);
+  const { list: allEmployes } = useSelector(state => state.employe);
 
   // Equipes filtrées
   const teamsForProject = useMemo(() => {
@@ -47,7 +48,7 @@ const TeamSection = ({
     dispatch(fetchAllTeams());
   }, [dispatch, projectId]);
 
-  // --- Modals et gestion équipes ---
+  // --- Gestion MODALS & actions ---
   const [openTeamModal, setOpenTeamModal] = useState(false);
   const [openEditTeamModal, setOpenEditTeamModal] = useState(false);
   const [teamToEdit, setTeamToEdit] = useState(null);
@@ -56,7 +57,27 @@ const TeamSection = ({
   const [currentTeamForMember, setCurrentTeamForMember] = useState(null);
   const [memberToDelete, setMemberToDelete] = useState(null);
 
-  const handleOpenTeamModal = () => setOpenTeamModal(true);
+  // === Blocage du bouton "Ajouter une équipe" si aucun employé disponible ===
+  const employees = useMemo(
+    () => (allEmployes || []).filter(emp => emp.role === "Employe"),
+    [allEmployes]
+  );
+  const alreadyAssignedIds = useMemo(() => {
+    return teamsForProject.flatMap(team =>
+      team.employeeList.map(e => typeof e === "string" ? e : e._id)
+    );
+  }, [teamsForProject]);
+  const employeesFiltered = useMemo(() => {
+    return employees.filter(emp => !alreadyAssignedIds.includes(emp._id));
+  }, [employees, alreadyAssignedIds]);
+  const blockCreateTeam = employeesFiltered.length === 0;
+
+  const projectTitle = propProjectTitle || "";
+
+  // Bouton Add: empêche modal si disabled
+  const handleOpenTeamModal = () => {
+    if (!blockCreateTeam) setOpenTeamModal(true);
+  };
   const handleEditTeam = (team) => {
     setTeamToEdit(team);
     setOpenEditTeamModal(true);
@@ -71,7 +92,7 @@ const TeamSection = ({
     }
   };
 
-  // --- Members ---
+  // --- Membres ---
   const handleAddMember = (team) => {
     setCurrentTeamForMember(team);
     setOpenAddMemberModal(true);
@@ -107,8 +128,6 @@ const TeamSection = ({
     setCurrentTeamForMember(null);
   };
 
-  const projectTitle = propProjectTitle || "";
-
   if (!isAdminOrManager) return null;
 
   return (
@@ -122,12 +141,32 @@ const TeamSection = ({
         background: "#fff",
       }}
     >
+      {/* HEADER + Bouton créer équipe */}
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
         <Typography variant="h6" fontWeight={700} sx={{ flex: 1, textAlign: "center" }}>
           Liste des Equipes Associées au Projet {projectTitle ? `"${projectTitle}"` : ""}
         </Typography>
-        <ButtonComponent text="Ajouter une équipe" onClick={handleOpenTeamModal} color="primary" />
+        <ButtonComponent
+          text="Créer une équipe"
+            icon={<GroupAddOutlinedIcon />}
+          onClick={handleOpenTeamModal}
+          color="primary"
+          disabled={blockCreateTeam}
+          sx={blockCreateTeam ? { opacity: 1, pointerEvents: "none" } : {}}
+          tooltip={
+            blockCreateTeam
+              ? "Impossible : tous les employés sont déjà assignés à une équipe."
+              : undefined
+          }
+        />
       </Stack>
+      {/* Message d'erreur si blocage */}
+      {blockCreateTeam && (
+        <Typography color="error" sx={{ mb: 2, textAlign: "center" }}>
+          Impossible d'Ajouter une nouvelle équipe !
+        </Typography>
+      )}
+
       {loadingTeam && (
         <Typography color="info.main">Chargement équipes...</Typography>
       )}
@@ -136,7 +175,17 @@ const TeamSection = ({
           <Typography color="text.secondary" fontSize={18}>
             Aucune équipe n’a encore été créée pour ce projet.
           </Typography>
-          <ButtonComponent text="Ajouter une équipe" onClick={handleOpenTeamModal} sx={{ mt: 3 }} />
+          <ButtonComponent
+            text="Ajouter une équipe"
+            onClick={handleOpenTeamModal}
+            sx={{ mt: 3 }}
+            disabled={blockCreateTeam}
+            tooltip={
+              blockCreateTeam
+                ? "Impossible : tous les employés sont déjà assignés à une équipe."
+                : undefined
+            }
+          />
         </Box>
       ) : (
         <EquipesBoard

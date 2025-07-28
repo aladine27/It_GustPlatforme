@@ -25,7 +25,7 @@ export default function EventDetailsModal({
   onDelete,
   userRole
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   if (!event) return null;
 
@@ -43,6 +43,13 @@ export default function EventDetailsModal({
       default:
         return "default";
     }
+  };
+
+  // Gère la locale dynamiquement (sécurisé pour .toLocaleString)
+  const getLocale = () => {
+    if (i18n.language && i18n.language.startsWith('fr')) return 'fr-FR';
+    if (i18n.language && i18n.language.startsWith('en')) return 'en-US';
+    return 'fr-FR'; // fallback
   };
 
   // Un item pour chaque ligne d'info
@@ -129,7 +136,7 @@ export default function EventDetailsModal({
           <DetailRow label={t("Date et heure de début")}>
             <Typography>
               {event.startDate
-                ? new Date(event.startDate).toLocaleString(t('fr-FR')) // tu peux utiliser le code langue
+                ? new Date(event.startDate).toLocaleString(getLocale())
                 : <span style={{ color: "#aaa" }}>{t("N/A")}</span>}
             </Typography>
           </DetailRow>
