@@ -90,7 +90,19 @@ const Projet = () => {
   return (
     <>
       {/* === BOUTON AJOUTER EN HAUT À DROITE (HORS PAPER) === */}
-
+ <Box sx={{display: "flex", justifyContent: "flex-end" }}>
+          {isAdminOrManager && (
+            <Button
+              onClick={() => setOpenAdd(true)}
+              startIcon={<AddCircleOutline />}
+              variant="contained"
+              color="primary"
+              sx={{ fontWeight: 700, borderRadius: 4, px: 3 }}
+            >
+              {t("Ajouter un nouveau Projet")}
+            </Button>
+          )}
+        </Box>
       <StyledPaper
         sx={{
           p: { xs: 2, md: 4 },
@@ -104,19 +116,7 @@ const Projet = () => {
           flexDirection: "column",
         }}
       >
-        <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-start", mb: 2 }}>
-          {isAdminOrManager && (
-            <Button
-              onClick={() => setOpenAdd(true)}
-              startIcon={<AddCircleOutline />}
-              variant="contained"
-              color="primary"
-              sx={{ fontWeight: 700, borderRadius: 4, px: 3 }}
-            >
-              {t("Ajouter")}
-            </Button>
-          )}
-        </Box>
+       
         {/* === HEADER FILTRE & RECHERCHE === */}
         <Box
           sx={{

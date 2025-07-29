@@ -264,6 +264,19 @@ const resources = {
       "Date fin": "End date",
       "Ongoing": "Ongoing",
       "Crée par": "Created by",
+      'Filtrer par statut :': 'Filter by status:',
+      'Titre, Description...': 'Title, Description...',
+      'Voir les tâches': 'View tasks',
+      'Voir les détails': 'View details',
+      'Équipes': 'Teams',
+      'Sprints': 'Sprints',
+      'Non définie': 'Not defined',
+      'Aucun fichier': 'No file',
+      'Modifier': 'Edit',
+      'Durée:': 'Duration:',
+      'Fichier:': 'File:',
+      'Ajouter un nouveau Projet': 'Add new project',
+
         
                   
       
@@ -517,7 +530,20 @@ const resources = {
     "Crée par": "Crée par",
     "Editer": "Éditer",
     "Date d'ajout": "Date d'ajout",
-    "fr-FR": "Français (France)"
+    "fr-FR": "Français (France)",
+    'Filtrer par statut :': 'Filtrer par statut :',
+    'Titre, Description...': 'Titre, Description...',
+    'Voir les tâches': 'Voir les tâches',
+    'Voir les détails': 'Voir les détails',
+    'Équipes': 'Équipes',
+    'Sprints': 'Sprints',
+    'Non définie': 'Non définie',
+    'Aucun fichier': 'Aucun fichier',
+    'Modifier': 'Modifier',
+    'Durée:': 'Durée:',
+    'Fichier:': 'Fichier:',
+    'Ajouter un nouveau Projet': 'Ajouter un nouveau Projet',
+
 
 
 

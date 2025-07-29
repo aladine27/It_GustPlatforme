@@ -3,10 +3,11 @@ import { Box, Typography, Chip, Button, Paper } from "@mui/material";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import KanbanTaskCard from "./KanbanTaskCard";
 import DownloadIcon from "@mui/icons-material/Download";
-import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import TaskDetailsModal from "./TaskDetailModal";
 import { useState } from "react";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const KanbanColumn = ({
   column,
@@ -26,20 +27,22 @@ const KanbanColumn = ({
     setOpenTaskDetails(true);
   };
 
-  // Export PDF
-  function exportTasksToPDF(tasks) {
-    const doc = new jsPDF();
-    doc.text("Tâches terminées", 14, 16);
-    const tableColumn = ["Titre", "Description", "Priorité", "Affectée à"];
-    const tableRows = tasks.map((task) => [
-      task.title || "",
-      task.description || "",
-      task.priority || "",
-      (task.user && (task.user.fullName || task.user.name)) || "",
-    ]);
-    autoTable(doc, { head: [tableColumn], body: tableRows, startY: 22 });
-    doc.save("done_tasks.pdf");
-  }
+  // Export EXcel
+  function exportTasksToExcel(tasks) {
+  const tableRows = tasks.map((task) => ({
+    "Titre": task.title || "",
+    "Description": task.description || "",
+    "Priorité": task.priority || "",
+    "Affectée à": (task.user && (task.user.fullName || task.user.name)) || "",
+  }));
+  const worksheet = XLSX.utils.json_to_sheet(tableRows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Tâches terminées");
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+  saveAs(data, "done_tasks.xlsx");
+}
+
 
   return (
     <Paper
@@ -67,13 +70,18 @@ const KanbanColumn = ({
             bgcolor: "rgba(0,0,0,0.1)", color: "#666", fontWeight: 600, minWidth: 24, height: 24,
           }} />
           {column.id === "done" && tasks.length > 0 && (
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<DownloadIcon />}
-              sx={{ ml: 1, px: 1, minWidth: 0, textTransform: "none" }}
-              onClick={() => exportTasksToPDF(tasks)}
-            >Exporter</Button>
+
+  <Button
+    variant="outlined"
+    size="small"
+    startIcon={<DownloadIcon />}
+    sx={{ ml: 1, px: 1, minWidth: 0, textTransform: "none" }}
+    onClick={() => exportTasksToExcel(tasks)}
+  >
+    Exporter
+  </Button>
+
+
           )}
         </Box>
       </Box>

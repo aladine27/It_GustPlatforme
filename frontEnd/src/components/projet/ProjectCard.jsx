@@ -1,13 +1,14 @@
-import { useState } from "react"
-import { Paper, Box, Chip, Typography, Stack, IconButton, Tooltip, Link, Avatar } from "@mui/material"
-import EditIcon from "@mui/icons-material/Edit"
-import DeleteIcon from "@mui/icons-material/Delete"
-import TimelineIcon from "@mui/icons-material/Timeline"
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined"
-import FolderIcon from "@mui/icons-material/Folder"
-import GroupIcon from "@mui/icons-material/Group"
-import SprintIcon from "@mui/icons-material/DirectionsRun"
-import ProjectDetailModal from "./ProjectDetailModal"
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Paper, Box, Chip, Typography, Stack, IconButton, Tooltip, Link, Avatar } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import TimelineIcon from "@mui/icons-material/Timeline";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import FolderIcon from "@mui/icons-material/Folder";
+import GroupIcon from "@mui/icons-material/Group";
+import SprintIcon from "@mui/icons-material/DirectionsRun";
+import ProjectDetailModal from "./ProjectDetailModal";
 
 const statusMap = {
   completed: {
@@ -46,7 +47,7 @@ const statusMap = {
     textColor: "#1976d2",
     gradient: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
   },
-}
+};
 
 const ProjectCard = ({
   project,
@@ -57,15 +58,16 @@ const ProjectCard = ({
   setOpenEdit,
   setOpenDelete,
 }) => {
-  const [openDetail, setOpenDetail] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
+  const [openDetail, setOpenDetail] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const { t } = useTranslation();
 
   const statusInfo = statusMap[project.status?.toLowerCase()] || {
     color: "default",
     bgColor: "#f5f5f5",
     textColor: "#666",
     gradient: "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)",
-  }
+  };
 
   return (
     <>
@@ -100,7 +102,7 @@ const ProjectCard = ({
           },
         }}
       >
-        {/* Enhanced Image Section */}
+        {/* Image section */}
         <Box
           sx={{
             width: "100%",
@@ -132,7 +134,7 @@ const ProjectCard = ({
             }}
           />
 
-          {/* Status Badge Overlay */}
+          {/* Status Badge */}
           <Box
             sx={{
               position: "absolute",
@@ -142,7 +144,7 @@ const ProjectCard = ({
             }}
           >
             <Chip
-              label={project.status}
+              label={t(project.status)}
               size="small"
               sx={{
                 fontWeight: 600,
@@ -160,7 +162,7 @@ const ProjectCard = ({
             />
           </Box>
 
-          {/* Admin Actions Overlay */}
+          {/* Admin Actions */}
           {isAdminOrManager && (
             <Box
               sx={{
@@ -173,7 +175,7 @@ const ProjectCard = ({
                 transition: "opacity 0.3s ease",
               }}
             >
-              <Tooltip title="Modifier" arrow>
+              <Tooltip title={t("Modifier")} arrow>
                 <IconButton
                   size="small"
                   sx={{
@@ -188,15 +190,15 @@ const ProjectCard = ({
                     transition: "all 0.2s ease",
                   }}
                   onClick={(e) => {
-                    e.stopPropagation()
-                    setSelectedProject(project)
-                    setOpenEdit(true)
+                    e.stopPropagation();
+                    setSelectedProject(project);
+                    setOpenEdit(true);
                   }}
                 >
                   <EditIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Supprimer" arrow>
+              <Tooltip title={t("Supprimer")} arrow>
                 <IconButton
                   size="small"
                   sx={{
@@ -211,9 +213,9 @@ const ProjectCard = ({
                     transition: "all 0.2s ease",
                   }}
                   onClick={(e) => {
-                    e.stopPropagation()
-                    setSelectedProject(project)
-                    setOpenDelete(true)
+                    e.stopPropagation();
+                    setSelectedProject(project);
+                    setOpenDelete(true);
                   }}
                 >
                   <DeleteIcon fontSize="small" />
@@ -223,7 +225,7 @@ const ProjectCard = ({
           )}
         </Box>
 
-        {/* Enhanced Content Section */}
+        {/* Content Section */}
         <Box sx={{ p: 2, display: "flex", flexDirection: "column", flex: 1 }}>
           {/* Project Title */}
           <Typography
@@ -244,7 +246,7 @@ const ProjectCard = ({
             {project.title}
           </Typography>
 
-          {/* Project Details Grid */}
+          {/* Details Grid */}
           <Box sx={{ mb: 2 }}>
             <Stack spacing={1.5}>
               {/* Duration */}
@@ -262,10 +264,10 @@ const ProjectCard = ({
                   </Typography>
                 </Avatar>
                 <Typography variant="body2" color="#64748b" fontWeight={500}>
-                  Durée:
+                  {t("Durée")}:
                 </Typography>
                 <Typography variant="body2" color="#1e293b" fontWeight={600}>
-                  {project.duration || "Non définie"}
+                  {project.duration || t("Non définie")}
                 </Typography>
               </Box>
 
@@ -282,25 +284,25 @@ const ProjectCard = ({
                   <FolderIcon sx={{ fontSize: 14 }} />
                 </Avatar>
                 <Typography variant="body2" color="#64748b" fontWeight={500}>
-                  Fichier:
+                  {t("Fichier")}:
                 </Typography>
                 {project.file ? (
-                  <Link
-                    href={`/uploads/${project.file}`}
-                    target="_blank"
-                    underline="hover"
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: "0.875rem",
-                      color: "#2563eb",
-                      "&:hover": { color: "#1d4ed8" },
-                    }}
-                  >
-                    {project.file.length > 18 ? project.file.slice(0, 16) + "..." : project.file}
-                  </Link>
+                 <Link
+                  href={project.file ? `http://localhost:3000/uploads/projects/${project.file}` : "#"}
+                  target="_blank"
+                  underline="hover"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                    color: "#2563eb",
+                    "&:hover": { color: "#1d4ed8" },
+                  }}
+                >
+                  {project.file.length > 18 ? project.file.slice(0, 16) + "..." : project.file}
+                </Link>
                 ) : (
                   <Typography variant="body2" color="#9ca3af" fontWeight={500}>
-                    Aucun fichier
+                    {t("Aucun fichier")}
                   </Typography>
                 )}
               </Box>
@@ -327,7 +329,7 @@ const ProjectCard = ({
                 </Typography>
               </Box>
               <Typography variant="caption" color="#64748b" fontWeight={500}>
-                Sprints
+                {t("Sprints")}
               </Typography>
             </Box>
 
@@ -341,7 +343,7 @@ const ProjectCard = ({
                 </Typography>
               </Box>
               <Typography variant="caption" color="#64748b" fontWeight={500}>
-                Équipes
+                {t("Équipes")}
               </Typography>
             </Box>
           </Box>
@@ -356,7 +358,7 @@ const ProjectCard = ({
               pt: 1,
             }}
           >
-            <Tooltip title="Voir les tâches" arrow>
+            <Tooltip title={t("Voir les tâches")} arrow>
               <IconButton
                 size="medium"
                 sx={{
@@ -373,15 +375,15 @@ const ProjectCard = ({
                   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                 }}
                 onClick={(e) => {
-                  e.stopPropagation()
-                  navigate(`/dashboard/tache/${project._id}`)
+                  e.stopPropagation();
+                  navigate(`/dashboard/tache/${project._id}`);
                 }}
               >
                 <TimelineIcon />
               </IconButton>
             </Tooltip>
 
-            <Tooltip title="Voir les détails" arrow>
+            <Tooltip title={t("Voir les détails")} arrow>
               <IconButton
                 size="medium"
                 sx={{
@@ -398,8 +400,8 @@ const ProjectCard = ({
                   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                 }}
                 onClick={(e) => {
-                  e.stopPropagation()
-                  setOpenDetail(true)
+                  e.stopPropagation();
+                  setOpenDetail(true);
                 }}
               >
                 <InfoOutlinedIcon />
@@ -415,19 +417,19 @@ const ProjectCard = ({
         handleClose={() => setOpenDetail(false)}
         project={project}
         onEdit={() => {
-          setSelectedProject(project)
-          setOpenEdit(true)
-          setOpenDetail(false)
+          setSelectedProject(project);
+          setOpenEdit(true);
+          setOpenDetail(false);
         }}
         onDelete={() => {
-          setSelectedProject(project)
-          setOpenDelete(true)
-          setOpenDetail(false)
+          setSelectedProject(project);
+          setOpenDelete(true);
+          setOpenDetail(false);
         }}
         userRole={isAdminOrManager ? "Admin" : "User"}
       />
     </>
-  )
-}
+  );
+};
 
-export default ProjectCard
+export default ProjectCard;
