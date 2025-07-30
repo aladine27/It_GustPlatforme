@@ -9,7 +9,7 @@ import FolderIcon from "@mui/icons-material/Folder";
 import GroupIcon from "@mui/icons-material/Group";
 import SprintIcon from "@mui/icons-material/DirectionsRun";
 import ProjectDetailModal from "./ProjectDetailModal";
-
+import DownloadIcon from "@mui/icons-material/Download";
 const statusMap = {
   completed: {
     color: "success",
@@ -292,13 +292,17 @@ const ProjectCard = ({
                   target="_blank"
                   underline="hover"
                   sx={{
-                    fontWeight: 600,
-                    fontSize: "0.875rem",
-                    color: "#2563eb",
-                    "&:hover": { color: "#1d4ed8" },
-                  }}
+                      display: "inline-flex",
+                      alignItems: "center",
+                      fontWeight: 600,
+                      fontSize: "0.95rem",
+                      color: "#2563eb",
+                      "&:hover": { color: "#1d4ed8", textDecoration: "underline" },
+                      ml: 1,
+                    }}
                 >
-                  {project.file.length > 18 ? project.file.slice(0, 16) + "..." : project.file}
+                   {t("Fichier de description")}
+                      <DownloadIcon sx={{ fontSize: 19, ml: 0.7 }} />
                 </Link>
                 ) : (
                   <Typography variant="body2" color="#9ca3af" fontWeight={500}>

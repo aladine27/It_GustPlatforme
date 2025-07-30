@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Recrutement = () => {
+function ApplicationList() {
   return (
     <div>
       
@@ -8,4 +8,4 @@ const Recrutement = () => {
   )
 }
 
-export default Recrutement
+export default ApplicationList

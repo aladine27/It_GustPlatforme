@@ -8,7 +8,8 @@ import Evenement from './pages/Evenement';
 import Projet from './pages/Projet';
 
 
-import Recrutement from './pages/Recrutement';
+import RecrutementIndex from './pages/Recrutement/RecrutementIndex';
+
 
 import Profile from './pages/Profile';
 import ResetPassword from './pages/ResetPassword';
@@ -82,7 +83,7 @@ function App() {
 
             {/* Recrutement : Admin + Rh */}
             <Route element={<PrivateRoute rolesAllowed={["Admin", "Rh"]} />}>
-              <Route path="recrutement" element={<Recrutement />} />
+              <Route path="recrutement" element={<RecrutementIndex />} />
             </Route>
 
             {/* Événement, Document, Congé, Frais : Admin + Rh + Manager + Employe */}
