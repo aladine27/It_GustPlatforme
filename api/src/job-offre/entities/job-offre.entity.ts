@@ -9,7 +9,6 @@ export class JobOffre {
     description : string;
     @Prop({required: true})
     requirements :  string; 
-
     @Prop({required: true})
     postedDate: Date; 
     @Prop({required: true})

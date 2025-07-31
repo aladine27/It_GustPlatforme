@@ -22,6 +22,7 @@ import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import { ButtonComponent } from "../components/Global/ButtonComponent";
 import PaginationComponent from "../components/Global/PaginationComponent";
 import { StyledCard, StyledPaper, Title, SearchTextField } from "../style/style";
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 
 import Navbar from '../components/Navbar';
@@ -189,7 +190,13 @@ export default function NosOffre() {
           bgcolor: "#f8fafc",
         }}
       >
-        <Box maxWidth="lg" mx="auto" px={isMobile ? 1 : 4} py={isMobile ? 1.5 : 3}>
+  <Box
+  maxWidth="lg"
+  mx={0}
+  sx={{ marginLeft: 2 }}
+  px={0}
+  py={isMobile ? 1.5 : 3}
+>
           {/* Header */}
           <Box textAlign="center" mb={isMobile ? 3 : 5}>
             <Title variant="h1" sx={{ fontSize: { xs: "2rem", sm: "2.6rem" }, mb: 1 }}>
@@ -204,7 +211,8 @@ export default function NosOffre() {
           {/* Grille principale */}
           <Grid container spacing={isMobile ? 2 : 4}>
             {/* Sidebar gauche : Recherche + Filtres */}
-          <Grid item xs={12} md={4} lg={3}>
+          <Grid item xs={12} md={4} lg={4}>
+
   <Card
     sx={{
       width: "100%",
@@ -369,7 +377,7 @@ export default function NosOffre() {
 </Grid>
 
             {/* Liste des offres */}
-            <Grid item xs={12} md={8} lg={9}>
+            <Grid item xs={12} md={8} lg={8}>
               <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" justifyContent="space-between" spacing={2} mb={2}>
                 <Typography variant="h5" color="primary" fontWeight={700}>
                   {filtered.length} offres trouvées
@@ -379,13 +387,16 @@ export default function NosOffre() {
                     </Typography>
                   )}
                 </Typography>
-                <FormControl size="small" sx={{ minWidth: 160 }}>
+               <Box sx={{ minWidth: 140, maxWidth: 220 }}>
+                <FormControl fullWidth size="small">
                   <Select value="recent" displayEmpty>
                     <MenuItem value="recent">Plus récents</MenuItem>
                     <MenuItem value="salary">Salaire croissant</MenuItem>
                     <MenuItem value="relevance">Pertinence</MenuItem>
                   </Select>
                 </FormControl>
+              </Box>
+
               </Stack>
               <Stack spacing={2}>
                 {filtered.map((job) => (
@@ -405,31 +416,23 @@ export default function NosOffre() {
                       {/* Info principale */}
                       <Grid item xs={12} md={10}>
                         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="flex-start">
-                          <Avatar src={job.logo} alt={job.company} sx={{
-                            width: 58, height: 58, bgcolor: "#e3f2fd", border: "2px solid #e3f2fd", fontWeight: 700, fontSize: 23
-                          }}>
-                            {job.company.slice(0, 2)}
-                          </Avatar>
+                         
                           <Box flex={1}>
                             <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" spacing={1}>
-                              <Typography variant="h6" fontWeight={700}>
-                                {job.title}
-                              </Typography>
-                              {job.featured && (
-                                <Chip
-                                  size="small"
-                                  icon={<StarIcon sx={{ color: "#ffb300", fontSize: 18, ml: -0.7 }} />}
-                                  label="Recommandé"
-                                  sx={{ bgcolor: "#fff9c4", color: "#b39500", fontWeight: 700, ml: 1 }}
-                                />
-                              )}
-                              {job.urgent && (
-                                <Chip
-                                  size="small"
-                                  label="Urgent"
-                                  sx={{ bgcolor: "#ffebee", color: "#d32f2f", fontWeight: 700, ml: 1 }}
-                                />
-                              )}
+                          <Stack direction="row" alignItems="center" spacing={1}>
+  <Typography variant="h6" fontWeight={700}>
+    {job.title}
+  </Typography>
+  <Chip
+    label={job.type}
+    icon={<WorkOutlineIcon sx={{ fontSize: 16 }} />}
+    sx={{ bgcolor: "#e3f2fd", color: "#1976d2", fontWeight: 700 }}
+    size="small"
+  />
+</Stack>
+
+                            
+                            
                             </Stack>
                             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mt={0.4} mb={0.8}>
                               <Typography variant="body2" color="text.secondary">
@@ -449,24 +452,14 @@ export default function NosOffre() {
                             </Typography>
                             {/* Tags infos */}
                             <Stack direction="row" spacing={1} mb={0.7}>
-                              <Chip
-                                label={job.type}
-                                icon={<WorkOutlineIcon sx={{ fontSize: 16 }} />}
-                                sx={{ bgcolor: "#e3f2fd", color: "#1976d2", fontWeight: 700 }}
-                                size="small"
-                              />
+                           
                               <Chip
                                 label={job.salary}
                                 icon={<AttachMoneyIcon sx={{ fontSize: 16 }} />}
                                 sx={{ bgcolor: "#e8f5e9", color: "#2e7d32", fontWeight: 700 }}
                                 size="small"
                               />
-                              <Chip
-                                label={job.experience}
-                                icon={<GroupIcon sx={{ fontSize: 16 }} />}
-                                sx={{ bgcolor: "#ede7f6", color: "#6a1b9a", fontWeight: 700 }}
-                                size="small"
-                              />
+                             
                               {job.remote && (
                                 <Chip
                                   label="Télétravail"
@@ -476,23 +469,30 @@ export default function NosOffre() {
                               )}
                             </Stack>
                             {/* Skills */}
-                            <Stack direction="row" spacing={0.7} mb={0.7}>
-                              {job.skills.slice(0, 4).map((skill) => (
-                                <Chip
-                                  key={skill}
-                                  label={skill}
-                                  size="small"
-                                  sx={{ bgcolor: "#fafafa", color: "#1976d2", fontWeight: 700 }}
-                                />
-                              ))}
-                              {job.skills.length > 4 && (
-                                <Chip
-                                  label={`+${job.skills.length - 4}`}
-                                  size="small"
-                                  sx={{ bgcolor: "#fafafa", color: "#1976d2", fontWeight: 700 }}
-                                />
-                              )}
-                            </Stack>
+                            <Stack direction="row" alignItems="center" spacing={1} mb={0.7}>
+  <Typography
+    variant="subtitle2"
+    sx={{ color: "#1976d2", fontWeight: 600, mb: 0, minWidth: 110 /* optionnel: fixe la largeur du label */ }}
+  >
+    Requirements&nbsp;:
+  </Typography>
+  {job.skills.slice(0, 4).map((skill) => (
+    <Chip
+      key={skill}
+      label={skill}
+      size="small"
+      sx={{ bgcolor: "#fafafa", color: "#1976d2", fontWeight: 700 }}
+    />
+  ))}
+  {job.skills.length > 4 && (
+    <Chip
+      label={`+${job.skills.length - 4}`}
+      size="small"
+      sx={{ bgcolor: "#fafafa", color: "#1976d2", fontWeight: 700 }}
+    />
+  )}
+</Stack>
+
                             {/* Benefits */}
                             <Stack direction="row" spacing={0.7}>
                               {job.benefits.slice(0, 3).map((b) => (
@@ -518,31 +518,7 @@ export default function NosOffre() {
                             sx={{ minWidth: 110, mb: 0.7, boxShadow: 2 }}
                             onClick={e => { e.stopPropagation(); handleApply(job); }}
                           />
-                          <Stack direction="row" spacing={1}>
-                            <Tooltip title={saved.includes(job.id) ? "Retirer des favoris" : "Ajouter aux favoris"}>
-                              <Button
-                                onClick={e => { e.stopPropagation(); handleLike(job.id); }}
-                                size="small"
-                                sx={{
-                                  bgcolor: saved.includes(job.id) ? "#ffebee" : "#fff",
-                                  color: saved.includes(job.id) ? "#d32f2f" : "#888",
-                                  minWidth: 0, px: 1.2, borderRadius: 2
-                                }}
-                              >
-                                {saved.includes(job.id) ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                              </Button>
-                            </Tooltip>
-                            <Tooltip title="Partager">
-                              <Button size="small" sx={{ minWidth: 0, px: 1.2, borderRadius: 2, color: "#1976d2" }}>
-                                <ShareOutlinedIcon />
-                              </Button>
-                            </Tooltip>
-                            <Tooltip title="Enregistrer">
-                              <Button size="small" sx={{ minWidth: 0, px: 1.2, borderRadius: 2, color: "#1976d2" }}>
-                                <BookmarkBorderOutlinedIcon />
-                              </Button>
-                            </Tooltip>
-                          </Stack>
+                       
                         </Stack>
                       </Grid>
                     </Grid>
@@ -550,20 +526,20 @@ export default function NosOffre() {
                     {/* Footer entreprise */}
                     <Stack direction="row" alignItems="center" spacing={3} justifyContent="space-between" px={1}>
                       <Stack direction="row" spacing={2} alignItems="center">
-                        <Typography fontSize={14} color="text.secondary">
-                          <StarIcon sx={{ color: "#ffb300", fontSize: 18, mr: 0.2, mb: -0.2 }} /> {job.rating}/5
-                        </Typography>
+                       
                         <Typography fontSize={14} color="text.secondary">{job.companySize} employés</Typography>
                         <Typography fontSize={14} color="text.secondary">{job.sector}</Typography>
                       </Stack>
                       <Button
                         variant="text"
                         color="primary"
-                        endIcon={<SendOutlinedIcon />}
-                        sx={{ fontWeight: 700 }}
+                        endIcon={<InfoOutlinedIcon />}
+                        sx={{ fontWeight: 700,
+                          background: "#e0e0e0",
+                         }}
                         onClick={e => { e.stopPropagation(); handleOpenDetails(job); }}
                       >
-                        Voir l'entreprise
+                        Voir Details
                       </Button>
                     </Stack>
                   </StyledCard>
