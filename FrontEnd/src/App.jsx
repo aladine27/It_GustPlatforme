@@ -29,6 +29,7 @@ import CongeHistory from './pages/Conge/CongeHistory';
 import DocumentIndex from './pages/Documents/DocumentIndex';
 import DocumentPersonnalisationPage from './pages/Documents/DocumentPersonnalisationPage';
 import ProjectSprintIndex from './pages/Tache/ProjectSprintIndex';
+import NosOffre from './pages/NosOffre';
 function App() {
   const { CurrentUser } = useSelector((state) => state.user);
   const role = CurrentUser?.role || CurrentUser?.user?.role;
@@ -61,6 +62,7 @@ function App() {
           <Route path="/google-redirect" element={<GoogleRedirect />} />
           <Route path="/" element={<Home />} />
           <Route path="/auth/github-redirect" element={<GithubRedirect />} />
+           <Route path="/offres" element={<NosOffre/>} />
 
           <Route
             path="/dashboard"

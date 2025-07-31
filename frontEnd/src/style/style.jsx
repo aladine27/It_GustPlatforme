@@ -1,6 +1,6 @@
 // style.jsx
 import { Card, Paper, Button, Typography, TextField } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import styled from "@emotion/styled";
 
 export const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: 18,

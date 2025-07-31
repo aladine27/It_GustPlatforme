@@ -56,7 +56,7 @@ export default function Navbar() {
   const [userMenu, setUserMenu] = useState(null);
   const [langMenu, setLangMenu] = useState(null);
 
-  const navItems = ['Home', 'About', 'Contact', 'Nos Offres'];
+  const navItems = ['Home', 'About', 'Contact', 'Offres'];
 
   const handleDrawerToggle = () => setMobileOpen((o) => !o);
 
