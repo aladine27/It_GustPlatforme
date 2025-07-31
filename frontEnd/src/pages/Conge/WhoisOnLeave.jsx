@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import {
   Box, Typography, Select, MenuItem, Chip, CardContent,
   Card,
-  Grid
+  Grid,
+  Button
 } from "@mui/material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import GroupsIcon from '@mui/icons-material/Groups';
@@ -153,16 +154,18 @@ return (
       
           {/* bouton Ajouter type */}
       <Box style={{ display: "flex", justifyContent: "flex-end" }}>
-        <StyledButton
-          startIcon={<AddCircleOutlineIcon />}
-          variant="contained"
-          onClick={() => {
+          <Button
+              onClick={() => {
             console.log("[Conge] Open modal type");
             setModalOpen(true);
           }}
-        >
-          {t("Ajouter un nouveau type")}
-        </StyledButton>
+              variant="outlined"
+              color="secondary"
+              startIcon={<AddCircleOutlineIcon />}
+              sx={{ fontWeight: 600, borderRadius: 8, px: 3, py: 1, fontSize: '1rem' }}
+            >
+              {t("Ajouter un nouveau type de congé")}
+            </Button>
       </Box>
       </Grid>
       <Card

@@ -96,22 +96,8 @@ const SprintSection = ({
   text="Créer un sprint"
   icon={<AddCircleOutlineIcon />}
   onClick={handleOpenSprintModal}
-  color="primary"
   disabled={blockCreateSprint}
-  sx={blockCreateSprint ? {
-    color: "#bbb !important",
-    bgcolor: "#f6f9fc !important",
-    borderColor: "#eee !important",
-    boxShadow: "none",
-    '& .MuiSvgIcon-root': { color: "#bbb" }
-  } : {}}
-  tooltip={blockCreateSprint
-    ? "Impossible : la durée totale ou la date de fin du projet est atteinte."
-    : undefined
-  }
-/>
-
-      )}
+/>)}
     </Box>
 
     <Divider sx={{ my: 2 }} />

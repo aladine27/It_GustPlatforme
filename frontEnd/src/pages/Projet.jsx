@@ -18,6 +18,7 @@ import { deleteProject, fetchAllProjects } from "../redux/actions/projectActions
 import { clearProjectMessages } from "../redux/slices/projectSlice";
 import staticProjectImage from "../assets/project_static.jpg";
 import { StyledPaper } from "../style/style";
+import { ButtonComponent } from "../components/Global/ButtonComponent";
 
 const STATUS = [
   { key: "All", label: "All" },
@@ -92,16 +93,11 @@ const Projet = () => {
       {/* === BOUTON AJOUTER EN HAUT À DROITE (HORS PAPER) === */}
  <Box sx={{display: "flex", justifyContent: "flex-end" }}>
           {isAdminOrManager && (
-            <Button
+            <ButtonComponent
               onClick={() => setOpenAdd(true)}
-              startIcon={<AddCircleOutline />}
-              variant="contained"
-              color="primary"
-              sx={{ fontWeight: 700, borderRadius: 4, px: 3 }}
-            >
-              {t("Ajouter un nouveau Projet")}
-            </Button>
-          )}
+             icon={<AddCircleOutline />}
+              text={t("Ajouter un nouveau Projet")}
+             />)}
         </Box>
       <StyledPaper
         sx={{

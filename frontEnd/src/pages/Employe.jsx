@@ -209,7 +209,7 @@ const Employe = () => {
                 onClick={() => setOpenAdd(true)}
                 text={t('Ajouter')}
                 icon={<AddCircleOutline />}
-                color="primary"
+                
               />
             </Grid>
             <Grid item>
@@ -217,14 +217,13 @@ const Employe = () => {
                 onClick={() => setOpenExport(true)}
                 text={t('Export')}
                 icon={<CloudDownload />}
-                color="#1273BA"
+              
               />
             </Grid>
             <Grid item>
               <ButtonComponent
                 text={t('Import')}
                 icon={<FileUpload />}
-                color="secondary"
                 onClick={handleImportClick}
               />
               <input

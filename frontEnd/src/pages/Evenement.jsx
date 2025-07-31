@@ -270,20 +270,14 @@ export default function Evenement() {
               {t("Créer un type d'événement")}
             </Button>
             <ButtonComponent
+            
               onClick={() => {
                 setSelectedEvent(null);
                 setModalOpen(true);
               }}
               text={t("Ajouter un évènement")}
               icon={<AddCircleOutlineIcon />}
-              sx={{
-                borderRadius: 8,
-                px: 3,
-                py: 1,
-                fontWeight: 700,
-                fontSize: '1rem'
-              }}
-            />
+           />
           </>
         )}
       </Box>

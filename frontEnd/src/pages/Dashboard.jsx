@@ -76,7 +76,7 @@ function Dashboard({ darkMode, onToggleDarkMode }) {
             maxHeight: '100%',
             p: 3,
             overflowY: 'auto',
-            bgcolor: theme.palette.background.default,
+           
             transition: "all 0.22s cubic-bezier(.4,0,.2,1)",
             display: 'flex',
             flexDirection: 'column',

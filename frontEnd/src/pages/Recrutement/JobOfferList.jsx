@@ -112,16 +112,8 @@ export default function JobOfferList() {
           <ButtonComponent
             text="Add New Offer"
             icon={null}
-            color="#1976d2"
-            sx={{
-              borderRadius: 999,
-              fontWeight: 700,
-              fontSize: 17,
-              px: 4,
-              py: 1.5,
-              boxShadow: "0 2px 12px #a5b4fc39"
-            }}
-          />
+            
+       />
         </Stack>
         {/* Search + Filters */}
    <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>

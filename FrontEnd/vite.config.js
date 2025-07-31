@@ -19,8 +19,8 @@ export default defineConfig({
       '@mui/icons-material'
     ],
     exclude: [
-      'primereact'  // Exclure PrimeReact pour éviter les conflits, si tu l'utilises
+      'primereact'
     ]
   },
-  // PAS de resolve.alias pour @mui/styled-engine !
+
 })

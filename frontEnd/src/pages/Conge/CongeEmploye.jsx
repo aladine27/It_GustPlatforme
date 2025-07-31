@@ -25,6 +25,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Cancel, CheckCircle } from "@mui/icons-material";
 import CalendarWidget from "../../components/Conge/CalenderWidget";
 import { useTranslation } from "react-i18next"; // ← N'oublie pas
+import { ButtonComponent } from "../../components/Global/ButtonComponent";
 
 export default function CongeEmploye() {
   const { t } = useTranslation();
@@ -254,18 +255,12 @@ export default function CongeEmploye() {
               </Typography>
             </Box>
           )}
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            startIcon={<AddCircleOutlineIcon />}
-            onClick={handleOpenModal}
-            sx={{ fontWeight: 700, borderRadius: 3 }}
-          >
-            {t("Nouvelle demande")}
-          </Button>
-
-          <DemandeCongeFormModal
+          <ButtonComponent
+          text={t("Nouvelle demande")}
+          icon={<AddCircleOutlineIcon />}
+          onClick={handleOpenModal}
+          />
+            <DemandeCongeFormModal
             open={openModal}
             handleClose={handleCloseModal}
             onSubmit={handleDemandeSubmit}

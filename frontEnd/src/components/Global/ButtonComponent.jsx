@@ -2,7 +2,7 @@ import { Button } from '@mui/material'
 import React from 'react'
 import { NavLink } from 'react-router-dom';
 
-const ButtonComponent = ({ onClick ,text,icon,color = 'primary' }) => {
+const ButtonComponent = ({ onClick ,text,icon,color = '#0082c8' }) => {
   return (
    <Button variant="contained"  type='submit' onClick={onClick} startIcon={icon} sx={{
     borderRadius: 2,

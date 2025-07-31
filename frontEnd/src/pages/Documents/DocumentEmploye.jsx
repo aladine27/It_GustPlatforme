@@ -13,6 +13,8 @@ import { clearDocumentMessages } from "../../redux/slices/documentSlice";
 import TableComponent from "../../components/Global/TableComponent";
 import PaginationComponent from "../../components/Global/PaginationComponent";
 import { toast } from "react-toastify";
+import { ButtonComponent } from "../../components/Global/ButtonComponent";
+import { AddCircleOutline } from "@mui/icons-material";
 
 export default function DocumentEmploye() {
   const { t } = useTranslation();
@@ -186,16 +188,13 @@ export default function DocumentEmploye() {
           <Typography variant="h5" fontWeight={700} mb={3}>
             {t("Déposer une nouvelle demande de document")}
           </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            startIcon={<AddCircleOutlineIcon />}
+          <ButtonComponent
+        icon={<AddCircleOutline />}
+            text={t("Nouvelle demande")}
             onClick={handleOpenModal}
-            sx={{ fontWeight: 700, borderRadius: 3, mb: 2 }}
-          >
-            {t("Nouvelle demande")}
-          </Button>
+          />
+            
+       
           <DemandeDocumentFormModal
             open={openModal}
             handleClose={handleCloseModal}

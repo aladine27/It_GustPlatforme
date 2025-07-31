@@ -4,11 +4,7 @@ export interface IJobOffre extends Document {
           readonly title: string;
          
           readonly description : string;
-      
-          readonly file :  string; 
-          
-          readonly emailContact: string;
-          
+                 
           readonly postedDate: Date; 
           
           readonly closingDate: Date;
