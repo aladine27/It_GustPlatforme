@@ -193,8 +193,7 @@ export default function NosOffre() {
   <Box
   maxWidth="lg"
   mx={0}
-  sx={{ marginLeft: 2 }}
-  px={0}
+  px={2}
   py={isMobile ? 1.5 : 3}
 >
           {/* Header */}
