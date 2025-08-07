@@ -1,13 +1,12 @@
 import React from "react";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, Typography, Stack, Chip, Box, Divider, IconButton, Link
+  Button, Typography, Stack, Chip, Box, Divider, IconButton
 } from "@mui/material";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import CloseIcon from "@mui/icons-material/Close";
-import { StyledPaper } from "../../style/style";
 
 export default function JobOfferDetailsModal({
   open,
@@ -18,9 +17,10 @@ export default function JobOfferDetailsModal({
   formatDate
 }) {
   if (!offer) return null;
-
   const status = getStatusColor(offer.status);
   const type = getTypeColor(offer.type);
+
+  // Dynamique split requirements/description si besoin
   const reqs = offer.requirements
     ? offer.requirements.split(/\n|,/).map((el) => el.trim()).filter(Boolean)
     : [];
@@ -32,7 +32,6 @@ export default function JobOfferDetailsModal({
       maxWidth="sm"
       fullWidth
       PaperProps={{
-        component: StyledPaper,
         sx: {
           p: { xs: 1.5, sm: 3 },
           borderRadius: 4,
@@ -65,8 +64,7 @@ export default function JobOfferDetailsModal({
       <DialogContent
         sx={{
           px: { xs: 0, sm: 1 },
-          // Supprime minHeight/maxHeight pour laisser la modal grandir
-          maxHeight: { xs: '80vh', sm: '85vh' }, // optionnel pour éviter de dépasser l'écran
+          maxHeight: { xs: '80vh', sm: '85vh' },
           overflowY: 'auto',
         }}
       >
@@ -89,7 +87,7 @@ export default function JobOfferDetailsModal({
             direction="row"
             spacing={1}
             alignItems="center"
-            flexWrap="wrap" // très important pour éviter que les chips ne dépassent
+            flexWrap="wrap"
             rowGap={1}
           >
             <Chip icon={<WorkOutlineIcon />} label={offer.type} sx={{
@@ -109,7 +107,6 @@ export default function JobOfferDetailsModal({
               bgcolor: "#fff2d6", color: "#d89b1d", fontWeight: 700, fontSize: 14.5, borderRadius: 2
             }} />
           </Stack>
-        
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2, pt: 1 }}>

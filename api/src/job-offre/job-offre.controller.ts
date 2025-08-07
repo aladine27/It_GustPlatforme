@@ -1,13 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus, UseGuards } from '@nestjs/common';
 import { JobOffreService } from './job-offre.service';
 import { CreateJobOffreDto } from './dto/create-job-offre.dto';
 import { UpdateJobOffreDto } from './dto/update-job-offre.dto';
-
+import { Roles } from 'src/decorators/roles.decorators';
+import { AccessTokenGuard } from 'src/guards/accessToken.guard';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { Response } from 'express';
+import { ApiBearerAuth } from '@nestjs/swagger';
+@ApiBearerAuth("access-token")
+@UseGuards(AccessTokenGuard) 
 @Controller('joboffre')
 export class JobOffreController {
   constructor(private readonly jobOffreService: JobOffreService) {}
 
   @Post()
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async create(@Body() createJobOffreDto: CreateJobOffreDto,@Res() res) {
     try {
       const newJobOffre = await this.jobOffreService.create(createJobOffreDto);
@@ -28,6 +36,8 @@ export class JobOffreController {
     }
   }
   @Get('/findJobOffreByUserId/:user')
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async findJobOffrebyUserId(@Param('user') user: string, @Res() res) {
   try {
     const userJobOffre = await this.jobOffreService.findJobOffreByuserId(user);
@@ -47,7 +57,10 @@ export class JobOffreController {
     });
   }
   }
+  
   @Get('/getJobOffreByjobCategory/:jobCategory')
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async findJobOffreByJobCategory(@Param('jobCategory') jobCategory: string, @Res() res) {
     try {
       const jobOffre = await this.jobOffreService.getJobOffreByjobCategory(jobCategory);
@@ -73,6 +86,8 @@ export class JobOffreController {
 
 
   @Get()
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async findAll(@Res() res) {
     try {
       const jobOffres = await this.jobOffreService.findAll();
@@ -90,6 +105,8 @@ export class JobOffreController {
   }
 
   @Get(':id')
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async findOne(@Param('id') id: string,@Res() res) {
   try {
     const jobOffre = await this.jobOffreService.findOne(id);
@@ -106,6 +123,8 @@ export class JobOffreController {
   }
 
   @Patch(':id')
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async update(@Param('id') id: string, @Body() updateJobOffreDto: UpdateJobOffreDto,@Res() res) {
   try {
     const jobOffre = await this.jobOffreService.update(id, updateJobOffreDto);
@@ -121,6 +140,8 @@ export class JobOffreController {
 }
 
   @Delete(':id')
+  @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async remove(@Param('id') id: string, @Res() res) {
     try {
       const jobOffre = await this.jobOffreService.remove(id); 

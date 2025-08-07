@@ -1,14 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus,UseGuards } from '@nestjs/common';
 import { JobCategoryService } from './job-category.service';
 import { CreateJobCategoryDto } from './dto/create-job-category.dto';
 import { UpdateJobCategoryDto } from './dto/update-job-category.dto';
+import { Roles } from 'src/decorators/roles.decorators';
+import { AccessTokenGuard } from 'src/guards/accessToken.guard';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { Response } from 'express';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+
+@ApiBearerAuth("access-token")
+@UseGuards(AccessTokenGuard) 
 @Controller('job-category')
 export class JobCategoryController {
   constructor(private readonly jobCategoryService: JobCategoryService) {}
 
  
-    @Post('')
+    @Post()
+     @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
     async create(@Body() createCategoryDto: CreateJobCategoryDto, @Res() res) {
       try {
         const newCategory = await this.jobCategoryService.create(createCategoryDto);
@@ -24,6 +34,8 @@ export class JobCategoryController {
       }
     }
    @Get() 
+     @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async findAll( @Res() res) {
       try {
         const categories = await this.jobCategoryService.findAll();
@@ -41,6 +53,8 @@ export class JobCategoryController {
     }
   
     @Get(':id')
+      @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
     async findOne(@Param('id') id: string, @Res() res) {
       try {
          const categorie = await this.jobCategoryService.findOne(id);
@@ -57,6 +71,8 @@ export class JobCategoryController {
     }
   
     @Patch(':id')
+      @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
     async update(@Param('id') id: string, @Body() updateCategoryDto: UpdateJobCategoryDto, @Res() res) {
       try {
         const categorie = await this.jobCategoryService.update(id, updateCategoryDto);
@@ -73,6 +89,8 @@ export class JobCategoryController {
     }
   
     @Delete(':id')
+      @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
     async remove(@Param('id') id: string, @Res() res) {
       try {
         const categorie = await this.jobCategoryService.remove(id);

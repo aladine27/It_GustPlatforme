@@ -1,15 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
   Typography,
   Chip,
   Divider,
   IconButton,
-  Tooltip,
   Link,
   Paper,
-  TextField,
-  InputAdornment,
   useTheme
 } from "@mui/material";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
@@ -20,9 +17,7 @@ import ChecklistRtlOutlinedIcon from "@mui/icons-material/ChecklistRtlOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import SearchIcon from "@mui/icons-material/Search";
 
-// Tooltip custom
 import { styled } from "@mui/material/styles";
 import MuiTooltip, { tooltipClasses } from "@mui/material/Tooltip";
 
@@ -57,31 +52,30 @@ export default function JobOfferCard({
   getTypeColor,
   formatDate,
   setDetailOffer,
-  onSearchChange,     // Ajouté pour la search bar
-  searchTerm,         // Ajouté pour la search bar
 }) {
   const status = getStatusColor(offer.status);
   const type = getTypeColor(offer.type);
-  const theme = useTheme();
 
-  // Search bar en haut de la card (si besoin sur chaque card, sinon place dans la liste globale)
-  // Ici en exemple en haut de la card, tu peux le placer global.
+  // Pour éviter crash si jamais salaryRange est null/undefined
+  const salary = typeof offer.salaryRange === "number" && !isNaN(offer.salaryRange)
+    ? offer.salaryRange
+    : "-";
+
   return (
     <Paper
       elevation={2}
       sx={{
+        border: "1px solid red",
         borderRadius: "20px",
         background: "linear-gradient(145deg, #ffffff, #e3f2fd)",
-        minHeight: 420,
+        Height: "300",
         maxWidth: 400,
         mx: "auto",
-        mb: 3,
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        position: "relative",
-        border: "1px solid #fff",
+        position: "relative",   
         transition: "transform 0.3s ease, box-shadow 0.3s ease",
         "&:hover": {
           transform: "translateY(-4px)",
@@ -93,33 +87,6 @@ export default function JobOfferCard({
         },
       }}
     >
-      {/* Search bar exemple, sinon place-le globalement */}
-      {/* <Box sx={{ p: 2, pb: 0 }}>
-        <TextField
-          label="Rechercher"
-          value={searchTerm}
-          onChange={e => onSearchChange && onSearchChange(e.target.value)}
-          placeholder="Titre, Ville, ..."
-          sx={{
-            width: '100%',
-            borderRadius: '50px',
-            bgcolor: '#fff',
-            boxShadow: theme.shadows[1],
-            mb: 2
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <IconButton size="small" color="primary">
-                  <SearchIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
-            sx: { borderRadius: '16px', fontSize: '1.03rem' }
-          }}
-        />
-      </Box> */}
-      
       {/* Header */}
       <Box
         sx={{
@@ -280,7 +247,7 @@ export default function JobOfferCard({
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, pl: 3, pb: 1 }}>
         <Chip
           icon={<MonetizationOnOutlinedIcon sx={{ fontSize: 16, color: "#2e7d32" }} />}
-          label={`$${offer.salaryRange.split("-")[1]?.trim() || offer.salaryRange}`}
+          label={`$${salary}`}
           sx={{
             bgcolor: "#e8f5e9",
             color: "#2e7d32",
@@ -315,7 +282,7 @@ export default function JobOfferCard({
       </Box>
       <Box sx={{ pl: 3, pb: 2 }}>
         <Typography component="span" sx={{ fontWeight: 700, color: "#1e3a8a", fontSize: 18 }}>
-          {offer.applications ?? 24}
+          {Array.isArray(offer.applications) ? offer.applications.length : 0}
         </Typography>
         <Typography component="span" sx={{ color: "#6b7280", fontWeight: 500, ml: 0.5, fontSize: 16 }}>
           applicants

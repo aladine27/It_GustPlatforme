@@ -11,6 +11,7 @@ import { leaveSlice, leaveTypeSlice } from './slices/leaveSlice';
 import teamReducer from './slices/teamSlice';
 import sprintReducer from './slices/sprintSlice';
 import taskReducer from './slices/taskSlice'
+import { jobCategoryReducer,jobOffreReducer } from './slices/jobOffreSlice';
 
 const rootReducer = combineReducers({
     user:userReducer,
@@ -19,6 +20,8 @@ const rootReducer = combineReducers({
     eventType: eventTypeSlice.reducer,
     leave:leaveSlice.reducer,
     leaveType:leaveTypeSlice.reducer,
+    jobOffre:jobOffreReducer,
+    jobCategory: jobCategoryReducer,
     document: documentReducer,
     team: teamReducer,     
     sprint: sprintReducer, 

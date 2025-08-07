@@ -11,6 +11,7 @@ export class CreateJobOffreDto {
             @IsNotEmpty()
     
         title: string;
+
          @ApiProperty({
         type: String,
         description: 'The description of the job offer'
@@ -26,14 +27,8 @@ export class CreateJobOffreDto {
             @IsNotEmpty()
         
         requirements :  string; 
-          @ApiProperty({
-        type: String,
-        description: 'The contact email for the job offer'
-    })
-            @IsEmail() 
-            @IsNotEmpty()
+      
         
-        emailContact: string;
         @ApiProperty({
         type: Date,
         description: 'The posted date of the job offer'
