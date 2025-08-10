@@ -17,7 +17,7 @@ export class ApplicationService {
   }
 
   async findAll():Promise<IApplication[]> {
-    const applications = await this.applicationModel.find()
+    const applications = await this.applicationModel.find().populate('jobOffre');
     if(!applications || applications.length === 0){ 
       throw new NotFoundException('No application found')
     }
@@ -26,7 +26,7 @@ export class ApplicationService {
   }
 
   async findOne(id: string):Promise<IApplication> { 
-   const application = await this.applicationModel.findById(id)
+   const application = await this.applicationModel.findById(id).populate('jobOffre');
    if(!application){ 
     throw new NotFoundException('No application found')
   }
@@ -50,4 +50,14 @@ export class ApplicationService {
   return application;
   
   }
+  async findByOffer(jobOffre: string): Promise<IApplication[]> {
+  const applications = await this.applicationModel
+    .find({ jobOffre })
+    .populate('jobOffre');
+  if (!applications || applications.length === 0) {
+    throw new NotFoundException('No application found');
+  }
+  return applications;
+}
+
 }

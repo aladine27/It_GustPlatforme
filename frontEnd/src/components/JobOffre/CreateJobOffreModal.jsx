@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   Box, Grid, TextField, MenuItem, Stack, Button
 } from "@mui/material";
@@ -14,30 +14,24 @@ import { ButtonComponent } from "../Global/ButtonComponent";
 import ModelComponent from "../Global/ModelComponent";
 import StepperComponent from "../Global/StepperComponent";
 
-// Steps titles
 const stepsKeys = [
   "Informations principales",
   "Détails de l'offre",
   "Catégorie"
 ];
 
-// Select options
 const locations = [
   { value: "Tunis", label: "Tunis" },
   { value: "Sfax", label: "Sfax" },
   { value: "Sousse", label: "Sousse" }
 ];
-const statusList = [
-  { value: "open", label: "Ouverte" },
-  { value: "closed", label: "Fermée" }
-];
+
 const typeList = [
   { value: "full-time", label: "Full-time" },
   { value: "part-time", label: "Part-time" },
   { value: "internship", label: "Internship" }
 ];
 
-// Validation schemas
 const jobOfferSchemas = [
   Yup.object().shape({
     title: Yup.string().required("Titre requis"),
@@ -45,13 +39,15 @@ const jobOfferSchemas = [
     requirements: Yup.string().required("Compétences requises"),
   }),
   Yup.object().shape({
-    closingDate: Yup.date().typeError("Date de clôture requise").required("Date de clôture requise").min(new Date(), "Date dans le futur"),
+    closingDate: Yup.date()
+      .typeError("Date de clôture requise")
+      .required("Date de clôture requise")
+      .min(new Date(), "Date dans le futur"),
     salaryRange: Yup.number()
       .typeError("Le salaire est requis")
       .required("Le salaire est requis")
       .positive("Le salaire doit être positif"),
     location: Yup.string().required("Lieu requis"),
-    status: Yup.string().required("Statut requis"),
     process: Yup.string().required("Processus de recrutement requis"),
     type: Yup.string().required("Type requis"),
   }),
@@ -65,9 +61,10 @@ export default function CreateJobOfferModal({
   handleClose,
   jobCategories,
   userId,
-  onSubmit // à connecter à ton redux ou API
+  editOffer, // <-- nouvelle prop pour mode édition
+  onSubmit // callback pour create ou update
 }) {
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = React.useState(0);
 
   const resolver = useMemo(
     () => yupResolver(jobOfferSchemas[activeStep]),
@@ -93,17 +90,31 @@ export default function CreateJobOfferModal({
       closingDate: null,
       salaryRange: "",
       location: "",
-      status: "open",
       process: "",
       type: "full-time",
       jobCategory: jobCategories?.[0]?._id || "",
     }
   });
 
-  // Reset form on modal open/close
+  // Remplir le formulaire en édition
   useEffect(() => {
-    if (!open) {
-      setActiveStep(0);
+    if (open && editOffer) {
+      reset({
+        title: editOffer.title || "",
+        description: editOffer.description || "",
+        requirements: editOffer.requirements || "",
+        closingDate: editOffer.closingDate ? new Date(editOffer.closingDate) : null,
+        salaryRange: editOffer.salaryRange || "",
+        location: editOffer.location || "",
+        process: editOffer.process || "",
+        type: editOffer.type || "full-time",
+        jobCategory:
+          editOffer.jobCategory?._id ||
+          editOffer.jobCategory ||
+          (jobCategories?.[0]?._id || ""),
+      });
+    }
+    if (open && !editOffer) {
       reset({
         title: "",
         description: "",
@@ -111,13 +122,12 @@ export default function CreateJobOfferModal({
         closingDate: null,
         salaryRange: "",
         location: "",
-        status: "open",
         process: "",
         type: "full-time",
         jobCategory: jobCategories?.[0]?._id || "",
       });
     }
-  }, [open, reset, jobCategories]);
+  }, [open, editOffer, reset, jobCategories]);
 
   // Correction du select value pour éviter warning
   useEffect(() => {
@@ -143,18 +153,17 @@ export default function CreateJobOfferModal({
       const payload = {
         ...data,
         salaryRange: Number(data.salaryRange),
-        postedDate: new Date().toISOString(),
+        postedDate: editOffer?.postedDate || new Date().toISOString(),
         user: userId,
       };
       await (onSubmit ? onSubmit(payload) : Promise.resolve());
       handleClose();
-      toast.success("Offre créée !");
+      toast.success(editOffer ? "Offre modifiée !" : "Offre créée !");
     } catch (err) {
-      toast.error("Erreur lors de la création");
+      toast.error("Erreur lors de la soumission");
     }
   };
 
-  // UI pour chaque étape
   const getStepContent = (step) => {
     switch (step) {
       case 0:
@@ -246,20 +255,6 @@ export default function CreateJobOfferModal({
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                select
-                label="Statut"
-                fullWidth
-                {...register("status")}
-                error={!!errors.status}
-                helperText={errors.status?.message}
-              >
-                {statusList.map(item => (
-                  <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
                 label="Processus de recrutement"
                 fullWidth
                 {...register("process")}
@@ -316,7 +311,7 @@ export default function CreateJobOfferModal({
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
       <ToastContainer position="top-right" autoClose={3000} />
       <ModelComponent open={open} handleClose={handleClose}
-        title="Créer une offre d'emploi"
+        title={editOffer ? "Modifier une offre d'emploi" : "Créer une offre d'emploi"}
         icon={<WorkOutline />}
       >
         <Box sx={{ my: 2 }}>
@@ -351,7 +346,7 @@ export default function CreateJobOfferModal({
                 type="submit"
                 startIcon={<SaveOutlined />}
               >
-                Créer
+                {editOffer ? "Mettre à jour" : "Créer"}
               </Button>
             )}
           </Stack>

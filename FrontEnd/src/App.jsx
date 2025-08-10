@@ -30,6 +30,7 @@ import DocumentIndex from './pages/Documents/DocumentIndex';
 import DocumentPersonnalisationPage from './pages/Documents/DocumentPersonnalisationPage';
 import ProjectSprintIndex from './pages/Tache/ProjectSprintIndex';
 import NosOffre from './pages/NosOffre';
+import ApplicationListRHIA from './pages/Recrutement/ApplicationList';
 function App() {
   const { CurrentUser } = useSelector((state) => state.user);
   const role = CurrentUser?.role || CurrentUser?.user?.role;
@@ -86,6 +87,7 @@ function App() {
             {/* Recrutement : Admin + Rh */}
             <Route element={<PrivateRoute rolesAllowed={["Admin", "Rh"]} />}>
               <Route path="recrutement" element={<RecrutementIndex />} />
+               <Route path="recrutement/applications/:jobOffreId" element={<ApplicationListRHIA />} />
             </Route>
 
             {/* Événement, Document, Congé, Frais : Admin + Rh + Manager + Employe */}

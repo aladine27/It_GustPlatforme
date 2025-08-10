@@ -12,7 +12,7 @@ import teamReducer from './slices/teamSlice';
 import sprintReducer from './slices/sprintSlice';
 import taskReducer from './slices/taskSlice'
 import { jobCategoryReducer,jobOffreReducer } from './slices/jobOffreSlice';
-
+import { applicationReducer } from './slices/applicationSlice';
 const rootReducer = combineReducers({
     user:userReducer,
     employe:employeReducer,
@@ -27,6 +27,7 @@ const rootReducer = combineReducers({
     sprint: sprintReducer, 
     task:taskReducer,
     project:projectReducer,
+    application: applicationReducer,
   
     
 });

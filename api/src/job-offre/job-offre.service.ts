@@ -38,6 +38,9 @@ export class JobOffreService {
 
   async findAll():Promise<IJobOffre[]> {
     const jobOffres = await this.joboffreModel.find()
+    .populate('user')
+    .populate('jobCategory')
+    .populate('applications');
     if(!jobOffres || jobOffres.length === 0){ 
       throw new NotFoundException('No jobOffre found')
     }
@@ -47,7 +50,11 @@ export class JobOffreService {
     
 
   async findOne(id: string):Promise<IJobOffre> {
-   const jobOffre = await this.joboffreModel.findById(id)
+   const jobOffre = await this.joboffreModel
+   .findById(id)
+    .populate('jobCategory')
+    .populate('user')
+    .populate('applications');
     if(!jobOffre){ 
         throw new NotFoundException('No jobOffre found')
       }

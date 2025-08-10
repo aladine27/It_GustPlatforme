@@ -1,11 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
 import { ApplicationService } from './application.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { AuthGuard } from '@nestjs/passport';
+import { Public } from 'src/decorators/public.decorator';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorators';
+import { AccessTokenGuard } from 'src/guards/accessToken.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
+
 @Controller('application')
+@ApiBearerAuth("access-token")
+@UseGuards(AccessTokenGuard) 
 export class ApplicationController {
   constructor(private readonly applicationService: ApplicationService) {}
    //config swager for file
@@ -31,6 +40,8 @@ export class ApplicationController {
       )
 
   @Post()
+     @UseGuards( RolesGuard)
+   @Public()
   async create(@Body() createApplicationDto: CreateApplicationDto,@Res() res,@UploadedFile()file: Express.Multer.File) {
     try {
       createApplicationDto.cvFile = file?.filename
@@ -50,6 +61,8 @@ export class ApplicationController {
   }
 
   @Get()
+   @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async findAll(@Res() res) {
     try {
       const applications = await this.applicationService.findAll();
@@ -71,6 +84,8 @@ export class ApplicationController {
   }
 
   @Get(':id')
+     @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async findOne(@Param('id') id: string,@Res() res) {
     try {
       const application = await this.applicationService.findOne(id);
@@ -111,6 +126,8 @@ export class ApplicationController {
       )
 
   @Patch(':id')
+     @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async update(@Param('id') id: string, @Body() updateApplicationDto: UpdateApplicationDto, @Res() res,
 @UploadedFile()file: Express.Multer.File) {
     try {
@@ -132,6 +149,8 @@ export class ApplicationController {
   }
 
   @Delete(':id')
+     @UseGuards( RolesGuard)
+  @Roles('Admin','Rh')
   async remove(@Param('id') id: string,@Res() res) {
     try {
       const application = await this.applicationService.remove(id);
@@ -149,4 +168,23 @@ export class ApplicationController {
       
     }
   }
+  @Get('by-offer/:jobOffre')
+@UseGuards(RolesGuard)
+@Roles('Admin','Rh')
+async findByOffer(@Param('jobOffre') jobOffre: string, @Res() res) {
+  try {
+    const applications = await this.applicationService.findByOffer(jobOffre);
+    return res.status(HttpStatus.OK).json({
+      message: 'Applications retrieved successfully',
+      data: applications,
+      status: HttpStatus.OK
+    });
+  } catch (error) {
+    return res.status(HttpStatus.BAD_REQUEST).json({
+      data: null,
+      status: HttpStatus.BAD_REQUEST,
+      message: error.message
+    });
+  }
+}
 }

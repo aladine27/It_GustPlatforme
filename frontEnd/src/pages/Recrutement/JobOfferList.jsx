@@ -5,6 +5,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import CategoryIcon from "@mui/icons-material/Category";
 import { ButtonComponent } from "../../components/Global/ButtonComponent";
@@ -13,14 +14,20 @@ import JobOfferDetailsModal from "../../components/JobOffre/JobOfferDetailsModal
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllJobOffres,
+  fetchJobOffreByCategory, 
   createJobOffre,
+  updateJobOffre,
   fetchAllJobCategories,
   createJobCategory,
   updateJobCategory,
   deleteJobCategory,
-} from "../../redux/actions/JobOffreAction";
+  deleteJobOffre,
+  
+} from "../../redux/actions/jobOffreAction.js";
 import CategoryFormModal from "../../components/JobOffre/CategoryFormModal";
 import CreateJobOfferModal from "../../components/JobOffre/CreateJobOffreModal";
+import CustomDeleteForm from "../../components/Global/CustomDeleteForm";
+import PaginationComponent from "../../components/Global/PaginationComponent";
 
 // Helpers pour l'affichage des statuts/types
 function getStatusColor(status) {
@@ -55,15 +62,26 @@ export default function JobOfferList() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [detailOffer, setDetailOffer] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState("all");
+
+  // *** Ajouts pour la gestion d'ajout / édition / suppression ***
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [editOffer, setEditOffer] = useState(null);
+  const [deleteOffer, setDeleteOffer] = useState(null);
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 3; 
+
+
+
 
   useEffect(() => {
     dispatch(fetchAllJobOffres());
     dispatch(fetchAllJobCategories());
   }, [dispatch]);
+  
 
-  // Filtres dynamiques (remplacent le filter sur mock)
+  // Filtres dynamiques
   const offers = useMemo(() => {
     let arr = offersBackend;
     if (statusFilter !== "all")
@@ -76,7 +94,6 @@ export default function JobOfferList() {
         (o.location && o.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (o.type && o.type.toLowerCase().includes(searchTerm.toLowerCase()))
       );
-    // Tri dynamique
     if (sortBy === "salary")
       arr = [...arr].sort((a, b) => (Number(b.salaryRange) || 0) - (Number(a.salaryRange) || 0));
     else if (sortBy === "title")
@@ -85,8 +102,19 @@ export default function JobOfferList() {
       arr = [...arr].sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate));
     return arr;
   }, [offersBackend, searchTerm, statusFilter, typeFilter, sortBy]);
+    useEffect(() => {
+    if (categoryFilter) {
+      dispatch(fetchJobOffreByCategory(categoryFilter));
+    } else {
+      dispatch(fetchAllJobOffres());
+    }
+  }, [categoryFilter, dispatch]);
+  const paginatedOffers = useMemo(() => {
+  const start = (page - 1) * rowsPerPage;
+  return offers.slice(start, start + rowsPerPage);
+}, [offers, page]);
 
-  // Gestion catégories (pas changé)
+  // Gestion catégories
   const handleCreateCategory = async (name) => {
     await dispatch(createJobCategory({ name })).unwrap();
     dispatch(fetchAllJobCategories());
@@ -133,7 +161,10 @@ export default function JobOfferList() {
             <ButtonComponent
               text="Add New Offer"
               icon={<AddCircleOutlineIcon />}
-              onClick={() => setCreateModalOpen(true)}
+              onClick={() => {
+                setCreateModalOpen(true);
+                setEditOffer(null); // mode ajout
+              }}
               color="#0082c8"
             />
           </Stack>
@@ -141,7 +172,7 @@ export default function JobOfferList() {
 
         {/* Search + Filters */}
         <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
-          <Grid item xs={12} md={5}>
+          <Grid item xs={12} md={4}>
             <Box sx={{ width: "100%", position: "relative" }}>
               <TextField
                 fullWidth
@@ -185,7 +216,7 @@ export default function JobOfferList() {
               />
             </Box>
           </Grid>
-          <Grid item xs={12} md={7}>
+          <Grid item xs={10} md={7.8}>
             <Stack
               direction={{ xs: "column", sm: "row" }}
               gap={2}
@@ -258,13 +289,42 @@ export default function JobOfferList() {
                 <MenuItem value="salary">Salary</MenuItem>
                 <MenuItem value="title">Title</MenuItem>
               </TextField>
+            =<TextField
+  select
+  label="Catégorie"
+  value={categoryFilter}
+  onChange={e => setCategoryFilter(e.target.value)}
+  size="small"
+  sx={{
+    minWidth: 150,
+    bgcolor: "#fff",
+    borderRadius: 2,
+    "& .MuiOutlinedInput-root": { borderRadius: 2 }
+  }}
+  InputProps={{
+    startAdornment: (
+      <InputAdornment position="start">
+        <CategoryIcon fontSize="small" />
+      </InputAdornment>
+    ),
+  }}
+>
+  {/* Valeur par défaut, à mettre en premier */}
+  <MenuItem value="all" sx={{ color: "#8c97a8" }}>All</MenuItem>
+  {jobCategories.map(cat =>
+    <MenuItem key={cat._id} value={cat._id}>
+      {cat.name}
+    </MenuItem>
+  )}
+</TextField>
+
+
             </Stack>
           </Grid>
         </Grid>
 
         <Divider sx={{ mb: 2, mx: 2 }} />
 
-        
         {loading ? (
           <Typography sx={{ mb: 3, fontWeight: 500, color: "#495672" }}>Chargement...</Typography>
         ) : error ? (
@@ -276,19 +336,40 @@ export default function JobOfferList() {
         )}
 
         {/* Job Cards */}
-        <Grid container spacing={3} sx={{ border:"1px solid red"  }}>
-          {offers.map((offer) => (
-            <Grid item xs={12} md={6} lg={4} key={offer._id} sx={{ border:"1px solid blue"}}>
-              <JobOfferCard
-                offer={offer}
-                getStatusColor={getStatusColor}
-                getTypeColor={getTypeColor}
-                formatDate={formatDate}
-                setDetailOffer={setDetailOffer}
-              />
-            </Grid>
-          ))}
-        </Grid>
+       <Grid container spacing={3}>
+  {paginatedOffers.map((offer) => (
+    <Grid item xs={12} md={6} lg={4} key={offer._id}>
+      <JobOfferCard
+        offer={offer}
+        getStatusColor={getStatusColor}
+        getTypeColor={getTypeColor}
+        formatDate={formatDate}
+        setDetailOffer={setDetailOffer}
+        onEdit={(offer) => {
+          setEditOffer(offer);
+          setCreateModalOpen(true);
+        }}
+        onDelete={(offer) => setDeleteOffer(offer)}
+      />
+    </Grid>
+  ))}
+</Grid>
+<Box sx={{ mt: 4 }}>
+{ rowsPerPage && (
+  <PaginationComponent
+    count={Math.ceil(offers.length / rowsPerPage)}
+    page={page}
+    onChange={(_, value) => setPage(value)}
+    siblingCount={1}
+    boundaryCount={1}
+   
+    showFirstButton
+    showLastButton
+  />
+)}
+</Box>
+
+
       </Box>
 
       {/* MODALES */}
@@ -312,15 +393,49 @@ export default function JobOfferList() {
 
       <CreateJobOfferModal
         open={createModalOpen}
-        handleClose={() => setCreateModalOpen(false)}
+        handleClose={() => {
+          setCreateModalOpen(false);
+          setEditOffer(null);
+        }}
         jobCategories={jobCategories}
         userId={userId}
-        onSubmit={
-          async (payload) => {
-          await dispatch(createJobOffre(payload)).unwrap();
-                dispatch(fetchAllJobOffres());
+        editOffer={editOffer}
+        onSubmit={async (payload) => {
+          if (editOffer) {
+            await dispatch(updateJobOffre({ id: editOffer._id, updateData: payload })).unwrap();
+            setEditOffer(null);
+            setCreateModalOpen(false);
+          } else {
+            await dispatch(createJobOffre(payload)).unwrap();
+            setCreateModalOpen(false);
+          }
+          dispatch(fetchAllJobOffres());
         }}
       />
+
+       <CustomDeleteForm
+        open={!!deleteOffer}
+        handleClose={() => setDeleteOffer(null)}
+        title={`Confirmer la suppression de l'offre "${deleteOffer?.title || ''}" ?`}
+        icon={<DeleteOutlineOutlinedIcon sx={{ fontSize: 34, color: "red" }} />}
+      >
+        <Box sx={{ mt: 2, display: "flex", justifyContent: "center", gap: 2 }}>
+          <ButtonComponent
+            color="error"
+            text="Supprimer"
+            onClick={async () => {
+              await dispatch(deleteJobOffre(deleteOffer._id)).unwrap();
+              setDeleteOffer(null);
+              dispatch(fetchAllJobOffres());
+            }}
+          />
+          <ButtonComponent
+            color="inherit"
+            text="Annuler"
+            onClick={() => setDeleteOffer(null)}
+          />
+        </Box>
+      </CustomDeleteForm>
     </Box>
   );
 }

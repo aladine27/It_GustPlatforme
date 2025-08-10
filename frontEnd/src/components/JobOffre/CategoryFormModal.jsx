@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Box, Typography, Paper, TextField, Stack, Button, Divider, List, ListItem,
-  ListItemSecondaryAction, IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, Chip, Fade
+  ListItemSecondaryAction, IconButton, Tooltip, Chip, Fade
 } from "@mui/material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import EditIcon from "@mui/icons-material/Edit";
@@ -9,11 +9,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CategoryIcon from "@mui/icons-material/Category";
-import WarningIcon from "@mui/icons-material/Warning";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import ModelComponent from "../../components/Global/ModelComponent";
+import CustomDeleteForm from "../../components/Global/CustomDeleteForm"; // Ajoute cet import
 
 export default function CategoryFormModal({
   open,
@@ -30,7 +30,19 @@ export default function CategoryFormModal({
   const [catToDelete, setCatToDelete] = useState(null);
 
   const schema = Yup.object().shape({
-    category: Yup.string().trim().required("Le nom de la catégorie est requis").max(40, "40 caractères max")
+    category: Yup.string().trim().required("Le nom de la catégorie est requis")
+    .max(40, "40 caractères max")
+    .test(
+        "unique",
+        "Cette catégorie existe déjà",
+        function (value) {
+          if (!value) return true;
+          const norm = value.trim().toLowerCase();
+          return !jobCategories.some(
+            (cat) => cat.name.trim().toLowerCase() === norm
+          );
+        }
+      ),
   });
   const {
     control,
@@ -136,7 +148,6 @@ export default function CategoryFormModal({
                   type="submit"
                   variant="contained"
                   startIcon={<AddCircleOutlineIcon />}
-                  // disabled={isSubmitting} // Si besoin, sinon commente pour debug
                 >
                   {"Créer la catégorie"}
                 </Button>
@@ -226,26 +237,34 @@ export default function CategoryFormModal({
           </Box>
         </Box>
       </ModelComponent>
-      {/* Dialog de confirmation de suppression */}
-      <Dialog open={deleteConfirmOpen} onClose={cancelDelete} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <WarningIcon color="warning" />
-          {"Confirmer la suppression"}
-        </DialogTitle>
-        <DialogContent>
-          <Typography>
-            {"Êtes-vous sûr de vouloir supprimer la catégorie"} <strong>"{catToDelete?.name}"</strong> ?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={cancelDelete} color="inherit">
-            {"Annuler"}
+      {/* Dialog de confirmation de suppression (remplacé par CustomDeleteForm) */}
+      <CustomDeleteForm
+        open={deleteConfirmOpen}
+        handleClose={cancelDelete}
+        title={
+          <>
+            Confirmer la suppression de la catégorie <b>{catToDelete?.name}</b> ?
+          </>
+        }
+        icon={<DeleteIcon sx={{ fontSize: 40, color: "red" }} />}
+      >
+        <Box sx={{ mt: 2, display: "flex", justifyContent: "center", gap: 2 }}>
+          <Button
+            color="error"
+            variant="contained"
+            startIcon={<DeleteIcon />}
+            onClick={confirmDelete}
+          >
+            Supprimer
           </Button>
-          <Button onClick={confirmDelete} color="error" variant="contained" startIcon={<DeleteIcon />}>
-            {"Supprimer"}
+          <Button
+            color="inherit"
+            onClick={cancelDelete}
+          >
+            Annuler
           </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      </CustomDeleteForm>
     </>
   );
 }

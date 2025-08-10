@@ -144,7 +144,6 @@ export class AuthController {
       const user = req.user as any;
       const token = await this.authService.generateToken(user._id, user.email, user.role);
   
-      // Encodage base64 + encodeURIComponent
       const userEncoded = encodeURIComponent(Buffer.from(JSON.stringify(user)).toString("base64"));
   
     const redirectUrl = `http://localhost:5173/google-redirect?token=${token.accessToken}&user=${encodeURIComponent(Buffer.from(JSON.stringify({

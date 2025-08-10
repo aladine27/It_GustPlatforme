@@ -16,6 +16,7 @@ export class EventController {
   constructor(private readonly eventService: EventService) {}
 
   @Post()  
+  
   @UseGuards( RolesGuard)
   @Roles('Admin','Rh')
   async create(@Body() createEventDto: CreateEventDto, @Res() res) {

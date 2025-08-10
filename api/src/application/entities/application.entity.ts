@@ -5,7 +5,7 @@ import { timestamp } from "rxjs";
 @Schema({timestamps:true})
 export class Application {
     
-     @Prop({required: true, unique: true})
+     @Prop({required: true})
     cvFile: string;
     @Prop({ type: SchemaTypes.ObjectId, ref: 'jobOffres', required: true })
     jobOffre: Types.ObjectId;
