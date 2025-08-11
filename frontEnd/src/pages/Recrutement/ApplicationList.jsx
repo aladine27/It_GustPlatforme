@@ -1,28 +1,46 @@
 // src/pages/Recrutement/ApplicationList.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Box, Paper, Typography, Divider, Stack } from "@mui/material";
-import TableComponent from "../../components/Global/TableComponent";
-import PaginationComponent from "../../components/Global/PaginationComponent";
-import { ButtonComponent } from "../../components/Global/ButtonComponent";
+import {
+  Box, Paper, Typography, Divider, Stack, TextField, InputAdornment, Slider,
+  Tooltip, IconButton
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import EmailIcon from "@mui/icons-material/Email";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
+import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+
+import TableComponent from "../../components/Global/TableComponent";
+import PaginationComponent from "../../components/Global/PaginationComponent";
+import { ButtonComponent } from "../../components/Global/ButtonComponent";
 import { fetchApplicationsByJobOffre } from "../../redux/actions/applicationAction";
+import ModelComponent from "../../components/Global/ModelComponent";
 
 const FILE_BASE = "http://localhost:3000/uploads/applications";
 const FLASK_URL = "http://localhost:5000/match_skills";
 
-export default function ApplicationListRHIA() {
+export default function ApplicationList({ selectedOffer }) {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
-  const { jobOffreId } = useParams();
-  const { state } = useLocation();
-  const currentOffer = state?.offer || null;
 
+  // Compat route (fallback)
+  const params = useParams();
+  const location = useLocation();
+  const routeOffer = location?.state?.offer || null;
+  const currentOffer = selectedOffer || routeOffer || null;
+  const jobOffreId = currentOffer?._id || params?.jobOffreId || null;
+
+  // Redux
   const { list: applications = [], loading, error } = useSelector((s) => s.application);
 
+  // States
   const [page1, setPage1] = useState(1);
   const [page2, setPage2] = useState(1);
   const [filtered, setFiltered] = useState(false);
@@ -30,19 +48,44 @@ export default function ApplicationListRHIA() {
   const [iaError, setIaError] = useState(null);
   const [iaResults, setIaResults] = useState([]);
 
+  // Filtres (UNIQUEMENT bloc IA)
+  const [search, setSearch] = useState("");
+  const [scoreRange, setScoreRange] = useState([0, 100]);
+
+  const prettyName = (f = "") => {
+    const m = f.match(/^[A-Za-z0-9]{10,}[-_](.+)$/);
+    return m ? m[1] : f;
+  };
+
+  // Aperçu (modal)
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewFile, setPreviewFile] = useState(null);
+
+  // Zoom CV (modal)
+  const [zoom, setZoom] = useState(1);
+  const ZOOM_MIN = 0.5;
+  const ZOOM_MAX = 2;
+  const ZOOM_STEP = 0.1;
+
+  const handleZoomIn = () => setZoom((z) => Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2)));
+  const handleZoomOut = () => setZoom((z) => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)));
+  const handleZoomReset = () => setZoom(1);
+
+  // Charger candidatures
   useEffect(() => {
-    if (jobOffreId) {
-      console.log("[UI] fetching applications for offer:", jobOffreId);
-      dispatch(fetchApplicationsByJobOffre(jobOffreId));
-    }
+    if (jobOffreId) dispatch(fetchApplicationsByJobOffre(jobOffreId));
   }, [jobOffreId, dispatch]);
 
-  // --- Table 1 (CV reçus)
-  const cvColumns = [{ id: "filename", label: "Nom du fichier" }];
-  const rowsPerPage1 = 8;
+  // ===== Bloc 1 : CV reçus (simple) =====
+  const cvColumns = [{ id: "displayFilename", label: t("Nom du fichier") }];
+  const rowsPerPage1 = 5;
 
   const cvRows = useMemo(
-    () => applications.map((a) => ({ _id: a._id, filename: a.cvFile || "-" })),
+    () => applications.map((a) => ({
+      _id: a._id,
+      storedFilename: a.cvFile || "-",
+      displayFilename: prettyName(a.cvFile || "-"),
+    })),
     [applications]
   );
 
@@ -53,13 +96,22 @@ export default function ApplicationListRHIA() {
 
   const cvActions = [
     {
-      tooltip: "Télécharger",
+      tooltip: t("Aperçu"),
+      icon: <PictureAsPdfIcon color="primary" fontSize="small" />,
+      onClick: (row) => {
+        setPreviewFile(row.storedFilename);
+        setPreviewOpen(true);
+        handleZoomReset();
+      },
+    },
+    {
+      tooltip: t("Télécharger"),
       icon: <DownloadIcon color="primary" fontSize="small" />,
-      onClick: (row) => window.open(`${FILE_BASE}/${row.filename}`, "_blank"),
+      onClick: (row) => window.open(`${FILE_BASE}/${row.storedFilename}`, "_blank"),
     },
   ];
 
-  // --- Filtrage IA (Flask) + limite aux fichiers de l'offre
+  // ===== IA : POST Flask =====
   const handleFilterIA = async () => {
     const requirements =
       currentOffer?.requirements ||
@@ -67,72 +119,32 @@ export default function ApplicationListRHIA() {
       "";
 
     if (!requirements) {
-      alert("Aucun requirements trouvé pour cette offre.");
+      alert(t("Aucun requirements trouvé pour cette offre."));
       return;
     }
 
     const allowedSet = new Set(applications.map((a) => a?.cvFile).filter(Boolean));
     const allowed_filenames = Array.from(allowedSet);
 
-    console.groupCollapsed("%c[IA] Lancement filtrage", "color:#1976d2;font-weight:bold");
-    console.log("[IA] Offer ID:", jobOffreId);
-    console.log("[IA] Offer title:", currentOffer?.title);
-    console.log("[IA] Requirements (raw):", requirements);
-    console.log("[IA] Fichiers autorisés (liés à l'offre) — count:", allowed_filenames.length);
-    console.table(allowed_filenames.map((f) => ({ filename: f })));
-    console.groupEnd();
-
     setFiltered(true);
     setIaLoading(true);
     setIaError(null);
 
     try {
-      console.groupCollapsed("%c[IA] POST -> Flask /match_skills (payload)", "color:#6b7280");
-      console.log({ requirements, allowed_filenames });
-      console.groupEnd();
-
       const res = await axios.post(FLASK_URL, { requirements, allowed_filenames });
-
-      console.groupCollapsed("%c[IA] Réponse Flask brute", "color:#6b7280");
-      console.log(res.status, res.statusText);
-      console.table((Array.isArray(res.data) ? res.data : []).map((r) => ({
-        filename: r.filename,
-        email: r.email || "-",
-        score: r.score,
-        skills_count: (r.skills_matched || []).length,
-        error: r.error || "",
-      })));
-      console.groupEnd();
-
       const raw = Array.isArray(res.data) ? res.data : [];
-      const onlyLinked = raw.filter((it) => allowedSet.has(it.filename));
-
-      // Log de contrôle: voir s'il manque des fichiers
-      const missing = allowed_filenames.filter((f) => !onlyLinked.some((x) => x.filename === f));
-      if (missing.length) {
-        console.warn("[IA] Ces fichiers liés à l'offre n'apparaissent pas dans la réponse Flask:", missing);
-      }
-
-      // Log détaillé par fichier (pour traquer celui qui ne sort rien)
-      onlyLinked.forEach((it) => {
-        const hasText = !(it.error) && (typeof it.score === "number"); // proxy, on n'a pas la longueur mais on peut lire score/error
-        const info = {
-          filename: it.filename,
-          email: it.email || "-",
-          score: it.score,
-          skills: (it.skills_matched || []).join(", "),
-          error: it.error || "-",
-        };
-        if (!hasText || it.score === 0) {
-          console.warn("[IA][WARN] Pas d'infos/score 0 pour ce CV:", info);
-        } else {
-          console.log("[IA] OK:", info);
-        }
-      });
-
+      const onlyLinked = raw
+        .filter((it) => allowedSet.has(it.filename))
+        .map((r) => ({
+          filename: r.filename,                    // brut pour actions
+          displayFilename: prettyName(r.filename), // joli pour affichage
+          email: r.email || "-",
+          score: typeof r.score === "number" ? Math.round(r.score) : 0,
+          skills_matched: r.skills_matched || [],
+        }));
       setIaResults(onlyLinked);
+      setPage2(1);
     } catch (e) {
-      console.error("[IA][ERROR] Flask call failed:", e);
       setIaError(e?.response?.data?.error || e.message);
       setIaResults([]);
     } finally {
@@ -140,16 +152,15 @@ export default function ApplicationListRHIA() {
     }
   };
 
-  // --- Table 2 (résultat IA)
+  // ===== Bloc 2 : Résultats IA =====
   const iaColumns = [
-    { id: "ranking", label: "Rang", render: (row) => <b>{row.ranking}</b> },
-    { id: "filename", label: "CV" },
-    { id: "email", label: "Email" },
-    { id: "poste", label: "Poste" },
-    { id: "score", label: "Score IA" },
+    { id: "ranking", label: t("Rang"), render: (row) => <b>{row.ranking}</b> },
+    { id: "displayFilename", label: t("CV") },
+    { id: "email", label: t("Email") },
+    { id: "score", label: t("Score IA") },
     {
       id: "skills_matched",
-      label: "Compétences trouvées",
+      label: t("Compétences"),
       render: (row) => (
         <Stack direction="row" spacing={0.5} flexWrap="wrap">
           {(row.skills_matched || []).map((s) => (
@@ -171,21 +182,27 @@ export default function ApplicationListRHIA() {
       ),
     },
   ];
-  const rowsPerPage2 = 10;
+  const rowsPerPage2 = 5;
 
-  const iaRows = useMemo(() => {
-    const sorted = [...iaResults].sort(
-      (a, b) => (Number(b.score) || 0) - (Number(a.score) || 0)
-    );
-    return sorted.map((r, idx) => ({
-      ranking: idx + 1,
-      filename: r.filename,
-      email: r.email || "-",
-      poste: currentOffer?.title || "-",
-      score: r.score ?? "-",
-      skills_matched: r.skills_matched || [],
-    }));
-  }, [iaResults, currentOffer]);
+  // Filtres (recherche + score) appliqués aux résultats IA
+  const iaRowsFiltered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const [min, max] = scoreRange;
+    return iaResults
+      .filter((r) => {
+        const scoreOk =
+          typeof r.score === "number" ? r.score >= min && r.score <= max : true;
+        if (!q) return scoreOk;
+        const hay = `${r.displayFilename} ${r.email} ${(r.skills_matched || []).join(" ")}`.toLowerCase();
+        return scoreOk && hay.includes(q);
+      })
+      .sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+  }, [iaResults, search, scoreRange]);
+
+  const iaRows = useMemo(
+    () => iaRowsFiltered.map((r, idx) => ({ ranking: idx + 1, ...r })),
+    [iaRowsFiltered]
+  );
 
   const paginatedIARows = useMemo(() => {
     const start = (page2 - 1) * rowsPerPage2;
@@ -194,18 +211,27 @@ export default function ApplicationListRHIA() {
 
   const iaActions = [
     {
-      tooltip: "Télécharger CV",
+      tooltip: t("Aperçu"),
+      icon: <PictureAsPdfIcon fontSize="small" color="primary" />,
+      onClick: (row) => {
+        setPreviewFile(row.filename);
+        setPreviewOpen(true);
+        handleZoomReset();
+      },
+    },
+    {
+      tooltip: t("Télécharger CV"),
       icon: <DownloadIcon color="primary" fontSize="small" />,
       onClick: (row) => window.open(`${FILE_BASE}/${row.filename}`, "_blank"),
     },
     {
-      tooltip: "Envoyer Email",
+      tooltip: t("Envoyer Email"),
       icon: <EmailIcon color="primary" fontSize="small" />,
       onClick: (row) => {
         if (!row.email || row.email === "-") return;
         window.open(
           `mailto:${row.email}?subject=${encodeURIComponent(
-            `Candidature ${row.filename}`
+            `${t("Candidature")} ${row.filename}`
           )}&body=${encodeURIComponent("Bonjour,")}`,
           "_blank"
         );
@@ -217,26 +243,26 @@ export default function ApplicationListRHIA() {
     <Box sx={{ minHeight: "100vh", bgcolor: "#f6f8fb", py: 3 }}>
       <Box sx={{ maxWidth: 1250, mx: "auto", px: { xs: 1, md: 2 } }}>
         <Typography variant="h4" fontWeight={800} color="primary" gutterBottom>
-          Candidatures – Filtrage IA
+          {t("Candidatures — Filtrage & Aperçu")}
         </Typography>
 
-        {/* Bloc 1 : Table des CV */}
+        {/* Bloc 1 : Table des CV (backend) */}
         <Paper sx={{ p: 3, mb: 4, borderRadius: 4, boxShadow: 2 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
             <Typography variant="h6" fontWeight={700} color="primary">
-              CV Reçus ({applications.length})
+              {t("CV Reçus")} ({cvRows.length})
             </Typography>
             <ButtonComponent
-              text={iaLoading ? "Analyse..." : "Filtrer via IA"}
+              text={iaLoading ? t("Analyse...") : t("Filtrer via IA")}
               icon={<FilterAltIcon />}
               onClick={handleFilterIA}
               color="#1976d2"
-              disabled={iaLoading}
+              disabled={iaLoading || cvRows.length === 0}
             />
           </Stack>
           <Divider sx={{ mb: 2 }} />
           {loading ? (
-            <Typography>Chargement...</Typography>
+            <Typography>{t("Chargement...")}</Typography>
           ) : error ? (
             <Typography color="error">{error}</Typography>
           ) : (
@@ -253,22 +279,66 @@ export default function ApplicationListRHIA() {
           )}
         </Paper>
 
-        {/* Bloc 2 : Résultat IA */}
+        {/* Bloc 2 : Résultats IA */}
         <Paper sx={{ p: 3, borderRadius: 4, boxShadow: 2 }}>
           <Typography variant="h6" fontWeight={700} color="primary" mb={2}>
-            Résultats du filtrage IA
+            {t("Résultats du filtrage IA")}
           </Typography>
 
           {!filtered ? (
             <Typography color="#64748b" fontStyle="italic" mb={2}>
-              Cliquez sur <b>Filtrer via IA</b> pour lancer l’analyse automatique.
+              {t("Lance l’analyse via le bouton {{btn}} au-dessus.", { btn: t("Filtrer via IA") })}
             </Typography>
           ) : iaLoading ? (
-            <Typography>Analyse en cours...</Typography>
+            <Typography>{t("Analyse en cours...")}</Typography>
           ) : iaError ? (
             <Typography color="error">{iaError}</Typography>
           ) : (
             <>
+              {/* Filtres IA */}
+              <Stack
+                direction={{ xs: "column", md: "row" }}
+                spacing={2}
+                alignItems={{ xs: "stretch", md: "center" }}
+                justifyContent="space-between"
+                sx={{
+                  width: "65%",
+                  "& .MuiSlider-rail, & .MuiSlider-track": { height: 6 },
+                  "& .MuiSlider-thumb": { width: 16, height: 16 },
+                  mb:2,
+                }}
+              >
+                <TextField
+                  fullWidth
+                  placeholder={t("Rechercher (email, fichier, compétence...)")}
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage2(1);
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <Box sx={{ minWidth: 280 }}>
+                  <Typography variant="caption" sx={{ color: "#64748b" }}>
+                    {t("Score IA ({{min}} - {{max}})", { min: scoreRange[0], max: scoreRange[1] })}
+                  </Typography>
+                  <Slider
+                    value={scoreRange}
+                    onChange={(_, v) => setScoreRange(v)}
+                    valueLabelDisplay="auto"
+                    min={0}
+                    max={100}
+                  />
+                </Box>
+              </Stack>
+
               <TableComponent columns={iaColumns} rows={paginatedIARows} actions={iaActions} />
               <Box sx={{ mt: 2 }}>
                 <PaginationComponent
@@ -281,6 +351,63 @@ export default function ApplicationListRHIA() {
           )}
         </Paper>
       </Box>
+
+      {/* Modal d'aperçu (iframe PDF/HTML) + ZOOM */}
+      <ModelComponent
+        open={previewOpen}
+        handleClose={() => { setPreviewOpen(false); setPreviewFile(null); handleZoomReset(); }}
+        title={t("Aperçu du CV")}
+        icon={<PictureAsPdfIcon />}
+      >
+        {previewFile ? (
+          <Box>
+            {/* Toolbar Zoom */}
+            <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={1} sx={{ mb: 1 }}>
+              <Tooltip title={t("Zoom -")}>
+                <span>
+                  <IconButton onClick={handleZoomOut} disabled={zoom <= ZOOM_MIN} size="small">
+                    <RemoveRoundedIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Typography variant="body2" sx={{ minWidth: 64, textAlign: "center" }}>
+                {(zoom * 100).toFixed(0)}%
+              </Typography>
+              <Tooltip title={t("Zoom +")}>
+                <span>
+                  <IconButton onClick={handleZoomIn} disabled={zoom >= ZOOM_MAX} size="small">
+                    <AddRoundedIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Tooltip title={t("Réinitialiser")}>
+                <IconButton onClick={handleZoomReset} size="small">
+                  <RestartAltRoundedIcon />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+
+            {/* Zone scrollable + scale */}
+            <Box sx={{ height: "72vh", overflow: "auto", borderRadius: 1, bgcolor: "#fafbfc", p: 1 }}>
+              <Box
+                sx={{
+                  transform: `scale(${zoom})`,
+                  transformOrigin: "top left",
+                  width: `${100 / zoom}%`,
+                }}
+              >
+                <iframe
+                  title="cv-preview"
+                  src={`${FILE_BASE}/${previewFile}`}
+                  style={{ width: "100%", height: "72vh", border: "none", borderRadius: 8 }}
+                />
+              </Box>
+            </Box>
+          </Box>
+        ) : (
+          <Typography color="text.secondary">{t("Aucun fichier sélectionné.")}</Typography>
+        )}
+      </ModelComponent>
     </Box>
   );
 }

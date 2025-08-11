@@ -11,9 +11,7 @@ import { LeaveModule } from './leave/leave.module';
 import { EventModule } from './event/event.module';
 import { ApplicationModule } from './application/application.module';
 import { DocumentModule } from './document/document.module';
-
 import { LeaveTypeModule } from './leave-type/leave-type.module';
-
 import { EventTypeModule } from './event-type/event-type.module';
 import { AdminModule } from './admin/admin.module';
 import { RhModule } from './rh/rh.module';

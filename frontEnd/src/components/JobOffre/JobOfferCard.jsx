@@ -13,6 +13,7 @@ import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { styled } from "@mui/material/styles";
 import MuiTooltip, { tooltipClasses } from "@mui/material/Tooltip";
+import { useTranslation } from "react-i18next";
 
 const WhiteTooltip = styled(({ className, ...props }) => (
   <MuiTooltip {...props} arrow classes={{ popper: className }} placement="top" />
@@ -42,7 +43,9 @@ export default function JobOfferCard({
   setDetailOffer,
   onEdit,
   onDelete,
+  onOpenApplications,
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const status = getStatusColor(offer.status);
   const type = getTypeColor(offer.type);
@@ -83,13 +86,14 @@ export default function JobOfferCard({
             target="_blank"
             rel="noopener"
             underline="hover"
+            title={t("Open in Maps")}
           >
             <LocationOnOutlinedIcon sx={{ fontSize: 18, color: "#1976d2" }} />
             {offer.location}
           </Typography>
           <Chip
             icon={<WorkOutlineIcon sx={{ fontSize: 16, color: type.color }} />}
-            label={offer.type}
+            label={t(offer.type || "")}
             sx={{
               bgcolor: type.bg,
               color: type.color,
@@ -103,7 +107,7 @@ export default function JobOfferCard({
           />
         </Box>
         <Chip
-          label={offer.status}
+          label={t(offer.status || "")}
           sx={{
             position: "absolute",
             top: 12,
@@ -126,7 +130,7 @@ export default function JobOfferCard({
           <ChecklistRtlOutlinedIcon sx={{ color: "#1a237e", fontSize: 20, mr: 1, mt: 0.5 }} />
           <Box sx={{ height: "50px", mb: "20px" }}>
             <Typography fontWeight={600} fontSize={15} color="#1a237e" sx={{ mb: 0.5 }}>
-              Job Description:
+              {t("Job Description")}:
             </Typography>
             <Typography
               variant="body2"
@@ -153,7 +157,7 @@ export default function JobOfferCard({
           <ChecklistRtlOutlinedIcon sx={{ color: "#1a237e", fontSize: 20, mr: 1, mt: 0.5 }} />
           <Box sx={{ height: "50px", mb: "20px" }}>
             <Typography fontWeight={600} fontSize={15} color="#1a237e" sx={{ mb: 0.5 }}>
-              Requirements:
+              {t("Requirements")}:
             </Typography>
             <Typography
               fontSize={14}
@@ -177,7 +181,7 @@ export default function JobOfferCard({
 
       <Divider sx={{ my: 2, borderColor: "#e5e7eb" }} />
 
-      {/* Footer Chips + Applicants (click => page IA) */}
+      {/* Footer Chips + Applicants */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, pl: 3, pb: 1 }}>
         <Chip
           icon={<MonetizationOnOutlinedIcon sx={{ fontSize: 16, color: "#2e7d32" }} />}
@@ -186,40 +190,48 @@ export default function JobOfferCard({
         />
         <Chip
           icon={<CalendarMonthOutlinedIcon sx={{ fontSize: 16, color: "#d97706" }} />}
-          label={`Closes ${formatDate(offer.closingDate)}`}
+          label={t("Closes {{date}}", { date: formatDate(offer.closingDate) })}
           sx={{ bgcolor: "#fff3e0", color: "#d97706", fontWeight: 600, fontSize: 13, borderRadius: "12px", px: 1, height: 26 }}
         />
       </Box>
 
       <Box
         sx={{ pl: 3, pb: 2, mt: 2, cursor: "pointer" }}
-        onClick={() => navigate(`/dashboard/recrutement/applications/${offer._id}`, { state: { offer } })}
-        title="Voir les candidatures de cette offre"
+        onClick={() => {
+          if (onOpenApplications) onOpenApplications(offer);
+          else navigate(`/dashboard/recrutement/applications/${offer._id}`, { state: { offer } });
+        }}
+        title={t("View this offer's applicants")}
       >
         <Typography component="span" sx={{ fontWeight: 700, color: "#1e3a8a", fontSize: 18 }}>
           {Array.isArray(offer.applications) ? offer.applications.length : 0}
         </Typography>
         <Typography component="span" sx={{ color: "#1e3a8a", fontWeight: 500, ml: 0.5, fontSize: 16 }}>
-          applicants
+          {t("applicants")}
         </Typography>
       </Box>
 
       {/* Actions + Posted */}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, pb: 1.5, bgcolor: "#f5faff",
-        borderBottomLeftRadius: "20px", borderBottomRightRadius: "20px" }}>
-        <Typography sx={{ color: "#6b7280", fontSize: 14, fontWeight: 500 }}>Posted {formatDate(offer.postedDate)}</Typography>
+      <Box sx={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        px: 2, pb: 1.5, bgcolor: "#f5faff",
+        borderBottomLeftRadius: "20px", borderBottomRightRadius: "20px"
+      }}>
+        <Typography sx={{ color: "#6b7280", fontSize: 14, fontWeight: 500 }}>
+          {t("Posted {{date}}", { date: formatDate(offer.postedDate) })}
+        </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <WhiteTooltip title="Voir les détails">
+          <WhiteTooltip title={t("Voir les détails")}>
             <IconButton size="small" onClick={() => setDetailOffer(offer)} sx={{ "&:hover": { bgcolor: "#e3f2fd" } }}>
               <InfoOutlinedIcon fontSize="small" sx={{ color: "#1976d2" }} />
             </IconButton>
           </WhiteTooltip>
-          <WhiteTooltip title="Modifier l'offre">
+          <WhiteTooltip title={t("Modifier l'offre")}>
             <IconButton size="small" onClick={() => onEdit(offer)} sx={{ "&:hover": { bgcolor: "#e3f2fd" } }}>
               <EditOutlinedIcon fontSize="small" sx={{ color: "#1976d2" }} />
             </IconButton>
           </WhiteTooltip>
-          <WhiteTooltip title="Supprimer l'offre">
+          <WhiteTooltip title={t("Supprimer l'offre")}>
             <IconButton size="small" onClick={() => onDelete(offer)} sx={{ "&:hover": { bgcolor: "#e3f2fd" } }}>
               <DeleteOutlineOutlinedIcon fontSize="small" sx={{ color: "#d32f2f" }} />
             </IconButton>

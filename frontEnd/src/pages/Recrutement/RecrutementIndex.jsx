@@ -1,17 +1,25 @@
+// RecrutementIndex.jsx
 import React, { useState } from "react";
-import { Box, Button, Divider, Stack, Typography } from "@mui/material";
+import { Button, Divider, Stack } from "@mui/material";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import { StyledPaper } from "../../style/style";
 import JobOfferList from "./JobOfferList";
 import ApplicationList from "./ApplicationList";
+import { useTranslation } from "react-i18next";
 
 const RecrutementIndex = () => {
+  const { t } = useTranslation();
   const [view, setView] = useState("offers");
+  const [selectedOffer, setSelectedOffer] = useState(null);
+
+  const openApplicationsView = (offer) => {
+    setSelectedOffer(offer);
+    setView("applications");
+  };
 
   return (
     <StyledPaper>
-      {/* Onglets navigation */}
       <Stack direction="row" alignItems="center" mb={2}>
         <Button
           sx={{
@@ -24,10 +32,11 @@ const RecrutementIndex = () => {
           startIcon={<WorkOutlineIcon />}
           onClick={() => setView("offers")}
         >
-          Offres d'emploi
+          {t("Offres d'emploi")}
         </Button>
 
         <Button
+          disabled={!selectedOffer} // Bloqué si aucune offre n'est sélectionnée
           sx={{
             mr: 1,
             textTransform: "none",
@@ -38,15 +47,19 @@ const RecrutementIndex = () => {
           startIcon={<AssignmentIndIcon />}
           onClick={() => setView("applications")}
         >
-          Candidatures
+          {t("Candidatures")}
         </Button>
 
         <Divider sx={{ mb: 1, mx: 2 }} />
       </Stack>
 
-      {/* Vues dynamiques */}
-      {view === "offers" && <JobOfferList />}
-      {view === "applications" && <ApplicationList />}
+      {view === "offers" && (
+        <JobOfferList onOpenApplications={openApplicationsView} />
+      )}
+
+      {view === "applications" && (
+        <ApplicationList selectedOffer={selectedOffer} />
+      )}
     </StyledPaper>
   );
 };

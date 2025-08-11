@@ -1,3 +1,4 @@
+// src/pages/Recrutement/JobOfferList.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Box, Stack, Typography, TextField, MenuItem, InputAdornment, Grid, Divider, Button
@@ -22,14 +23,14 @@ import {
   updateJobCategory,
   deleteJobCategory,
   deleteJobOffre,
-  
 } from "../../redux/actions/jobOffreAction.js";
 import CategoryFormModal from "../../components/JobOffre/CategoryFormModal";
 import CreateJobOfferModal from "../../components/JobOffre/CreateJobOffreModal";
 import CustomDeleteForm from "../../components/Global/CustomDeleteForm";
 import PaginationComponent from "../../components/Global/PaginationComponent";
+import { useTranslation } from "react-i18next";
 
-// Helpers pour l'affichage des statuts/types
+// Helpers
 function getStatusColor(status) {
   if (!status) return { bg: "#f3f4f6", color: "#607d8b" };
   if (status.toLowerCase() === "open") return { bg: "#e4faeb", color: "#22a77c" };
@@ -49,14 +50,15 @@ function formatDate(dateStr) {
   return d.toLocaleDateString("en-GB");
 }
 
-export default function JobOfferList() {
+export default function JobOfferList({ onOpenApplications }) {
+  const { t } = useTranslation();
   const { CurrentUser } = useSelector((state) => state.user);
   const userId = CurrentUser?.user?._id || CurrentUser?._id;
   const dispatch = useDispatch();
   const { list: offersBackend = [], loading, error } = useSelector((state) => state.jobOffre);
   const { list: jobCategories = [] } = useSelector((state) => state.jobCategory);
 
-  // UI state pour filtres/recherche/tri
+  // UI states
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -64,22 +66,17 @@ export default function JobOfferList() {
   const [detailOffer, setDetailOffer] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState("all");
 
-  // *** Ajouts pour la gestion d'ajout / édition / suppression ***
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [editOffer, setEditOffer] = useState(null);
   const [deleteOffer, setDeleteOffer] = useState(null);
   const [page, setPage] = useState(1);
-  const rowsPerPage = 3; 
-
-
-
+  const rowsPerPage = 3;
 
   useEffect(() => {
     dispatch(fetchAllJobOffres());
     dispatch(fetchAllJobCategories());
   }, [dispatch]);
-  
 
   // Filtres dynamiques
   const offers = useMemo(() => {
@@ -102,17 +99,20 @@ export default function JobOfferList() {
       arr = [...arr].sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate));
     return arr;
   }, [offersBackend, searchTerm, statusFilter, typeFilter, sortBy]);
-    useEffect(() => {
-    if (categoryFilter) {
+
+  // Chargement par catégorie
+  useEffect(() => {
+    if (categoryFilter && categoryFilter !== "all") {
       dispatch(fetchJobOffreByCategory(categoryFilter));
     } else {
       dispatch(fetchAllJobOffres());
     }
   }, [categoryFilter, dispatch]);
+
   const paginatedOffers = useMemo(() => {
-  const start = (page - 1) * rowsPerPage;
-  return offers.slice(start, start + rowsPerPage);
-}, [offers, page]);
+    const start = (page - 1) * rowsPerPage;
+    return offers.slice(start, start + rowsPerPage);
+  }, [offers, page]);
 
   // Gestion catégories
   const handleCreateCategory = async (name) => {
@@ -135,10 +135,10 @@ export default function JobOfferList() {
         <Stack direction={{ xs: "column", md: "row" }} alignItems={{ xs: "start", md: "center" }} justifyContent="space-between" gap={2} mb={4}>
           <Box>
             <Typography variant="h4" fontWeight={800} color="primary" gutterBottom>
-              Job Offers
+              {t("Job Offers")}
             </Typography>
             <Typography variant="body1" color="#64748b">
-              Manage and track all your job postings
+              {t("Manage and track all your job postings")}
             </Typography>
           </Box>
           <Stack direction="row" gap={2}>
@@ -156,14 +156,14 @@ export default function JobOfferList() {
               }}
               onClick={() => setCategoryModalOpen(true)}
             >
-              Manage Categories
+              {t("Manage Categories")}
             </Button>
             <ButtonComponent
-              text="Add New Offer"
+              text={t("Add New Offer")}
               icon={<AddCircleOutlineIcon />}
               onClick={() => {
                 setCreateModalOpen(true);
-                setEditOffer(null); // mode ajout
+                setEditOffer(null);
               }}
               color="#0082c8"
             />
@@ -176,10 +176,10 @@ export default function JobOfferList() {
             <Box sx={{ width: "100%", position: "relative" }}>
               <TextField
                 fullWidth
-                label="Rechercher"
+                label={t("Rechercher")}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                placeholder="Titre, Lieu, Type..."
+                placeholder={t("Titre, Lieu, Type...")}
                 variant="outlined"
                 sx={{
                   bgcolor: "#fff",
@@ -207,15 +207,12 @@ export default function JobOfferList() {
                       <SearchIcon sx={{ color: "#2563eb", fontSize: 24 }} />
                     </InputAdornment>
                   ),
-                  sx: {
-                    borderRadius: "20px",
-                    bgcolor: "#fff",
-                    fontWeight: 500,
-                  }
+                  sx: { borderRadius: "20px", bgcolor: "#fff", fontWeight: 500 }
                 }}
               />
             </Box>
           </Grid>
+
           <Grid item xs={10} md={7.8}>
             <Stack
               direction={{ xs: "column", sm: "row" }}
@@ -225,16 +222,11 @@ export default function JobOfferList() {
             >
               <TextField
                 select
-                label="Status"
+                label={t("Status")}
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
                 size="small"
-                sx={{
-                  minWidth: 120,
-                  bgcolor: "#fff",
-                  borderRadius: 2,
-                  "& .MuiOutlinedInput-root": { borderRadius: 2 }
-                }}
+                sx={{ minWidth: 120, bgcolor: "#fff", borderRadius: 2, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -243,22 +235,18 @@ export default function JobOfferList() {
                   ),
                 }}
               >
-                <MenuItem value="all">All Status</MenuItem>
-                <MenuItem value="open">Open</MenuItem>
-                <MenuItem value="closed">Closed</MenuItem>
+                <MenuItem value="all">{t("All Status")}</MenuItem>
+                <MenuItem value="open">{t("Open")}</MenuItem>
+                <MenuItem value="closed">{t("Closed")}</MenuItem>
               </TextField>
+
               <TextField
                 select
-                label="Type"
+                label={t("Type")}
                 value={typeFilter}
                 onChange={e => setTypeFilter(e.target.value)}
                 size="small"
-                sx={{
-                  minWidth: 130,
-                  bgcolor: "#fff",
-                  borderRadius: 2,
-                  "& .MuiOutlinedInput-root": { borderRadius: 2 }
-                }}
+                sx={{ minWidth: 130, bgcolor: "#fff", borderRadius: 2, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -267,58 +255,47 @@ export default function JobOfferList() {
                   ),
                 }}
               >
-                <MenuItem value="all">All Types</MenuItem>
-                <MenuItem value="full-time">Full-time</MenuItem>
-                <MenuItem value="part-time">Part-time</MenuItem>
-                <MenuItem value="internship">Internship</MenuItem>
+                <MenuItem value="all">{t("All Types")}</MenuItem>
+                <MenuItem value="full-time">{t("Full-time")}</MenuItem>
+                <MenuItem value="part-time">{t("Part-time")}</MenuItem>
+                <MenuItem value="internship">{t("Internship")}</MenuItem>
               </TextField>
+
               <TextField
                 select
-                label="Sort By"
+                label={t("Sort By")}
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value)}
                 size="small"
-                sx={{
-                  minWidth: 110,
-                  bgcolor: "#fff",
-                  borderRadius: 2,
-                  "& .MuiOutlinedInput-root": { borderRadius: 2 }
+                sx={{ minWidth: 110, bgcolor: "#fff", borderRadius: 2, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              >
+                <MenuItem value="date">{t("Date")}</MenuItem>
+                <MenuItem value="salary">{t("Salary")}</MenuItem>
+                <MenuItem value="title">{t("Title")}</MenuItem>
+              </TextField>
+
+              <TextField
+                select
+                label={t("Catégorie")}
+                value={categoryFilter}
+                onChange={e => setCategoryFilter(e.target.value)}
+                size="small"
+                sx={{ minWidth: 150, bgcolor: "#fff", borderRadius: 2, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <CategoryIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
                 }}
               >
-                <MenuItem value="date">Date</MenuItem>
-                <MenuItem value="salary">Salary</MenuItem>
-                <MenuItem value="title">Title</MenuItem>
+                <MenuItem value="all" sx={{ color: "#8c97a8" }}>{t("All")}</MenuItem>
+                {jobCategories.map(cat =>
+                  <MenuItem key={cat._id} value={cat._id}>
+                    {cat.name}
+                  </MenuItem>
+                )}
               </TextField>
-            =<TextField
-  select
-  label="Catégorie"
-  value={categoryFilter}
-  onChange={e => setCategoryFilter(e.target.value)}
-  size="small"
-  sx={{
-    minWidth: 150,
-    bgcolor: "#fff",
-    borderRadius: 2,
-    "& .MuiOutlinedInput-root": { borderRadius: 2 }
-  }}
-  InputProps={{
-    startAdornment: (
-      <InputAdornment position="start">
-        <CategoryIcon fontSize="small" />
-      </InputAdornment>
-    ),
-  }}
->
-  {/* Valeur par défaut, à mettre en premier */}
-  <MenuItem value="all" sx={{ color: "#8c97a8" }}>All</MenuItem>
-  {jobCategories.map(cat =>
-    <MenuItem key={cat._id} value={cat._id}>
-      {cat.name}
-    </MenuItem>
-  )}
-</TextField>
-
-
             </Stack>
           </Grid>
         </Grid>
@@ -326,50 +303,49 @@ export default function JobOfferList() {
         <Divider sx={{ mb: 2, mx: 2 }} />
 
         {loading ? (
-          <Typography sx={{ mb: 3, fontWeight: 500, color: "#495672" }}>Chargement...</Typography>
+          <Typography sx={{ mb: 3, fontWeight: 500, color: "#495672" }}>{t("Chargement...")}</Typography>
         ) : error ? (
           <Typography color="error" sx={{ mb: 3 }}>{error}</Typography>
         ) : (
           <Typography sx={{ mb: 3, fontWeight: 500, color: "#495672" }}>
-            Showing <b>{offers.length}</b> of <b>{offersBackend.length}</b> job offers
+            {t("Showing {{shown}} of {{total}} job offers", {
+              shown: offers.length,
+              total: offersBackend.length
+            })}
           </Typography>
         )}
 
         {/* Job Cards */}
-       <Grid container spacing={3}>
-  {paginatedOffers.map((offer) => (
-    <Grid item xs={12} md={6} lg={4} key={offer._id}>
-      <JobOfferCard
-        offer={offer}
-        getStatusColor={getStatusColor}
-        getTypeColor={getTypeColor}
-        formatDate={formatDate}
-        setDetailOffer={setDetailOffer}
-        onEdit={(offer) => {
-          setEditOffer(offer);
-          setCreateModalOpen(true);
-        }}
-        onDelete={(offer) => setDeleteOffer(offer)}
-      />
-    </Grid>
-  ))}
-</Grid>
-<Box sx={{ mt: 4 }}>
-{ rowsPerPage && (
-  <PaginationComponent
-    count={Math.ceil(offers.length / rowsPerPage)}
-    page={page}
-    onChange={(_, value) => setPage(value)}
-    siblingCount={1}
-    boundaryCount={1}
-   
-    showFirstButton
-    showLastButton
-  />
-)}
-</Box>
+        <Grid container spacing={3}>
+          {paginatedOffers.map((offer) => (
+            <Grid item xs={12} md={6} lg={4} key={offer._id}>
+              <JobOfferCard
+                offer={offer}
+                getStatusColor={getStatusColor}
+                getTypeColor={getTypeColor}
+                formatDate={formatDate}
+                setDetailOffer={setDetailOffer}
+                onEdit={(offer) => { setEditOffer(offer); setCreateModalOpen(true); }}
+                onDelete={(offer) => setDeleteOffer(offer)}
+                onOpenApplications={onOpenApplications}
+              />
+            </Grid>
+          ))}
+        </Grid>
 
-
+        <Box sx={{ mt: 4 }}>
+          { rowsPerPage && (
+            <PaginationComponent
+              count={Math.ceil(offers.length / rowsPerPage)}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+              siblingCount={1}
+              boundaryCount={1}
+              showFirstButton
+              showLastButton
+            />
+          )}
+        </Box>
       </Box>
 
       {/* MODALES */}
@@ -413,16 +389,16 @@ export default function JobOfferList() {
         }}
       />
 
-       <CustomDeleteForm
+      <CustomDeleteForm
         open={!!deleteOffer}
         handleClose={() => setDeleteOffer(null)}
-        title={`Confirmer la suppression de l'offre "${deleteOffer?.title || ''}" ?`}
+        title={t("Confirmer la suppression de l'offre \"{{title}}\" ?", { title: deleteOffer?.title || "" })}
         icon={<DeleteOutlineOutlinedIcon sx={{ fontSize: 34, color: "red" }} />}
       >
         <Box sx={{ mt: 2, display: "flex", justifyContent: "center", gap: 2 }}>
           <ButtonComponent
             color="error"
-            text="Supprimer"
+            text={t("Supprimer")}
             onClick={async () => {
               await dispatch(deleteJobOffre(deleteOffer._id)).unwrap();
               setDeleteOffer(null);
@@ -431,7 +407,7 @@ export default function JobOfferList() {
           />
           <ButtonComponent
             color="inherit"
-            text="Annuler"
+            text={t("Annuler")}
             onClick={() => setDeleteOffer(null)}
           />
         </Box>
