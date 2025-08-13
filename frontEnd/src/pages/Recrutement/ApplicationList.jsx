@@ -1,4 +1,4 @@
-// src/pages/Recrutement/ApplicationList.jsx
+// src/pages/Recrutement/ApplicationList.jsx 
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Box, Paper, Typography, Divider, Stack, TextField, InputAdornment, Slider,
@@ -27,9 +27,10 @@ const FILE_BASE = "http://localhost:3000/uploads/applications";
 const FLASK_URL = "http://localhost:5000/match_skills";
 
 export default function ApplicationList({ selectedOffer }) {
+  console.log("🚀 ApplicationList - Composant initialisé avec selectedOffer:", selectedOffer);
+  
   const { t } = useTranslation();
   const dispatch = useDispatch();
-
 
   const params = useParams();
   const location = useLocation();
@@ -37,8 +38,21 @@ export default function ApplicationList({ selectedOffer }) {
   const currentOffer = selectedOffer || routeOffer || null;
   const jobOffreId = currentOffer?._id || params?.jobOffreId || null;
 
+  console.log("📍 ApplicationList - Params et offre:", {
+    params,
+    routeOffer,
+    currentOffer,
+    jobOffreId
+  });
+
   // Redux
   const { list: applications = [], loading, error } = useSelector((s) => s.application);
+  console.log("🔄 Redux state - applications:", {
+    applicationsLength: applications.length,
+    applications,
+    loading,
+    error
+  });
 
   // States
   const [page1, setPage1] = useState(1);
@@ -52,9 +66,32 @@ export default function ApplicationList({ selectedOffer }) {
   const [search, setSearch] = useState("");
   const [scoreRange, setScoreRange] = useState([0, 100]);
 
+  console.log("📊 States actuels:", {
+    page1, page2, filtered, iaLoading, iaError,
+    iaResultsLength: iaResults.length,
+    search, scoreRange
+  });
+
   const prettyName = (f = "") => {
+    console.log("🎨 prettyName - input:", f);
     const m = f.match(/^[A-Za-z0-9]{10,}[-_](.+)$/);
-    return m ? m[1] : f;
+    const result = m ? m[1] : f;
+    console.log("🎨 prettyName - output:", result);
+    return result;
+  };
+
+  // ✅ FIX helper: normalisation pour correspondance flexible
+  const normalizeName = (s = "") => {
+    try {
+      return decodeURIComponent(s)
+        .normalize("NFKD").replace(/[\u0300-\u036f]/g, "") // accents
+        .replace(/\s+/g, "")                               // espaces
+        .replace(/[~()]/g, "")                              // char parasites
+        .toLowerCase()
+        .replace(/^(\d{10,}[-_])+/g, "");                  // retire 1+ timestamps-/_ au début
+    } catch {
+      return String(s).toLowerCase().replace(/^(\d{10,}[-_])+/g, "");
+    }
   };
 
   // Aperçu (modal)
@@ -67,31 +104,63 @@ export default function ApplicationList({ selectedOffer }) {
   const ZOOM_MAX = 2;
   const ZOOM_STEP = 0.1;
 
-  const handleZoomIn = () => setZoom((z) => Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2)));
-  const handleZoomOut = () => setZoom((z) => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)));
-  const handleZoomReset = () => setZoom(1);
+  const handleZoomIn = () => {
+    console.log("🔍 Zoom In - avant:", zoom);
+    setZoom((z) => {
+      const newZoom = Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2));
+      console.log("🔍 Zoom In - après:", newZoom);
+      return newZoom;
+    });
+  };
+  
+  const handleZoomOut = () => {
+    console.log("🔍 Zoom Out - avant:", zoom);
+    setZoom((z) => {
+      const newZoom = Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2));
+      console.log("🔍 Zoom Out - après:", newZoom);
+      return newZoom;
+    });
+  };
+  
+  const handleZoomReset = () => {
+    console.log("🔍 Zoom Reset");
+    setZoom(1);
+  };
 
   // Charger candidatures
   useEffect(() => {
-    if (jobOffreId) dispatch(fetchApplicationsByJobOffre(jobOffreId));
+    console.log("🔄 useEffect - Chargement des candidatures pour jobOffreId:", jobOffreId);
+    if (jobOffreId) {
+      console.log("📡 Dispatch fetchApplicationsByJobOffre");
+      dispatch(fetchApplicationsByJobOffre(jobOffreId));
+    }
   }, [jobOffreId, dispatch]);
 
   // ===== Bloc 1 : CV reçus (simple) =====
   const cvColumns = [{ id: "displayFilename", label: t("Nom du fichier") }];
   const rowsPerPage1 = 5;
 
-  const cvRows = useMemo(
-    () => applications.map((a) => ({
-      _id: a._id,
-      storedFilename: a.cvFile || "-",
-      displayFilename: prettyName(a.cvFile || "-"),
-    })),
-    [applications]
-  );
+  const cvRows = useMemo(() => {
+    console.log("📄 cvRows useMemo - applications:", applications);
+    const rows = applications.map((a) => {
+      const row = {
+        _id: a._id,
+        storedFilename: a.cvFile || "-",
+        displayFilename: prettyName(a.cvFile || "-"),
+      };
+      console.log("📄 cvRows - mapping application:", a, "to row:", row);
+      return row;
+    });
+    console.log("📄 cvRows - résultat final:", rows);
+    return rows;
+  }, [applications]);
 
   const paginatedCVRows = useMemo(() => {
+    console.log("📖 paginatedCVRows - page1:", page1, "rowsPerPage1:", rowsPerPage1);
     const start = (page1 - 1) * rowsPerPage1;
-    return cvRows.slice(start, start + rowsPerPage1);
+    const result = cvRows.slice(start, start + rowsPerPage1);
+    console.log("📖 paginatedCVRows - start:", start, "result:", result);
+    return result;
   }, [cvRows, page1]);
 
   const cvActions = [
@@ -99,6 +168,7 @@ export default function ApplicationList({ selectedOffer }) {
       tooltip: t("Aperçu"),
       icon: <PictureAsPdfIcon color="primary" fontSize="small" />,
       onClick: (row) => {
+        console.log("👁️ Action Aperçu CV - row:", row);
         setPreviewFile(row.storedFilename);
         setPreviewOpen(true);
         handleZoomReset();
@@ -107,48 +177,100 @@ export default function ApplicationList({ selectedOffer }) {
     {
       tooltip: t("Télécharger"),
       icon: <DownloadIcon color="primary" fontSize="small" />,
-      onClick: (row) => window.open(`${FILE_BASE}/${row.storedFilename}`, "_blank"),
+      onClick: (row) => {
+        console.log("⬇️ Action Télécharger CV - row:", row);
+        const url = `${FILE_BASE}/${row.storedFilename}`;
+        console.log("⬇️ URL de téléchargement:", url);
+        window.open(url, "_blank");
+      },
     },
   ];
 
   // ===== IA : POST Flask =====
   const handleFilterIA = async () => {
+    console.log("🤖 handleFilterIA - Début du filtrage IA");
+    console.log("🤖 currentOffer:", currentOffer);
+    console.log("🤖 applications:", applications);
+    
     const requirements =
       currentOffer?.requirements ||
       applications?.[0]?.jobOffre?.requirements ||
       "";
 
+    console.log("📋 Requirements extraits:", requirements);
+
     if (!requirements) {
+      console.error("❌ Aucun requirements trouvé");
       alert(t("Aucun requirements trouvé pour cette offre."));
       return;
     }
 
-    const allowedSet = new Set(applications.map((a) => a?.cvFile).filter(Boolean));
+    // Création du Set des fichiers autorisés (logs existants conservés)
+    const applicationFiles = applications.map((a) => a?.cvFile).filter(Boolean);
+    console.log("📁 Fichiers des applications (avant Set):", applicationFiles);
+    
+    const allowedSet = new Set(applicationFiles);
+    console.log("📁 allowedSet:", allowedSet);
+    
     const allowed_filenames = Array.from(allowedSet);
+    console.log("📁 allowed_filenames pour Flask:", allowed_filenames);
+
+    // ✅ FIX: index normalisé -> vrais noms DB (gère doublons et variations)
+    const allowedIndex = applicationFiles.reduce((map, f) => {
+      const k = normalizeName(f);
+      map.set(k, [...(map.get(k) || []), f]);
+      return map;
+    }, new Map());
+    console.log("📁 allowedIndex keys (normalisés):", [...allowedIndex.keys()]);
 
     setFiltered(true);
     setIaLoading(true);
     setIaError(null);
 
     try {
+      console.log("📡 Envoi requête POST à Flask:", {
+        url: FLASK_URL,
+        payload: { requirements, allowed_filenames }
+      });
+
       const res = await axios.post(FLASK_URL, { requirements, allowed_filenames });
+      console.log("📨 Réponse Flask brute:", res.data);
+      
       const raw = Array.isArray(res.data) ? res.data : [];
-      const onlyLinked = raw
-        .filter((it) => allowedSet.has(it.filename))
-        .map((r) => ({
-          filename: r.filename,                    // brut pour actions
-          displayFilename: prettyName(r.filename), // joli pour affichage
+      console.log("📨 Données Flask après vérification array:", raw);
+
+      // ✅ FIX: Filtrage + mapping avec correspondance flexible et remap vers le vrai filename DB
+      console.log("🔍 Début filtrage des résultats Flask:");
+      const linked = raw.flatMap((r) => {
+        const key = normalizeName(r.filename);
+        const matches = allowedIndex.get(key);
+        console.log(`🔎 IA "${r.filename}" -> key="${key}" | DB matches:`, matches);
+        if (!matches) return [];
+        // S'il y a plusieurs fichiers DB correspondant au même "nom propre", on les renvoie tous
+        return matches.map((storedFilename) => ({
+          filename: storedFilename, // ⚠️ on garde le vrai nom DB pour actions (aperçu/téléchargement)
+          displayFilename: prettyName(storedFilename),
           email: r.email || "-",
-          score: typeof r.score === "number" ? Math.round(r.score) : 0,
+          score: Number.isFinite(r.score) ? Math.round(r.score) : 0,
           skills_matched: r.skills_matched || [],
         }));
-      setIaResults(onlyLinked);
+      });
+
+      // ✅ FIX: dédoublonner par "filename" au cas d'uploads multiples identiques
+      const dedup = Array.from(new Map(linked.map(x => [x.filename, x])).values());
+
+      console.log(`✅ Résultats finaux liés à l'offre: ${dedup.length} / IA total: ${raw.length} (DB: ${applicationFiles.length})`);
+
+      setIaResults(dedup);
       setPage2(1);
     } catch (e) {
+      console.error("❌ Erreur lors de l'appel Flask:", e);
+      console.error("❌ Détails erreur:", e?.response?.data);
       setIaError(e?.response?.data?.error || e.message);
       setIaResults([]);
     } finally {
       setIaLoading(false);
+      console.log("🤖 handleFilterIA - Fin du traitement");
     }
   };
 
@@ -160,7 +282,8 @@ export default function ApplicationList({ selectedOffer }) {
     { id: "score", label: t("Score IA") },
     {
       id: "skills_matched",
-      label: t("Compétences trouvées"),
+      // (petit fallback i18n)
+      label: t("Compétences trouvées", { defaultValue: "Compétences trouvées" }),
       render: (row) => (
         <Stack direction="row" spacing={0.5} flexWrap="wrap">
           {(row.skills_matched || []).map((s) => (
@@ -186,27 +309,64 @@ export default function ApplicationList({ selectedOffer }) {
 
   // Filtres (recherche + score) appliqués aux résultats IA
   const iaRowsFiltered = useMemo(() => {
+    console.log("🔍 iaRowsFiltered useMemo - Début filtrage des résultats IA");
+    console.log("🔍 iaResults avant filtrage:", iaResults);
+    console.log("🔍 Filtres appliqués - search:", search, "scoreRange:", scoreRange);
+    
     const q = search.trim().toLowerCase();
     const [min, max] = scoreRange;
-    return iaResults
-      .filter((r) => {
-        const scoreOk =
-          typeof r.score === "number" ? r.score >= min && r.score <= max : true;
-        if (!q) return scoreOk;
-        const hay = `${r.displayFilename} ${r.email} ${(r.skills_matched || []).join(" ")}`.toLowerCase();
-        return scoreOk && hay.includes(q);
-      })
-      .sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+    
+    const filtered = iaResults.filter((r) => {
+      const scoreOk = typeof r.score === "number" ? r.score >= min && r.score <= max : true;
+      console.log(`🔍 ${r.filename} - Score ${r.score}: scoreOk = ${scoreOk} (range: ${min}-${max})`);
+      
+      if (!q) {
+        console.log(`🔍 ${r.filename} - Pas de recherche textuelle, résultat: ${scoreOk}`);
+        return scoreOk;
+      }
+      
+      const hay = `${r.displayFilename} ${r.email} ${(r.skills_matched || []).join(" ")}`.toLowerCase();
+      const textMatch = hay.includes(q);
+      console.log(`🔍 ${r.filename} - Texte recherché "${q}" dans "${hay}": ${textMatch}`);
+      
+      const finalResult = scoreOk && textMatch;
+      console.log(`🔍 ${r.filename} - Résultat final: ${finalResult}`);
+      return finalResult;
+    });
+    
+    console.log("🔍 Résultats après filtrage:", filtered);
+    
+    const sorted = filtered.sort((a, b) => {
+      const scoreA = Number(a.score) || 0;
+      const scoreB = Number(b.score) || 0;
+      console.log(`📊 Tri: ${a.filename} (${scoreA}) vs ${b.filename} (${scoreB})`);
+      return scoreB - scoreA;
+    });
+    
+    console.log("📊 Résultats après tri par score:", sorted);
+    return sorted;
   }, [iaResults, search, scoreRange]);
 
-  const iaRows = useMemo(
-    () => iaRowsFiltered.map((r, idx) => ({ ranking: idx + 1, ...r })),
-    [iaRowsFiltered]
-  );
+  const iaRows = useMemo(() => {
+    console.log("📊 iaRows useMemo - Ajout des rankings");
+    console.log("📊 iaRowsFiltered:", iaRowsFiltered);
+    
+    const result = iaRowsFiltered.map((r, idx) => {
+      const rowWithRanking = { ranking: idx + 1, ...r };
+      console.log(`📊 Ajout ranking ${idx + 1} pour ${r.filename}:`, rowWithRanking);
+      return rowWithRanking;
+    });
+    
+    console.log("📊 iaRows final:", result);
+    return result;
+  }, [iaRowsFiltered]);
 
   const paginatedIARows = useMemo(() => {
+    console.log("📖 paginatedIARows - page2:", page2, "rowsPerPage2:", rowsPerPage2);
     const start = (page2 - 1) * rowsPerPage2;
-    return iaRows.slice(start, start + rowsPerPage2);
+    const result = iaRows.slice(start, start + rowsPerPage2);
+    console.log("📖 paginatedIARows - start:", start, "result:", result);
+    return result;
   }, [iaRows, page2]);
 
   const iaActions = [
@@ -214,6 +374,7 @@ export default function ApplicationList({ selectedOffer }) {
       tooltip: t("Aperçu"),
       icon: <PictureAsPdfIcon fontSize="small" color="primary" />,
       onClick: (row) => {
+        console.log("👁️ Action Aperçu IA - row:", row);
         setPreviewFile(row.filename);
         setPreviewOpen(true);
         handleZoomReset();
@@ -222,22 +383,38 @@ export default function ApplicationList({ selectedOffer }) {
     {
       tooltip: t("Télécharger CV"),
       icon: <DownloadIcon color="primary" fontSize="small" />,
-      onClick: (row) => window.open(`${FILE_BASE}/${row.filename}`, "_blank"),
+      onClick: (row) => {
+        console.log("⬇️ Action Télécharger IA - row:", row);
+        const url = `${FILE_BASE}/${row.filename}`;
+        console.log("⬇️ URL de téléchargement IA:", url);
+        window.open(url, "_blank");
+      },
     },
     {
       tooltip: t("Envoyer Email"),
       icon: <EmailIcon color="primary" fontSize="small" />,
       onClick: (row) => {
-        if (!row.email || row.email === "-") return;
-        window.open(
-          `mailto:${row.email}?subject=${encodeURIComponent(
-            `${t("Candidature")} ${row.filename}`
-          )}&body=${encodeURIComponent("Bonjour,")}`,
-          "_blank"
-        );
+        console.log("📧 Action Email - row:", row);
+        if (!row.email || row.email === "-") {
+          console.log("📧 Pas d'email disponible");
+          return;
+        }
+        const mailtoUrl = `mailto:${row.email}?subject=${encodeURIComponent(
+          `${t("Candidature")} ${row.filename}`
+        )}&body=${encodeURIComponent("Bonjour,")}`;
+        console.log("📧 URL mailto:", mailtoUrl);
+        window.open(mailtoUrl, "_blank");
       },
     },
   ];
+
+  console.log("🎯 Rendu final - Compteurs:", {
+    cvRowsLength: cvRows.length,
+    iaResultsLength: iaResults.length,
+    iaRowsFilteredLength: iaRowsFiltered.length,
+    iaRowsLength: iaRows.length,
+    paginatedIARowsLength: paginatedIARows.length
+  });
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f6f8fb", py: 3 }}>
@@ -272,7 +449,10 @@ export default function ApplicationList({ selectedOffer }) {
                 <PaginationComponent
                   count={Math.max(1, Math.ceil(cvRows.length / rowsPerPage1))}
                   page={page1}
-                  onChange={(e, p) => setPage1(p)}
+                  onChange={(e, p) => {
+                    console.log("📖 Changement page CV:", p);
+                    setPage1(p);
+                  }}
                 />
               </Box>
             </>
@@ -287,7 +467,7 @@ export default function ApplicationList({ selectedOffer }) {
 
           {!filtered ? (
             <Typography color="#64748b" fontStyle="italic" mb={2}>
-              {t("Lance l’analyse via le bouton {{btn}} au-dessus.", { btn: t("Filtrer via IA") })}
+              {t("Lance l'analyse via le bouton {{btn}} au-dessus.", { btn: t("Filtrer via IA"), defaultValue: "Lance l'analyse via le bouton {{btn}} au-dessus." })}
             </Typography>
           ) : iaLoading ? (
             <Typography>{t("Analyse en cours...")}</Typography>
@@ -313,6 +493,7 @@ export default function ApplicationList({ selectedOffer }) {
                   placeholder={t("Rechercher (email, fichier, compétence...)")}
                   value={search}
                   onChange={(e) => {
+                    console.log("🔍 Changement recherche:", e.target.value);
                     setSearch(e.target.value);
                     setPage2(1);
                   }}
@@ -331,7 +512,10 @@ export default function ApplicationList({ selectedOffer }) {
                   </Typography>
                   <Slider
                     value={scoreRange}
-                    onChange={(_, v) => setScoreRange(v)}
+                    onChange={(_, v) => {
+                      console.log("📊 Changement range score:", v);
+                      setScoreRange(v);
+                    }}
                     valueLabelDisplay="auto"
                     min={0}
                     max={100}
@@ -344,7 +528,10 @@ export default function ApplicationList({ selectedOffer }) {
                 <PaginationComponent
                   count={Math.max(1, Math.ceil(iaRows.length / rowsPerPage2))}
                   page={page2}
-                  onChange={(e, p) => setPage2(p)}
+                  onChange={(e, p) => {
+                    console.log("📖 Changement page IA:", p);
+                    setPage2(p);
+                  }}
                 />
               </Box>
             </>
@@ -355,7 +542,12 @@ export default function ApplicationList({ selectedOffer }) {
       {/* Modal d'aperçu (iframe PDF/HTML) + ZOOM */}
       <ModelComponent
         open={previewOpen}
-        handleClose={() => { setPreviewOpen(false); setPreviewFile(null); handleZoomReset(); }}
+        handleClose={() => { 
+          console.log("❌ Fermeture modal aperçu");
+          setPreviewOpen(false); 
+          setPreviewFile(null); 
+          handleZoomReset(); 
+        }}
         title={t("Aperçu du CV")}
         icon={<PictureAsPdfIcon />}
       >

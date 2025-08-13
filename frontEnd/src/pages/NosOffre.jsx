@@ -65,6 +65,22 @@ export default function NosOffre() {
   const { list: offers = [], loading, error } = useSelector((s) => s.jobOffre || {});
 
   useEffect(() => { dispatch(fetchAllJobOffres()); }, [dispatch]);
+  // ====== Fichiers autorisés ======
+const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg"];
+const ALLOWED_MIME = new Set([
+  "application/pdf",
+  "application/msword", // .doc
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+  "image/png",
+  "image/jpeg", // .jpg .jpeg
+]);
+const MAX_SIZE_MB = 10;
+
+const getExt = (name = "") => {
+  const i = name.lastIndexOf(".");
+  return i >= 0 ? name.slice(i).toLowerCase() : "";
+};
+
 
   // UI states
   const [search, setSearch] = useState("");
@@ -125,17 +141,31 @@ export default function NosOffre() {
   const openApply = (job) => { setApplyJob(job); setCvFile(null); };
   const closeApply = () => { setApplyJob(null); setCvFile(null); };
 
-  const onFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) { setCvFile(null); return; }
-    if (file.type !== "application/pdf") {
-      toast.warn("Merci d'importer un fichier PDF.");
-      e.target.value = "";
-      setCvFile(null);
-      return;
-    }
-    setCvFile(file);
-  };
+const onFileChange = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) { setCvFile(null); return; }
+
+  const ext = getExt(file.name);
+  const extOk = ALLOWED_EXTENSIONS.includes(ext);
+  // parfois file.type est vide/incorrect -> on tolère vide et on se base sur l’extension
+  const mimeOk = !file.type || ALLOWED_MIME.has(file.type);
+  const sizeOk = file.size <= MAX_SIZE_MB * 1024 * 1024;
+
+  if (!extOk || !mimeOk) {
+    toast.warn("Types autorisés : PDF, DOC, DOCX, PNG, JPG, JPEG.");
+    e.target.value = "";
+    setCvFile(null);
+    return;
+  }
+  if (!sizeOk) {
+    toast.warn(`Taille max ${MAX_SIZE_MB} Mo.`);
+    e.target.value = "";
+    setCvFile(null);
+    return;
+  }
+  setCvFile(file);
+};
+
 
   const submitApplication = async () => {
     if (!applyJob || !cvFile) return;
@@ -392,12 +422,7 @@ export default function NosOffre() {
                                 sx={{ bgcolor: "#e3f2fd", color: "#1976d2", fontWeight: 700 }}
                                 size="small"
                               />
-                              <Chip
-                                label={`Clôture: ${fmt(job.closingDate)}`}
-                                icon={<ScheduleIcon sx={{ fontSize: 16 }} />}
-                                sx={{ bgcolor: "#fff3e0", color: "#d97706", fontWeight: 700 }}
-                                size="small"
-                              />
+                           
                             </Stack>
 
                             {/* Requirements */}
@@ -455,6 +480,7 @@ export default function NosOffre() {
                         <Stack direction="row" spacing={2} alignItems="center">
                           <Typography fontSize={14} color="text.secondary">{job.sector}</Typography>
                           <Typography fontSize={14} color="text.secondary">Candidats: {job.candidatesCount}</Typography>
+                          <Typography fontSize={14} color="text.secondary">Clôture: {fmt(job.closingDate)}</Typography>
                         </Stack>
                         <Button variant="text" color="primary" endIcon={<InfoOutlinedIcon />} onClick={() => openDetails(job)}>
                           Voir Details
@@ -524,15 +550,53 @@ export default function NosOffre() {
         title={applyJob ? `Postuler à ${applyJob.title}` : ""}
         icon={<SendOutlinedIcon />}
       >
-        <Typography mb={1.5}>Déposez votre CV (PDF uniquement)</Typography>
+        <Typography mb={1.5}>Déposez votre CV</Typography>
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
           <input
             type="file"
-            accept="application/pdf"
+            accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,.pdf,.doc,.docx,.png,.jpg,.jpeg"
             onChange={onFileChange}
             style={{ width: "100%" }}
           />
+        <Box
+  sx={{
+    mt: 1.8,
+    p: 2,
+    borderRadius: 2,
+    position: "relative",
+    background: "linear-gradient(135deg, #EEF6FF 0%, #F9FBFF 100%)",
+    border: "1px solid",
+    borderColor: "#D9E6FF",
+    boxShadow: "0 10px 24px rgba(25,118,210,0.12)",
+    overflow: "hidden",
+    backdropFilter: "blur(2px)",
+    animation: "fadeIn 280ms ease-out",
+    "@keyframes fadeIn": {
+      from: { opacity: 0, transform: "translateY(6px)" },
+      to: { opacity: 1, transform: "translateY(0)" },
+    },
+    "&:before": {
+      content: '""',
+      position: "absolute",
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 6,
+      background: "linear-gradient(180deg, #1976d2 0%, #42a5f5 100%)",
+    },
+  }}
+>
+  <Stack direction="row" spacing={1.5} alignItems="flex-start">
+    <InfoOutlinedIcon sx={{ color: "#1976d2", mt: "2px" }} />
+    <Typography variant="body2" sx={{ color: "#0F172A", lineHeight: 1.7 }}>
+      <strong style={{ color: "#0B3D91" }}>Information&nbsp;:</strong>&nbsp;
+      si vous n’obtenez pas de réponse sous <b style={{ color: "#1976d2" }}>15&nbsp;jours</b>,
+      veuillez considérer que votre candidature n’a pas été retenue. Merci pour votre intérêt.
+    </Typography>
+  </Stack>
+</Box>
+
 
           <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
             <Button onClick={closeApply}>Annuler</Button>
