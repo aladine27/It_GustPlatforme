@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString, IsNotEmpty, IsEmail, IsDate, IsNumber } from "class-validator";
+import { IsString, IsNotEmpty, IsEmail, IsDate, IsNumber, IsOptional } from "class-validator";
 
 export class CreateJobOffreDto {
          @ApiProperty({
@@ -105,5 +105,14 @@ export class CreateJobOffreDto {
     @IsString() 
     @IsNotEmpty()
     user: string;
+
+     @ApiProperty({
+    type: String,
+    required: false,
+    description: "Bonus/perks séparés par des virgules (ex: Télétravail, Tickets resto, Mutuelle)"
+  })
+  @IsString()
+  @IsOptional()
+  bonuses?: string; 
 
 }

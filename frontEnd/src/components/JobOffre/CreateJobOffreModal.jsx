@@ -37,6 +37,7 @@ const jobOfferSchemas = [
     title: Yup.string().required("Titre requis"),
     description: Yup.string().required("Description requise"),
     requirements: Yup.string().required("Compétences requises"),
+    bonuses: Yup.string().trim().optional()
   }),
   Yup.object().shape({
     closingDate: Yup.date()
@@ -61,8 +62,8 @@ export default function CreateJobOfferModal({
   handleClose,
   jobCategories,
   userId,
-  editOffer, // <-- nouvelle prop pour mode édition
-  onSubmit // callback pour create ou update
+  editOffer, 
+  onSubmit
 }) {
   const [activeStep, setActiveStep] = React.useState(0);
 
@@ -87,6 +88,7 @@ export default function CreateJobOfferModal({
       title: "",
       description: "",
       requirements: "",
+      bonuses: "",
       closingDate: null,
       salaryRange: "",
       location: "",
@@ -103,6 +105,7 @@ export default function CreateJobOfferModal({
         title: editOffer.title || "",
         description: editOffer.description || "",
         requirements: editOffer.requirements || "",
+        bonuses: editOffer.bonuses || "", 
         closingDate: editOffer.closingDate ? new Date(editOffer.closingDate) : null,
         salaryRange: editOffer.salaryRange || "",
         location: editOffer.location || "",
@@ -119,6 +122,7 @@ export default function CreateJobOfferModal({
         title: "",
         description: "",
         requirements: "",
+        bonuses: "",
         closingDate: null,
         salaryRange: "",
         location: "",
@@ -152,6 +156,7 @@ export default function CreateJobOfferModal({
     try {
       const payload = {
         ...data,
+        bonuses: (data.bonuses || "").trim(),
         salaryRange: Number(data.salaryRange),
         postedDate: editOffer?.postedDate || new Date().toISOString(),
         user: userId,
@@ -198,6 +203,17 @@ export default function CreateJobOfferModal({
                 {...register("requirements")}
                 error={!!errors.requirements}
                 helperText={errors.requirements?.message}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Bonus (séparés par ,)  ex: Télétravail, Tickets resto, Mutuelle"
+                fullWidth
+                multiline
+                minRows={1}
+                {...register("bonuses")}
+                error={!!errors.bonuses}
+                helperText={errors.bonuses?.message}
               />
             </Grid>
           </Grid>

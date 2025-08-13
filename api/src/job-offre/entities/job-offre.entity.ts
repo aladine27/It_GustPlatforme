@@ -23,6 +23,8 @@ export class JobOffre {
     process: string;
     @Prop({required: true})
     type: string;
+    @Prop({ default: "" })
+    bonuses: string; 
     @Prop({type:SchemaTypes.ObjectId, ref: 'jobCategories',required: true})
     jobCategory: Types.ObjectId;  
     @Prop([{type:SchemaTypes.ObjectId, ref: 'applications'}])

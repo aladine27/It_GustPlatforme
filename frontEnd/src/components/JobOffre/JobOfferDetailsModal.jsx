@@ -7,7 +7,7 @@ import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import CloseIcon from "@mui/icons-material/Close";
-
+import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
 export default function JobOfferDetailsModal({
   open,
   onClose,
@@ -24,6 +24,10 @@ export default function JobOfferDetailsModal({
   const reqs = offer.requirements
     ? offer.requirements.split(/\n|,/).map((el) => el.trim()).filter(Boolean)
     : [];
+   const bonuses = offer.bonuses
+    ? String(offer.bonuses).split(/\n|,/).map((b) => b.trim()).filter(Boolean)
+    : [];
+
 
   return (
     <Dialog
@@ -83,30 +87,38 @@ export default function JobOfferDetailsModal({
             <Typography color="text.secondary" fontWeight={700}>Process:</Typography>
             <Typography sx={{ mt: 0.4, wordBreak: "break-word" }}>{offer.process}</Typography>
           </Box>
-          <Stack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            flexWrap="wrap"
-            rowGap={1}
-          >
-            <Chip icon={<WorkOutlineIcon />} label={offer.type} sx={{
-              bgcolor: type.bg,
-              color: type.color,
-              fontWeight: 700,
-              fontSize: 14.5,
-              borderRadius: 2
-            }} />
-            <Chip icon={<MonetizationOnOutlinedIcon />} label={`$${offer.salaryRange}`} sx={{
-              bgcolor: "#dbf9e9", color: "#14a35e", fontWeight: 700, fontSize: 14.5, borderRadius: 2
-            }} />
-            <Chip icon={<CalendarMonthOutlinedIcon />} label={`Posted: ${formatDate(offer.postedDate)}`} sx={{
-              bgcolor: "#dde6fa", color: "#3969e6", fontWeight: 700, fontSize: 14.5, borderRadius: 2
-            }} />
-            <Chip icon={<CalendarMonthOutlinedIcon />} label={`Closing: ${formatDate(offer.closingDate)}`} sx={{
-              bgcolor: "#fff2d6", color: "#d89b1d", fontWeight: 700, fontSize: 14.5, borderRadius: 2
-            }} />
-          </Stack>
+           <Box>
+            <Typography color="text.secondary" fontWeight={700}>Bonus:</Typography>
+            {bonuses.length ? (
+              <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1} sx={{ mt: 0.8 }}>
+                {bonuses.map((b, i) => (
+                  <Chip
+                    key={i}
+                    icon={<EmojiEventsOutlinedIcon />}
+                    label={b}
+                    sx={{ bgcolor: "#e8f1ff", color: "#1976d2", fontWeight: 700, borderRadius: 2 }}
+                    size="small"
+                  />
+                ))}
+              </Stack>
+            ) : (
+              <Typography sx={{ mt: 0.4 }} color="text.secondary">—</Typography>
+            )}
+          </Box>
+
+         <Box>
+            <Typography color="text.secondary" fontWeight={700}>Autre détaille:</Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1} sx={{ mt:.8 }}>
+              <Chip icon={<WorkOutlineIcon />} label={offer.type}
+                    sx={{ bgcolor:type.bg, color:type.color, fontWeight:700, fontSize:14.5, borderRadius:2 }} />
+              <Chip icon={<MonetizationOnOutlinedIcon />} label={`$${offer.salaryRange}`}
+                    sx={{ bgcolor:"#dbf9e9", color:"#14a35e", fontWeight:700, fontSize:14.5, borderRadius:2 }} />
+              <Chip icon={<CalendarMonthOutlinedIcon />} label={`Posted: ${formatDate(offer.postedDate)}`}
+                    sx={{ bgcolor:"#dde6fa", color:"#3969e6", fontWeight:700, fontSize:14.5, borderRadius:2 }} />
+              <Chip icon={<CalendarMonthOutlinedIcon />} label={`Closing: ${formatDate(offer.closingDate)}`}
+                    sx={{ bgcolor:"#fff2d6", color:"#d89b1d", fontWeight:700, fontSize:14.5, borderRadius:2 }} />
+            </Stack>
+          </Box>
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2, pt: 1 }}>

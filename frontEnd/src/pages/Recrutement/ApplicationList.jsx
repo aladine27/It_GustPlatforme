@@ -30,7 +30,7 @@ export default function ApplicationList({ selectedOffer }) {
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
-  // Compat route (fallback)
+
   const params = useParams();
   const location = useLocation();
   const routeOffer = location?.state?.offer || null;
@@ -160,7 +160,7 @@ export default function ApplicationList({ selectedOffer }) {
     { id: "score", label: t("Score IA") },
     {
       id: "skills_matched",
-      label: t("Compétences"),
+      label: t("Compétences trouvées"),
       render: (row) => (
         <Stack direction="row" spacing={0.5} flexWrap="wrap">
           {(row.skills_matched || []).map((s) => (
@@ -247,7 +247,7 @@ export default function ApplicationList({ selectedOffer }) {
         </Typography>
 
         {/* Bloc 1 : Table des CV (backend) */}
-        <Paper sx={{ p: 3, mb: 4, borderRadius: 4, boxShadow: 2 }}>
+        <Paper sx={{ p: 3, mb: 4, borderRadius: 1.5, boxShadow: 2 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
             <Typography variant="h6" fontWeight={700} color="primary">
               {t("CV Reçus")} ({cvRows.length})
@@ -280,7 +280,7 @@ export default function ApplicationList({ selectedOffer }) {
         </Paper>
 
         {/* Bloc 2 : Résultats IA */}
-        <Paper sx={{ p: 3, borderRadius: 4, boxShadow: 2 }}>
+        <Paper sx={{ p: 3, borderRadius: 1.5, boxShadow: 2 }}>
           <Typography variant="h6" fontWeight={700} color="primary" mb={2}>
             {t("Résultats du filtrage IA")}
           </Typography>

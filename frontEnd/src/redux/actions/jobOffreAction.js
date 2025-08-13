@@ -222,7 +222,7 @@ export const deleteJobCategory = createAsyncThunk(
       const res = await axios.delete(`http://localhost:3000/job-category/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log("[deleteJobCategory] Response:", res);
+      console.log("[deleteJoabCategory] Response:", res);
       return res.data.data;
     } catch (err) {
       console.error("[deleteJobCategory] Error:", err.response?.data || err.message);

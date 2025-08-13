@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Box, Typography, Chip, Divider, IconButton, Link, Paper
 } from "@mui/material";
@@ -8,6 +8,7 @@ import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlin
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import ChecklistRtlOutlinedIcon from "@mui/icons-material/ChecklistRtlOutlined";
+import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -21,7 +22,7 @@ const WhiteTooltip = styled(({ className, ...props }) => (
   [`& .${tooltipClasses.tooltip}`]: {
     backgroundColor: "#fff",
     color: "#1976d2",
-    boxShadow: "0 6px 24px 0 rgba(24, 58, 119, 0.09)",
+    boxShadow: "0 6px 24px rgba(24,58,119,0.09)",
     fontWeight: 700,
     fontSize: 15,
     padding: "8px 16px",
@@ -49,10 +50,43 @@ export default function JobOfferCard({
   const navigate = useNavigate();
   const status = getStatusColor(offer.status);
   const type = getTypeColor(offer.type);
+
+  // --- Salaire en Dinar Tunisien (DT)
   const salary =
     typeof offer.salaryRange === "number" && !isNaN(offer.salaryRange)
       ? offer.salaryRange
-      : "-";
+      : null;
+
+  const formatDT = (n) =>
+    n == null ? "-" : `${new Intl.NumberFormat("fr-TN").format(n)} DT`;
+
+  // Requirements chips + "+N"
+  const MAX_REQS = 4;
+  const reqList = useMemo(() => {
+    const raw = Array.isArray(offer.requirements)
+      ? offer.requirements
+      : String(offer.requirements || "")
+          .split(/[,\n]/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+    return [...new Set(raw)];
+  }, [offer.requirements]);
+  const visibleReqs = reqList.slice(0, MAX_REQS);
+  const restReqs = reqList.slice(MAX_REQS);
+  const restCount = Math.max(reqList.length - MAX_REQS, 0);
+
+  // Bonuses chips + "+1"
+  const MAX_BONUS = 2;
+  const bonusList = useMemo(() => {
+    const raw = String(offer.bonuses || "")
+      .split(/[,\n]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return [...new Set(raw)];
+  }, [offer.bonuses]);
+  const visibleBonus = bonusList.slice(0, MAX_BONUS);
+  const hiddenBonus = bonusList.slice(MAX_BONUS);
+  const hasMoreBonus = hiddenBonus.length > 0;
 
   return (
     <Paper
@@ -126,57 +160,104 @@ export default function JobOfferCard({
 
       {/* Body */}
       <Box sx={{ px: 3, pt: 2.5, flex: 1 }}>
-        <Box sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}>
-          <ChecklistRtlOutlinedIcon sx={{ color: "#1a237e", fontSize: 20, mr: 1, mt: 0.5 }} />
-          <Box sx={{ height: "50px", mb: "20px" }}>
-            <Typography fontWeight={600} fontSize={15} color="#1a237e" sx={{ mb: 0.5 }}>
-              {t("Job Description")}:
-            </Typography>
-            <Typography
-              variant="body2"
-              color="#374151"
-              sx={{
-                fontWeight: 400,
-                fontSize: 14,
-                lineHeight: 1.5,
-                maxHeight: 60,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                display: "-webkit-box",
-                WebkitBoxOrient: "vertical",
-                WebkitLineClamp: 3,
-                mb: 3,
-              }}
-            >
-              {offer.description?.length > 80 ? offer.description.slice(0, 80) + "..." : offer.description}
-            </Typography>
-          </Box>
-        </Box>
+        {/* styles communs */}
+        {(() => {
+          const lineSx = { display: "flex", alignItems: "flex-start", gap: 1, mb: 2 };
+          const panelSx = { bgcolor: "#f8fafc", borderRadius: "12px", p: 1.2 };
 
-        <Box sx={{ mt: 4, bgcolor: "#f8fafc", borderRadius: "12px", mb: 2, display: "flex", alignItems: "flex-start" }}>
-          <ChecklistRtlOutlinedIcon sx={{ color: "#1a237e", fontSize: 20, mr: 1, mt: 0.5 }} />
-          <Box sx={{ height: "50px", mb: "20px" }}>
-            <Typography fontWeight={600} fontSize={15} color="#1a237e" sx={{ mb: 0.5 }}>
-              {t("Requirements")}:
-            </Typography>
-            <Typography
-              fontSize={14}
-              color="#374151"
-              sx={{
-                fontWeight: 400,
-                lineHeight: 1.5,
-                maxHeight: 60,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                display: "-webkit-box",
-                WebkitBoxOrient: "vertical",
-                WebkitLineClamp: 3,
-              }}
-            >
-              {offer.requirements}
-            </Typography>
-          </Box>
-        </Box>
+          return (
+            <>
+              {/* Description */}
+              <Box sx={lineSx}>
+                <ChecklistRtlOutlinedIcon sx={{ color: "#1a237e", fontSize: 20, mt: 0.5 }} />
+                <Box sx={{ flex: 1 }}>
+                  <Typography fontWeight={600} fontSize={15} color="#1a237e" sx={{ mb: 0.5 }}>
+                    {t("Description du poste")}:
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="#374151"
+                    sx={{
+                      fontWeight: 400,
+                      fontSize: 14,
+                      lineHeight: 1.5,
+                      overflow: "hidden",
+                      display: "-webkit-box",
+                      WebkitBoxOrient: "vertical",
+                      WebkitLineClamp: 3,
+                    }}
+                  >
+                    {offer.description?.length > 80 ? offer.description.slice(0, 80) + "..." : offer.description}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Exigences */}
+              <Box sx={lineSx}>
+                <ChecklistRtlOutlinedIcon sx={{ color: "#1a237e", fontSize: 20, mt: 0.5 }} />
+                <Box sx={{ flex: 1 }}>
+                  <Typography fontWeight={600} fontSize={15} color="#1a237e" sx={{ mb: 0.5 }}>
+                    {t("Exigences")}:
+                  </Typography>
+                  <Box sx={panelSx}>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.8 }}>
+                      {visibleReqs.map((r, i) => (
+                        <Chip
+                          key={i}
+                          label={r}
+                          size="small"
+                          sx={{ bgcolor: "#e8f1ff", color: "#1976d2", fontWeight: 600, borderRadius: "10px", height: 26 }}
+                        />
+                      ))}
+                      {restCount > 0 && (
+                        <WhiteTooltip title={restReqs.join(", ")}>
+                          <Chip
+                            label={`+${restCount}`}
+                            size="small"
+                            sx={{ bgcolor: "#e8f1ff", color: "#1976d2", fontWeight: 700, borderRadius: "10px", height: 26 }}
+                          />
+                        </WhiteTooltip>
+                      )}
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Bonus */}
+              {bonusList.length > 0 && (
+                <Box sx={lineSx}>
+                  <EmojiEventsOutlinedIcon sx={{ color: "#1a237e", fontSize: 20, mt: 0.5 }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography fontWeight={600} fontSize={15} color="#1a237e" sx={{ mb: 0.5 }}>
+                      Bonus :
+                    </Typography>
+                    <Box sx={panelSx}>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.8 }}>
+                        {visibleBonus.map((b, i) => (
+                          <Chip
+                            key={i}
+                            label={b}
+                            size="small"
+                            sx={{ bgcolor: "#e8f1ff", color: "#1976d2", fontWeight: 600, borderRadius: "10px", height: 26 }}
+                          />
+                        ))}
+                        {hasMoreBonus && (
+                          <WhiteTooltip title={hiddenBonus.join(", ")}>
+                            <Chip
+                              label="+1"
+                              size="small"
+                              sx={{ bgcolor: "#e8f1ff", color: "#1976d2", fontWeight: 700, borderRadius: "10px", height: 26 }}
+                            />
+                          </WhiteTooltip>
+                        )}
+                      </Box>
+                    </Box>
+                  </Box>
+                </Box>
+              )}
+            </>
+          );
+        })()}
       </Box>
 
       <Divider sx={{ my: 2, borderColor: "#e5e7eb" }} />
@@ -185,7 +266,7 @@ export default function JobOfferCard({
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, pl: 3, pb: 1 }}>
         <Chip
           icon={<MonetizationOnOutlinedIcon sx={{ fontSize: 16, color: "#2e7d32" }} />}
-          label={`$${salary}`}
+          label={formatDT(salary)}  // <--- ICI : affichage en Dinar Tunisien
           sx={{ bgcolor: "#e8f5e9", color: "#2e7d32", fontWeight: 600, fontSize: 13, borderRadius: "12px", px: 1, height: 26 }}
         />
         <Chip
@@ -212,11 +293,18 @@ export default function JobOfferCard({
       </Box>
 
       {/* Actions + Posted */}
-      <Box sx={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        px: 2, pb: 1.5, bgcolor: "#f5faff",
-        borderBottomLeftRadius: "20px", borderBottomRightRadius: "20px"
-      }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: 2,
+          pb: 1.5,
+          bgcolor: "#f5faff",
+          borderBottomLeftRadius: "20px",
+          borderBottomRightRadius: "20px",
+        }}
+      >
         <Typography sx={{ color: "#6b7280", fontSize: 14, fontWeight: 500 }}>
           {t("Posted {{date}}", { date: formatDate(offer.postedDate) })}
         </Typography>
