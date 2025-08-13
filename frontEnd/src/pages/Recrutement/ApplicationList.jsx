@@ -415,6 +415,9 @@ export default function ApplicationList({ selectedOffer }) {
     iaRowsLength: iaRows.length,
     paginatedIARowsLength: paginatedIARows.length
   });
+    // nombre de CV issus de l'IA (après recherche + filtre score)
+const iaCount = filtered && !iaLoading && !iaError ? iaRows.length : 0;
+
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f6f8fb", py: 3 }}>
@@ -461,9 +464,11 @@ export default function ApplicationList({ selectedOffer }) {
 
         {/* Bloc 2 : Résultats IA */}
         <Paper sx={{ p: 3, borderRadius: 1.5, boxShadow: 2 }}>
-          <Typography variant="h6" fontWeight={700} color="primary" mb={2}>
-            {t("Résultats du filtrage IA")}
-          </Typography>
+       <Typography variant="h6" fontWeight={700} color="primary" mb={2}>
+  {t("Résultats du filtrage IA")}
+  {filtered && !iaLoading && !iaError ? ` (${iaCount})` : ""}
+</Typography>
+
 
           {!filtered ? (
             <Typography color="#64748b" fontStyle="italic" mb={2}>
