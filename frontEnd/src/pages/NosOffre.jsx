@@ -15,21 +15,17 @@ import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
 import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
-
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllJobOffres } from "../redux/actions/jobOffreAction";
+import { fetchAllJobOffres,fetchAllJobCategories } from "../redux/actions/jobOffreAction";
 import { createApplication } from "../redux/actions/applicationAction";
-
 import { ButtonComponent } from "../components/Global/ButtonComponent";
 import PaginationComponent from "../components/Global/PaginationComponent";
 import { StyledPaper, Title, SearchTextField } from "../style/style";
 import Navbar from "../components/Navbar";
 import ModelComponent from "../components/Global/ModelComponent";
-
-// --- react-toastify ---
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import { uniq } from "lodash";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -40,7 +36,7 @@ const parseList = (str = "") =>
     .split(/[,\n]/)
     .map((s) => s.trim())
     .filter(Boolean);
-const uniq = (arr) => [...new Set(arr)];
+// Removed duplicate uniq declaration - using lodash's uniq instead
 const formatTND = (n) =>
   typeof n === "number" && !Number.isNaN(n)
     ? `${new Intl.NumberFormat("fr-TN").format(n)} DT`
@@ -60,11 +56,17 @@ const statusStyle = (s = "") => {
 export default function NosOffre() {
   const dispatch = useDispatch();
   const isMobile = useMediaQuery("(max-width:900px)");
+  const [sort, setSort] = useState("recent");
 
   // Redux offres
   const { list: offers = [], loading, error } = useSelector((s) => s.jobOffre || {});
 
-  useEffect(() => { dispatch(fetchAllJobOffres()); }, [dispatch]);
+  useEffect(() => {
+     dispatch(fetchAllJobOffres());
+     dispatch(fetchAllJobCategories());
+    }, [dispatch]);
+
+const { list: categories = [] } = useSelector((state) => state.jobCategory);
   // ====== Fichiers autorisés ======
 const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg"];
 const ALLOWED_MIME = new Set([
@@ -81,7 +83,6 @@ const getExt = (name = "") => {
   return i >= 0 ? name.slice(i).toLowerCase() : "";
 };
 
-
   // UI states
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
@@ -90,6 +91,8 @@ const getExt = (name = "") => {
   const [remote, setRemote] = useState("all"); // statique
   const [page, setPage] = useState(1);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [jobCategories, setJobCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   // Candidature (Modal prédéfini)
   const [applyJob, setApplyJob] = useState(null);
@@ -116,7 +119,8 @@ const getExt = (name = "") => {
         process: o.process || "",
         requirements: skills,
         bonuses,
-        candidatesCount: Array.isArray(o.applications) ? o.applications.length : 0
+        candidatesCount: Array.isArray(o.applications) ? o.applications.length : 0,
+        categoryId: o.jobCategory ? String((o.jobCategory._id ?? o.jobCategory)) : null
       };
     });
   }, [offers]);
@@ -124,12 +128,35 @@ const getExt = (name = "") => {
   // filtres
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return jobsVM.filter((j) =>
-      (q === "" || `${j.title} ${j.company} ${j.requirements.join(" ")}`.toLowerCase().includes(q)) &&
-      (location === "" || j.location.toLowerCase().includes(location.toLowerCase())) &&
-      (jobType === "all" || (j.type || "").toLowerCase() === jobType)
-    );
-  }, [jobsVM, search, location, jobType]);
+    return jobsVM.filter((j) => {
+      // Recherche par texte
+      const matchesSearch = q === "" || `${j.title} ${j.company} ${j.requirements.join(" ")}`.toLowerCase().includes(q);
+      
+      // Filtre par localisation
+      const matchesLocation = location === "" || j.location.toLowerCase().includes(location.toLowerCase());
+      
+      // Filtre par type de contrat
+      const matchesJobType = jobType === "all" || (j.type || "").toLowerCase() === jobType;
+      
+      // Filtre par catégorie - utiliser categoryId directement depuis jobsVM
+      const matchesCategory = selectedCategory === "all" || j.categoryId === selectedCategory;
+      
+      return matchesSearch && matchesLocation && matchesJobType && matchesCategory;
+    });
+  }, [jobsVM, search, location, jobType, selectedCategory]);
+  
+  const sortedFiltered = useMemo(() => {
+    const copy = [...filtered];
+    switch (sort) {
+      case "salary":
+        return copy.sort((a, b) => (a.salaryRange || 0) - (b.salaryRange || 0));
+      case "relevance":
+        return copy.sort((a, b) => b.candidatesCount - a.candidatesCount); // le plus postulé en premier
+      case "recent":
+      default:
+        return copy.sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate));
+    }
+  }, [filtered, sort]);
 
   const handlePage = (_, v) => setPage(v);
 
@@ -147,7 +174,7 @@ const onFileChange = (e) => {
 
   const ext = getExt(file.name);
   const extOk = ALLOWED_EXTENSIONS.includes(ext);
-  // parfois file.type est vide/incorrect -> on tolère vide et on se base sur l’extension
+  // parfois file.type est vide/incorrect -> on tolère vide et on se base sur l'extension
   const mimeOk = !file.type || ALLOWED_MIME.has(file.type);
   const sizeOk = file.size <= MAX_SIZE_MB * 1024 * 1024;
 
@@ -166,7 +193,6 @@ const onFileChange = (e) => {
   setCvFile(file);
 };
 
-
   const submitApplication = async () => {
     if (!applyJob || !cvFile) return;
     try {
@@ -177,6 +203,13 @@ const onFileChange = (e) => {
       toast.error(e || "Erreur lors de la candidature");
     }
   };
+  
+  const filters = useMemo(() => {
+    const types = uniq(offers.map(j => j.type?.toLowerCase()).filter(Boolean));
+    const salaries = uniq(offers.map(j => j.salaryRange).filter(Boolean)).sort((a, b) => a - b);
+    const categoryOptions = categories.map(cat => ({ id: cat._id, name: cat.name }));
+    return { types, salaries, categoryOptions };
+  }, [offers, categories]);
 
   return (
     <Box sx={{ minHeight: "100vh", width: "100vw", bgcolor: "#f8fafc" }}>
@@ -270,8 +303,6 @@ const onFileChange = (e) => {
                     />
                   </Box>
 
-           
-
                  <Divider sx={{ mt: 1, mb: 0 }} />
 
                   {/* Filtres (statique UI) */}
@@ -287,48 +318,25 @@ const onFileChange = (e) => {
 
   <StyledPaper sx={{ border: "1px solid #e3f2fd", boxShadow: 2, p: 2.2 }}>
     <Stack spacing={2}>
-      <FormControl>
-        <InputLabel>Type de contrat</InputLabel>
-        <Select
-          value={jobType}
-          onChange={(e) => setJobType(e.target.value)}
-          label="Type de contrat"
-        >
-          <MenuItem value="all">Tous les types</MenuItem>
-          <MenuItem value="cdi">cdi</MenuItem>
-          <MenuItem value="cdd">cdd</MenuItem>
-          <MenuItem value="freelance">freelance</MenuItem>
-          <MenuItem value="stage">stage</MenuItem>
-        </Select>
-      </FormControl>
+     <FormControl fullWidth>
+  <InputLabel>Type de contrat</InputLabel>
+  <Select value={jobType} onChange={(e) => setJobType(e.target.value)} label="Type de contrat">
+    <MenuItem value="all">Tous</MenuItem>
+    {filters.types.map((t) => (
+      <MenuItem key={t} value={t}>{t}</MenuItem>
+    ))}
+  </Select>
+</FormControl>
 
-      <FormControl>
-        <InputLabel>Salaire</InputLabel>
-        <Select
-          value={salary}
-          onChange={(e) => setSalary(e.target.value)}
-          label="Salaire"
-        >
-          <MenuItem value="all">Tous</MenuItem>
-          <MenuItem value="30-40">30 000 - 40 000 DT</MenuItem>
-          <MenuItem value="40-50">40 000 - 50 000 DT</MenuItem>
-          <MenuItem value="50-60">50 000 - 60 000 DT</MenuItem>
-          <MenuItem value="60+">60 000 DT et plus</MenuItem>
-        </Select>
-      </FormControl>
-
-      <FormControl>
-        <InputLabel>Mode</InputLabel>
-        <Select
-          value={remote}
-          onChange={(e) => setRemote(e.target.value)}
-          label="Mode"
-        >
-          <MenuItem value="all">Tous</MenuItem>
-          <MenuItem value="remote">Télétravail</MenuItem>
-          <MenuItem value="onsite">Présentiel</MenuItem>
-        </Select>
-      </FormControl>
+   <FormControl fullWidth>
+  <InputLabel>Catégorie</InputLabel>
+  <Select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} label="Catégorie">
+    <MenuItem value="all">Toutes</MenuItem>
+    {filters.categoryOptions.map((c) => (
+      <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+    ))}
+  </Select>
+</FormControl>
 
       <Button
         variant="outlined"
@@ -341,6 +349,8 @@ const onFileChange = (e) => {
           setRemote("all");
           setLocation("");
           setSearch("");
+          setSort("recent");
+          setSelectedCategory("all");
         }}
       >
         Réinitialiser
@@ -366,17 +376,22 @@ const onFileChange = (e) => {
                 </Typography>
                 <Box sx={{ minWidth: 140, maxWidth: 220 }}>
                   <FormControl fullWidth size="small">
-                    <Select value="recent" displayEmpty>
-                      <MenuItem value="recent">Plus récents</MenuItem>
-                      <MenuItem value="salary">Salaire croissant</MenuItem>
-                      <MenuItem value="relevance">Pertinence</MenuItem>
-                    </Select>
-                  </FormControl>
+                      <Select
+                        value={sort}
+                        onChange={(e) => setSort(e.target.value)}
+                        displayEmpty
+                      >
+                        <MenuItem value="recent">Plus récents</MenuItem>
+                        <MenuItem value="salary">Salaire croissant</MenuItem>
+                        <MenuItem value="relevance">Pertinence</MenuItem>
+                      </Select>
+                    </FormControl>
+
                 </Box>
               </Stack>
 
               <Stack spacing={2}>
-                {filtered.map((job) => {
+                {sortedFiltered.map((job) => {
                   const st = statusStyle(job.status);
                   return (
                     <Card key={job.id} sx={{ transition: "all .17s", p: 2.4, boxShadow: 8, "&:hover": { boxShadow: 12 } }}>
@@ -493,7 +508,7 @@ const onFileChange = (e) => {
 
               <Box mt={4} pb={6}>
                 <PaginationComponent
-                  count={Math.max(1, Math.ceil(filtered.length / 8))}
+                  count={Math.max(1, Math.ceil(sortedFiltered.length / 8))}
                   page={page}
                   onChange={handlePage}
                   color="primary"
@@ -591,12 +606,11 @@ const onFileChange = (e) => {
     <InfoOutlinedIcon sx={{ color: "#1976d2", mt: "2px" }} />
     <Typography variant="body2" sx={{ color: "#0F172A", lineHeight: 1.7 }}>
       <strong style={{ color: "#0B3D91" }}>Information&nbsp;:</strong>&nbsp;
-      si vous n’obtenez pas de réponse sous <b style={{ color: "#1976d2" }}>15&nbsp;jours</b>,
-      veuillez considérer que votre candidature n’a pas été retenue. Merci pour votre intérêt.
+      si vous n'obtenez pas de réponse sous <b style={{ color: "#1976d2" }}>15&nbsp;jours</b>,
+      veuillez considérer que votre candidature n'a pas été retenue. Merci pour votre intérêt.
     </Typography>
   </Stack>
 </Box>
-
 
           <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
             <Button onClick={closeApply}>Annuler</Button>

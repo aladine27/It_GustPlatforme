@@ -436,7 +436,7 @@ const iaCount = filtered && !iaLoading && !iaError ? iaRows.length : 0;
               text={iaLoading ? t("Analyse...") : t("Filtrer via IA")}
               icon={<FilterAltIcon />}
               onClick={handleFilterIA}
-              color="#1976d2"
+
               disabled={iaLoading || cvRows.length === 0}
             />
           </Stack>

@@ -37,7 +37,7 @@ const jobOfferSchemas = [
     title: Yup.string().required("Titre requis"),
     description: Yup.string().required("Description requise"),
     requirements: Yup.string().required("Compétences requises"),
-    bonuses: Yup.string().trim().optional()
+    
   }),
   Yup.object().shape({
     closingDate: Yup.date()
@@ -54,6 +54,7 @@ const jobOfferSchemas = [
   }),
   Yup.object().shape({
     jobCategory: Yup.string().required("Catégorie requise"),
+    bonuses: Yup.string().trim().optional(),
   }),
 ];
 
@@ -149,10 +150,10 @@ export default function CreateJobOfferModal({
 
   // Soumission finale
   const onFinalSubmit = async (data) => {
-    if (!userId) {
-      toast.error("Utilisateur non authentifié !");
-      return;
-    }
+      const now = new Date();
+  const closing = new Date(data.closingDate);
+  const status = closing >= now ? "open" : "close";
+ 
     try {
       const payload = {
         ...data,
@@ -160,6 +161,7 @@ export default function CreateJobOfferModal({
         salaryRange: Number(data.salaryRange),
         postedDate: editOffer?.postedDate || new Date().toISOString(),
         user: userId,
+        statuts:status,
       };
       await (onSubmit ? onSubmit(payload) : Promise.resolve());
       handleClose();
@@ -205,17 +207,7 @@ export default function CreateJobOfferModal({
                 helperText={errors.requirements?.message}
               />
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Bonus (séparés par ,)  ex: Télétravail, Tickets resto, Mutuelle"
-                fullWidth
-                multiline
-                minRows={1}
-                {...register("bonuses")}
-                error={!!errors.bonuses}
-                helperText={errors.bonuses?.message}
-              />
-            </Grid>
+        
           </Grid>
         );
       case 1:
@@ -316,6 +308,17 @@ export default function CreateJobOfferModal({
                 }
               </TextField>
             </Grid>
+                <Grid item xs={12}>
+              <TextField
+                label="Bonus (séparés par ,)  ex: Télétravail, Tickets resto, Mutuelle"
+                fullWidth
+                multiline
+                minRows={1}
+                {...register("bonuses")}
+                error={!!errors.bonuses}
+                helperText={errors.bonuses?.message}
+              />
+            </Grid>
           </Grid>
         );
       default:
@@ -343,7 +346,7 @@ export default function CreateJobOfferModal({
                 onClick={e => { e.preventDefault(); handleBack(); }}
                 text="Retour"
                 icon={<ArrowBack />}
-                color="inherit"
+                
                 type="button"
               />
             )}
@@ -352,13 +355,13 @@ export default function CreateJobOfferModal({
                 onClick={e => { e.preventDefault(); handleNext(); }}
                 text="Suivant"
                 icon={<ArrowForward />}
-                color="primary"
+                
                 type="button"
               />
             ) : (
               <Button
                 variant="contained"
-                color="primary"
+             
                 type="submit"
                 startIcon={<SaveOutlined />}
               >

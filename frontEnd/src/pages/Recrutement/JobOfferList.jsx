@@ -397,7 +397,6 @@ export default function JobOfferList({ onOpenApplications }) {
       >
         <Box sx={{ mt: 2, display: "flex", justifyContent: "center", gap: 2 }}>
           <ButtonComponent
-            color="error"
             text={t("Supprimer")}
             onClick={async () => {
               await dispatch(deleteJobOffre(deleteOffer._id)).unwrap();
@@ -405,11 +404,7 @@ export default function JobOfferList({ onOpenApplications }) {
               dispatch(fetchAllJobOffres());
             }}
           />
-          <ButtonComponent
-            color="inherit"
-            text={t("Annuler")}
-            onClick={() => setDeleteOffer(null)}
-          />
+          
         </Box>
       </CustomDeleteForm>
     </Box>

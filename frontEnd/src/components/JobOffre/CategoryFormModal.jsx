@@ -14,6 +14,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import ModelComponent from "../../components/Global/ModelComponent";
 import CustomDeleteForm from "../../components/Global/CustomDeleteForm"; // Ajoute cet import
+import { ButtonComponent } from "../Global/ButtonComponent";
 
 export default function CategoryFormModal({
   open,
@@ -144,13 +145,14 @@ export default function CategoryFormModal({
                 )}
               />
               <Stack direction="row" spacing={2} justifyContent="flex-end">
-                <Button
+                <ButtonComponent
                   type="submit"
+                  text="Créer"
                   variant="contained"
                   startIcon={<AddCircleOutlineIcon />}
                 >
                   {"Créer la catégorie"}
-                </Button>
+                </ButtonComponent>
               </Stack>
               {!!createError && <Typography color="error">{createError}</Typography>}
             </form>
@@ -198,11 +200,7 @@ export default function CategoryFormModal({
                             <SaveIcon />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title={"Annuler"}>
-                          <IconButton color="error" onClick={cancelEdit}>
-                            <CancelIcon />
-                          </IconButton>
-                        </Tooltip>
+                      
                       </Box>
                     ) : (
                       <>
@@ -257,12 +255,7 @@ export default function CategoryFormModal({
           >
             Supprimer
           </Button>
-          <Button
-            color="inherit"
-            onClick={cancelDelete}
-          >
-            Annuler
-          </Button>
+          
         </Box>
       </CustomDeleteForm>
     </>
