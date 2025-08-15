@@ -23,6 +23,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { SprintsModule } from './sprints/sprints.module';
 import { TeamsModule } from './teams/teams.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { TeamsModule } from './teams/teams.module';
     }),
     SprintsModule,
     TeamsModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -49,13 +49,8 @@ export class User {
     events: Types.ObjectId[];
    @Prop([{ type: SchemaTypes.ObjectId, ref: 'teams' }])
    teams: Types.ObjectId[];
-
-
-  
-  
-  
-
-
+    @Prop([{ type: SchemaTypes.ObjectId, ref: 'notifications' }])
+   notifications: Types.ObjectId[];
 
 }
 export const userSchema = SchemaFactory.createForClass(User)

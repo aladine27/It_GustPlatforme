@@ -150,7 +150,7 @@ export default function CreateJobOfferModal({
 
   // Soumission finale
   const onFinalSubmit = async (data) => {
-      const now = new Date();
+  const now = new Date();
   const closing = new Date(data.closingDate);
   const status = closing >= now ? "open" : "close";
  
