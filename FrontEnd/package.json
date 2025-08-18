@@ -20,8 +20,8 @@
     "@fullcalendar/timegrid": "^6.1.17",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.1.1",
-    "@mui/material": "^5.15.13",
     "@mui/icons-material": "^5.15.13",
+    "@mui/material": "^5.15.13",
     "@mui/x-date-pickers": "^8.5.2",
     "@reduxjs/toolkit": "^2.8.2",
     "@tiptap/extension-code-block-lowlight": "^2.24.0",
@@ -72,6 +72,7 @@
     "recharts": "^2.15.4",
     "redux-persist": "^6.0.0",
     "slick-carousel": "^1.8.1",
+    "socket.io-client": "^4.8.1",
     "tiptap-extension-resize-image": "^1.2.2",
     "xlsx": "^0.18.5",
     "yup": "^1.6.1"

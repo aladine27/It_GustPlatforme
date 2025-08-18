@@ -5,11 +5,15 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { eventSchema } from './entities/event.entity';
 import { EventTypeSchema } from 'src/event-type/entities/event-type.entity';
 import { userSchema } from 'src/users/entities/user.entity';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
    imports: [MongooseModule.forFeature([{ name: 'events', schema: eventSchema }]),
              MongooseModule.forFeature([{ name: 'eventTypes', schema: EventTypeSchema }]),
-             MongooseModule.forFeature([{ name: 'users', schema: userSchema }])],
+             MongooseModule.forFeature([{ name: 'users', schema: userSchema }]),
+             NotificationModule
+            ],
+            
   controllers: [EventController],
   providers: [EventService],
 })

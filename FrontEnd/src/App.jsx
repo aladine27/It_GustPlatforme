@@ -6,11 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Employe from './pages/Employe';
 import Evenement from './pages/Evenement';
 import Projet from './pages/Projet';
-
-
 import RecrutementIndex from './pages/Recrutement/RecrutementIndex';
-
-
 import Profile from './pages/Profile';
 import ResetPassword from './pages/ResetPassword';
 import ExportPage from './components/ExportModal';
@@ -20,7 +16,6 @@ import GoogleRedirect from './pages/GoogleRedirect';
 import PrivateRoute from './components/PrivateRoute';
 import { useSelector } from 'react-redux';
 import AdminDashboard from './pages/AdminDashboard';
-
 import "react-toastify/dist/ReactToastify.css";
 import Conge from './pages/Conge/Conge';
 import CongeIndex from './pages/Conge/CongeIndex';
@@ -31,10 +26,16 @@ import DocumentPersonnalisationPage from './pages/Documents/DocumentPersonnalisa
 import ProjectSprintIndex from './pages/Tache/ProjectSprintIndex';
 import NosOffre from './pages/NosOffre';
 import ApplicationListRHIA from './pages/Recrutement/ApplicationList';
+import { useEffect, useState } from 'react';
 function App() {
   const { CurrentUser } = useSelector((state) => state.user);
   const role = CurrentUser?.role || CurrentUser?.user?.role;
-  
+  const [socket,SetSocket]=useState("null");
+
+ /*useEffect(() => {
+    socket?.emit("new user",CurrentUser)
+  }
+  , [CurrentUser,socket])*/
  
 
   // Redirection dynamique initiale selon le rôle

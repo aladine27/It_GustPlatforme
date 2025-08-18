@@ -19,11 +19,20 @@ export class NotificationService {
         await this.notificationModel.insertMany(notifications)
         //emettre en temp réel la notification via web Socket
         userIds.forEach(userId => {
-          this.notificationGateway.handleEmitEvent(userId, message,title);
+          this.notificationGateway.handleEmitEventToUser(userId, message,title);
         });
+        return {succes:true,message:"notification envoyé"}
     
     }
-      async sendNotifToUser(userId: string,title:string, message: string) {
+    async getUserNotif(userId:string){
+        return this.notificationModel.find({user:userId}).sort({createdAt:-1}).exec();
+    }
+    async marqueAsRead(notificationId:string,userId:string){
+      return  await this.notificationModel.findByIdAndUpdate({notificationId,userId},{status:true},{new:true}).exec();
+    } 
+    
+    async sendNotifToUser(userId: string,title:string, message: string) {
+        
         
     }
 }

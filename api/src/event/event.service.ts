@@ -6,20 +6,23 @@ import { Model } from 'mongoose';
 import { IEvent } from './interfaces/event.interface';
 import { IEventType } from 'src/event-type/interfaces/eventType.interface';
 import { IUser } from 'src/users/interfaces/user.interface';
+import { NotificationService } from 'src/notification/notification.service';
 
 
 @Injectable()
 export class EventService {
   constructor (@InjectModel('events') private eventModel: Model<IEvent>,
               @InjectModel('eventTypes') private eventTypeModel: Model<IEventType>,
-              @InjectModel('users') private userModel: Model<IUser>
+              @InjectModel('users') private userModel: Model<IUser>,
+              private readonly notificationService:NotificationService,
             ) {}
   async create(createEventDto: CreateEventDto):Promise<IEvent> {
     const newEvent = new this.eventModel(createEventDto);
     await this.eventTypeModel.updateOne({_id:createEventDto.eventType},{$push:{events:newEvent._id  }})
     await this.userModel.updateOne({_id:createEventDto.user},{$push:{events:newEvent._id  }})
-    return newEvent.save();
-    
+    const savedEvent = await newEvent.save();
+    this.notificationService.sendNotifToUsers(createEventDto.invited,newEvent.title,"un nouveau évènement est ajouté")
+    return savedEvent;
   }
   async getEventByUserID(user: string):Promise<IEvent[]> {
     const userEvents = await this.eventModel.find({user}).populate('user')
@@ -64,4 +67,5 @@ export class EventService {
      await this.userModel.updateOne({_id:event.user},{$pull:{events:event._id  }})
     return event;
   }
+
 }

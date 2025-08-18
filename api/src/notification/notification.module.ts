@@ -9,6 +9,7 @@ import { notificationSchema } from './entites/notification.entity';
    imports :[MongooseModule.forFeature([{ name: 'notifications', schema: notificationSchema }]),
    ],
   providers: [NotificationService, NotificationGateway],
-  controllers: [NotificationController]
+  controllers: [NotificationController],
+  exports: [NotificationService],
 })
 export class NotificationModule {}
