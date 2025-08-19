@@ -48,7 +48,7 @@ function App() {
       case 'Rh':
         return 'evenement';
       case 'Employe':
-        return 'tache';
+        return 'projet';
       default:
         return 'profile';
     }

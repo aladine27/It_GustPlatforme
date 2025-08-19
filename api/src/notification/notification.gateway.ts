@@ -12,12 +12,13 @@ import { Server,Socket } from 'socket.io';
 export class NotificationGateway {
   @WebSocketServer()
   server:Server;
+  
   private connectedUsers= new Map<string, string>();
   @SubscribeMessage('message')
   handleMessage(client: any, payload: any): string {
     return 'Hello world!';
   }
- 
+ @SubscribeMessage('register')  
   handleRegister(@ConnectedSocket() client: Socket, @MessageBody() message: { userId: string }) {
     if (message && message.userId) {
       this.connectedUsers.set(message.userId, client.id);

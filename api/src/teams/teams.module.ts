@@ -5,12 +5,14 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { TeamSchema } from './entities/team.entity';
 import { projectSchema } from 'src/projects/entities/project.entity';
 import { userSchema } from 'src/users/entities/user.entity';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'teams', schema: TeamSchema }]),
      MongooseModule.forFeature([{ name: 'projects', schema: projectSchema }]),
-     MongooseModule.forFeature([{ name: 'users', schema: userSchema }])
+     MongooseModule.forFeature([{ name: 'users', schema: userSchema }]),
+    NotificationModule
   ],
   controllers: [TeamsController],
   providers: [TeamsService],

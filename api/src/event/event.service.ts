@@ -49,23 +49,72 @@ export class EventService {
     }
     return event;
   }
+ async update(id: string, updateEventDto: UpdateEventDto): Promise<IEvent> {
+    // 1) Récupérer l'état AVANT pour comparer les invités
+    const before = await this.eventModel.findById(id).select('invited user title');
+    if (!before) {
+      throw new NotFoundException('No event found');
+    }
 
-  async update(id: string, updateEventDto: UpdateEventDto):Promise<IEvent> {
+    // 2) Mettre à jour et récupérer l'état APRÈS
     const event = await this.eventModel.findByIdAndUpdate(id, updateEventDto, { new: true });
     if (!event) {
       throw new NotFoundException('No event found');
     }
+
+    // 3) Calcul des deltas d'invités (ajoutés / retirés)
+    const prevInv = ((before as any).invited || []).map((x: any) => String(x));
+    const nextInv = ((event as any).invited || []).map((x: any) => String(x));
+
+    const prevSet = new Set(prevInv);
+    const nextSet = new Set(nextInv);
+
+    const addedInvited = nextInv.filter((u) => !prevSet.has(u));
+    const removedInvited = prevInv.filter((u) => !nextSet.has(u));
+    const stillInvited = nextInv.filter((u) => prevSet.has(u)); // invités présents avant et après
+
+    // 4) Notifs manquantes :
+    // 4.1 Nouveaux invités
+    if (addedInvited.length) {
+      this.notificationService.sendNotifToUsers(addedInvited, event.title, 'vous avez été invité à un évènement');
+    }
+
+    // 4.2 Invités retirés
+    if (removedInvited.length) {
+      this.notificationService.sendNotifToUsers(removedInvited, event.title, 'votre invitation a été retirée');
+    }
+
+    // 4.3 Invités toujours concernés → mise à jour
+    if (stillInvited.length) {
+      this.notificationService.sendNotifToUsers(stillInvited, event.title, 'évènement mis à jour');
+    }
+
+    // 4.4 Créateur (propriétaire) → mise à jour
+    this.notificationService.sendNotifToUser(String((event as any).user), event.title, 'votre évènement a été mis à jour');
+
     return event;
   }
 
-  async remove(id: string):Promise<IEvent> {
+  async remove(id: string): Promise<IEvent> {
     const event = await this.eventModel.findByIdAndDelete(id);
     if (!event) {
       throw new NotFoundException('No event found');
     }
-     await this.eventTypeModel.updateOne({_id:event.eventType},{$pull:{events:event._id  }})
-     await this.userModel.updateOne({_id:event.user},{$pull:{events:event._id  }})
+
+    await this.eventTypeModel.updateOne({ _id: (event as any).eventType }, { $pull: { events: event._id } });
+    await this.userModel.updateOne({ _id: (event as any).user }, { $pull: { events: event._id } });
+
+    // Notifier invités + créateur (suppression)
+    const invitedIds = ((event as any).invited || []).map((x: any) => String(x));
+    if (invitedIds.length) {
+      this.notificationService.sendNotifToUsers(invitedIds, String((event as any).title), 'évènement annulé/supprimé');
+    }
+    this.notificationService.sendNotifToUser(
+      String((event as any).user),
+      String((event as any).title),
+      'votre évènement a été supprimé'
+    );
+
     return event;
   }
-
 }

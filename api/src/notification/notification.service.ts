@@ -8,6 +8,7 @@ import { NotificationGateway } from './notification.gateway';
 export class NotificationService {
     constructor(@InjectModel('notifications') private notificationModel: Model<Inotification>,
     private notificationGateway:NotificationGateway) {}
+
     async sendNotifToUsers(userIds: string[],title:string, message: string) {
         const notifications = userIds.map(userId => ({
           user: userId,
@@ -32,7 +33,16 @@ export class NotificationService {
     } 
     
     async sendNotifToUser(userId: string,title:string, message: string) {
-        
-        
+       await this.notificationModel.create({
+           user: userId,
+           message,
+           title,
+           status: false,
+        });
+
+    this.notificationGateway.handleEmitEventToUser(userId, message, title);
+
+    return { succes: true, message: 'notification envoyé' };
+         
     }
 }

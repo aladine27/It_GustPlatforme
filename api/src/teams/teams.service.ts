@@ -6,13 +6,15 @@ import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { IProject } from '../projects/interfaces/project.interface';
 import { IUser } from 'src/users/interfaces/user.interface';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class TeamsService {
   constructor(
     @InjectModel('teams') private teamModel: Model<ITeam>,
     @InjectModel('projects') private projectModel: Model<IProject>,
-    @InjectModel('users') private userModel: Model<IUser>
+    @InjectModel('users') private userModel: Model<IUser>,
+     private readonly notificationService: NotificationService,
   ) {}
 
   async create(createTeamDto: CreateTeamDto): Promise<ITeam> {
@@ -26,7 +28,10 @@ export class TeamsService {
       { _id: { $in: createTeamDto.employeeList } },
       { $push: { teams: newTeam._id } }
     );
+    
   }
+  
+  
     return newTeam.save();
   }
 
