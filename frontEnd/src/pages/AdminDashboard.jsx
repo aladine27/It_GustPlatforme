@@ -1,19 +1,10 @@
-// src/pages/AdminDashboard.jsx
 import { useMemo, useState } from "react";
-import {
-  Box, Grid, Card, CardContent, Typography, Chip, Stack, Avatar,
-  Divider
-} from "@mui/material";
+import {Box, Grid, Card, CardContent, Typography, Chip, Stack, Avatar,Divider} from "@mui/material";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
-import {
-  PieChart,
-  BarChart,
-  LineChart,
-  Gauge,
-} from "@mui/x-charts";
+import {PieChart,BarChart,LineChart,Gauge} from "@mui/x-charts";
 
 import { StyledCard } from "../style/style";
 
@@ -25,16 +16,12 @@ const kpi = {
   applications: 245,
   notifications: 325,
 };
-
-// Rôles utilisateurs
 const usersByRole = [
   { id: "Admin", value: 8 },
   { id: "Manager", value: 18 },
   { id: "RH", value: 12 },
   { id: "Employé", value: 208 },
 ];
-
-// Statuts de congés (par mois – noms FR)
 const leavesMonthlyStatus = [
   { m: "Janv", ap: 6, rj: 1, pd: 2 },
   { m: "Févr", ap: 7, rj: 2, pd: 3 },
@@ -43,23 +30,17 @@ const leavesMonthlyStatus = [
   { m: "Mai",  ap: 7, rj: 1, pd: 3 },
   { m: "Juin", ap: 9, rj: 2, pd: 2 },
 ];
-
-// Types de congés (Top)
 const leaveTypesTop3 = [
   { type: "Annuel", v: 34 },
   { type: "Maladie", v: 22 },
   { type: "Sans solde", v: 12 },
 ];
-
-// Volume total de congés par mois (FR)
 const monthlyLeaves = [
   { month: "Janv", v: 18 }, { month: "Févr", v: 22 }, { month: "Mars", v: 20 },
   { month: "Avr",  v: 25 }, { month: "Mai",  v: 21 }, { month: "Juin", v: 26 },
   { month: "Juil", v: 24 }, { month: "Août", v: 29 }, { month: "Sept", v: 30 },
   { month: "Oct",  v: 28 }, { month: "Nov",  v: 31 }, { month: "Déc",  v: 33 },
 ];
-
-// Recrutement
 const applicationsPerOffer = [
   { offer: "DevOps",   v: 210 },
   { offer: "Frontend", v: 160 },
@@ -67,35 +48,27 @@ const applicationsPerOffer = [
   { offer: "QA",       v: 95  },
   { offer: "Data",     v: 80  },
 ];
-
 const jobByCategory = [
   { id: "Informatique", value: 6 },
   { id: "Ressources Humaines", value: 3 },
   { id: "Ventes", value: 2 },
   { id: "Design", value: 4 },
 ];
-
 const offersStatus = [
   { id: "Ouvertes", value: 8 },
   { id: "Clôturées", value: 5 },
 ];
-
-// Delivery (projets / tâches / sprints)
 const tasksByStatus = [
   { id: "À faire", value: 42 },
   { id: "En cours", value: 68 },
   { id: "Terminées", value: 120 },
 ];
-
 const sprintsStats = { inProgress: 3, done: 5 };
 const burndown = [
   { d: "Lun", r: 50 }, { d: "Mar", r: 44 }, { d: "Mer", r: 38 },
   { d: "Jeu", r: 29 }, { d: "Ven", r: 22 }, { d: "Sam", r: 15 }, { d: "Dim", r: 8 },
 ];
-
 const projectCompletion = 75;
-
-// Documents
 const documentsMonthly = [
   { m: "Janv", gen: 10, val: 7,  aw: 2 },
   { m: "Févr", gen: 15, val: 12, aw: 3 },
@@ -104,46 +77,37 @@ const documentsMonthly = [
   { m: "Mai",  gen: 19, val: 15, aw: 2 },
   { m: "Juin", gen: 22, val: 17, aw: 3 },
 ];
-
 const docByType = [
   { id: "Contrat", value: 64 },
   { id: "Attestation", value: 48 },
   { id: "Politique", value: 32 },
   { id: "Autre", value: 20 },
 ];
-
-// Événements & notifications
 const eventsStatus = [
   { id: "Planifié", value: 14 },
   { id: "Réalisé", value: 22 },
   { id: "Annulé", value: 3 },
 ];
-
 const typeEvents = [
   { id: "Réunion", value: 12 },
   { id: "Formation", value: 5 },
   { id: "Atelier", value: 4 },
   { id: "Autre", value: 3 },
 ];
-
 const upcomingEvents = [
   { title: "Réunion plénière T3", date: "2025-09-05 10:00", type: "Réunion",   location: "Siège" },
   { title: "Formation sécurité",  date: "2025-09-10 14:00", type: "Formation", location: "En ligne" },
   { title: "Atelier d’équipe",    date: "2025-09-15 09:30", type: "Atelier",    location: "Salle B" },
 ];
-
 const notifStats = [
   { id: "Non lues", value: kpi.notifications },
   { id: "Lues",     value: 955 },
 ];
-
 const recentNotifications = [
   { title: "Nouvelle politique ajoutée", ago: "il y a 2 h", unread: true },
   { title: "Sprint de projet clôturé",   ago: "hier",       unread: false },
   { title: "Nouvelle offre publiée",     ago: "il y a 2 j", unread: false },
 ];
-
-// Effectifs (People)
 const headcountTrend = [
   { m: "Janv", employees: 210, hires: 8,  exits: 3 },
   { m: "Févr", employees: 218, hires: 12, exits: 4 },
@@ -159,7 +123,6 @@ const headcountTrend = [
   { m: "Déc",  employees: 268, hires: 6,  exits: 2 },
 ];
 const peopleKpis = { totalEmployees: 268, managers: 18, teams: 5 };
-
 /* ================== COMPOSANTS ================== */
 const KpiCard = ({ icon, label, value, sub }) => (
   <Card
@@ -199,7 +162,6 @@ const KpiCard = ({ icon, label, value, sub }) => (
     </CardContent>
   </Card>
 );
-
 const GroupSection = ({ title, subtitle, children }) => (
   <StyledCard
     sx={{
@@ -234,7 +196,6 @@ const GroupSection = ({ title, subtitle, children }) => (
     </CardContent>
   </StyledCard>
 );
-
 const SubBlock = ({ title, children, right, description }) => (
   <StyledCard
     sx={{
@@ -284,7 +245,6 @@ export default function AdminDashboard() {
           <KpiCard icon={<ArticleOutlinedIcon />} label="Candidatures totales" value={kpi.applications} />
         </Grid>
       </Grid>
-
       {/* DELIVERY */}
       <GroupSection title="Livraison" subtitle="Projets, tâches et sprints">
         <Grid container spacing={2.5}>
@@ -301,7 +261,6 @@ export default function AdminDashboard() {
               </Typography>
             </SubBlock>
           </Grid>
-
           <Grid item xs={12} md={4}>
             <SubBlock
               title="Tâches par statut"
@@ -314,16 +273,10 @@ export default function AdminDashboard() {
               />
             </SubBlock>
           </Grid>
-
           <Grid item xs={12} md={4}>
             <SubBlock
               title="Burn‑down du sprint"
-              right={
-                <Stack direction="row" spacing={1}>
-                  <Chip color="info" label={`En cours : ${sprintsStats.inProgress}`} sx={{ fontWeight: 600 }} />
-                  <Chip color="success" label={`Terminés : ${sprintsStats.done}`} sx={{ fontWeight: 600 }} />
-                </Stack>
-              }
+           
               description="Charge de travail restante au fil des jours du sprint. Plus ça descend vite, mieux c’est."
             >
               <LineChart
@@ -335,16 +288,14 @@ export default function AdminDashboard() {
           </Grid>
         </Grid>
       </GroupSection>
-
       <Box sx={{ height: 24 }} />
-
       {/* PEOPLE & TEAMS */}
       <GroupSection title="Personnes & Équipes" subtitle="Utilisateurs, rôles et dynamique d’équipes">
         <Grid container spacing={2.5}>
           <Grid item xs={12} md={5} lg={4}>
             <SubBlock
               title="Utilisateurs par rôle"
-              right={<Chip size="small" variant="outlined" label="Équipes 5 • Moy. 6,4" sx={{ fontWeight: 500 }} />}
+             
               description="Répartition de tous les comptes par rôle. Permet d’équilibrer les profils (Admin, Manager, RH, Employé)."
             >
               <PieChart
@@ -361,8 +312,7 @@ export default function AdminDashboard() {
               right={
                 <Stack direction="row" spacing={1}>
                   <Chip label={`Employés : ${peopleKpis.totalEmployees}`} color="primary" />
-                  <Chip label={`Managers : ${peopleKpis.managers}`} variant="outlined" />
-                  <Chip label={`Équipes : ${peopleKpis.teams}`} variant="outlined" />
+ 
                 </Stack>
               }
               description="Effectif total (zone) et flux mensuels (entrées/sorties). Utile pour suivre la croissance et le turnover."
@@ -381,9 +331,7 @@ export default function AdminDashboard() {
           </Grid>
         </Grid>
       </GroupSection>
-
       <Box sx={{ height: 24 }} />
-
       {/* CONGÉS */}
       <GroupSection title="Congés" subtitle="Volumes, statuts et tendances">
         <Grid container spacing={2.5}>
@@ -433,16 +381,13 @@ export default function AdminDashboard() {
           </Grid>
         </Grid>
       </GroupSection>
-
       <Box sx={{ height: 24 }} />
-
       {/* RECRUTEMENT */}
       <GroupSection title="Recrutement" subtitle="Offres, catégories et candidatures">
         <Grid container spacing={2.5}>
           <Grid item xs={12} md={7} lg={6}>
             <SubBlock
               title="Candidatures par offre"
-              right={<Chip color="primary" label="Ouvertes : 8 • Conv. 30,6 %" sx={{ fontWeight: 600 }} />}
               description="Comparaison du nombre de candidatures par offre pour identifier les postes les plus attractifs."
             >
               <BarChart
@@ -455,7 +400,7 @@ export default function AdminDashboard() {
             </SubBlock>
           </Grid>
 
-          <Grid item xs={12} md={5} lg={3}>
+         <Grid item xs={12} md={6} lg={5} >
             <SubBlock
               title="Offres par catégorie"
               description="Répartition des offres ouvertes par famille de métiers."
@@ -467,25 +412,10 @@ export default function AdminDashboard() {
             </SubBlock>
           </Grid>
 
-          <Grid item xs={12} md={5} lg={3}>
-            <SubBlock
-              title="Statut des offres"
-              right={<Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>Ouvertes vs Clôturées</Typography>}
-              description="Vue rapide du nombre d’offres encore ouvertes par rapport aux offres clôturées."
-            >
-              <BarChart
-                height={230}
-                xAxis={[{ data: offersStatus.map(s => s.id), scaleType: "band" }]}
-                series={[{ data: offersStatus.map(s => s.value) }]}
-                grid={{ vertical: true }}
-              />
-            </SubBlock>
-          </Grid>
+      
         </Grid>
       </GroupSection>
-
       <Box sx={{ height: 24 }} />
-
       {/* DOCUMENTS */}
       <GroupSection title="Documents" subtitle="Volumes, statuts et répartition par type">
         <Grid container spacing={2.5}>
@@ -520,9 +450,7 @@ export default function AdminDashboard() {
           </Grid>
         </Grid>
       </GroupSection>
-
       <Box sx={{ height: 24 }} />
-
       {/* ÉVÉNEMENTS */}
       <GroupSection title="Événements" subtitle="Planification et activité des événements">
         <Grid container spacing={2.5}>
@@ -577,9 +505,7 @@ export default function AdminDashboard() {
           </Grid>
         </Grid>
       </GroupSection>
-
       <Box sx={{ height: 24 }} />
-
       {/* NOTIFICATIONS */}
       <GroupSection title="Notifications" subtitle="Alertes et distribution des messages">
         <Grid container spacing={2.5}>
@@ -613,7 +539,6 @@ export default function AdminDashboard() {
           </Grid>
         </Grid>
       </GroupSection>
-
       <Box sx={{ textAlign: "center", mt: 4, color: "text.secondary" }}>
         <Typography
           variant="caption"

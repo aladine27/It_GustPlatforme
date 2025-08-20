@@ -31,12 +31,12 @@ const StyledNavLink = styled(NavLink)(({ theme }) => ({
     left: 0,
     height: 2,
     width: 0,
-    background: '#ffeb3b',
+    background: '#451991ff',
     transition: 'width 0.3s',
   },
-  '&:hover': { color: '#ffeb3b' },
+  '&:hover': { color: '#451991ff' },
   '&:hover::after': { width: '100%' },
-  '&.active': { color: '#ffeb3b' },
+  '&.active': { color: '#451991ff' },
 }));
 
 export default function Navbar() {
