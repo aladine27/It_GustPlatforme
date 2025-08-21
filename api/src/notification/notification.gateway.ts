@@ -22,6 +22,7 @@ export class NotificationGateway {
   handleRegister(@ConnectedSocket() client: Socket, @MessageBody() message: { userId: string }) {
     if (message && message.userId) {
       this.connectedUsers.set(message.userId, client.id);
+      console.log(`utilisateur ${message.userId} connecté ${client.id}`);
     }
   }
   //supprimé les utilisateurs qui sont deconnecté (notification n'est pas en temp réel dans ce cas)
@@ -33,9 +34,17 @@ export class NotificationGateway {
       }
     }
   }
-  handleEmitEventToUsers(userId: string, message: string,title:string) {
-    this.server.emit(userId, message,title);
-  }
+handleEmitEventToUsers(userIds: string[], title: string, message: string) {
+  userIds.forEach((userId) => {
+    const socketId = this.connectedUsers.get(userId);
+    if (socketId) {
+      this.server.to(socketId).emit('newNotification', {
+        title,
+        message,
+      });
+    }
+  });
+}
   handleEmitEventToUser(userId: string, message: string,title:string) {
     const socketId = this.connectedUsers.get(userId);
     if (socketId) {

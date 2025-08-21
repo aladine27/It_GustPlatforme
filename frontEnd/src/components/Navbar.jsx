@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 import {
   AppBar, Toolbar, IconButton, Box, Menu, MenuItem, Badge,
@@ -16,7 +16,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { toast } from 'react-toastify';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import PersonIcon from '@mui/icons-material/Person';
-
+import io from 'socket.io-client';
 const StyledNavLink = styled(NavLink)(({ theme }) => ({
   position: 'relative',
   textDecoration: 'none',
@@ -51,10 +51,14 @@ export default function Navbar() {
   const userFullName= CurrentUser?.fullName|| CurrentUser?.user?.fullName;
   const userEmail   = CurrentUser?.email   || CurrentUser?.user?.email;
   const userRole    = CurrentUser?.role    || CurrentUser?.user?.role;
+  const userId      = CurrentUser?._id    || CurrentUser?.user?._id;
 
   // Séparation des états des menus
   const [userMenu, setUserMenu] = useState(null);
   const [langMenu, setLangMenu] = useState(null);
+  const [unReadNotifications,setUnReadNotifications]=useState(0);
+  const [viewNotifications,setViewNotifications]=useState(false);
+  
 
   const navItems = ['Home', 'About', 'Contact', 'Offres'];
 
@@ -67,6 +71,7 @@ export default function Navbar() {
   // Menu langue
   const handleFlagClick = (e) => setLangMenu(e.currentTarget);
   const handleFlagClose = () => setLangMenu(null);
+  const [notifications,setNotifications]=useState([]);
 
   // Changement de langue
   const handleLanguageChange = (lang) => {
@@ -86,6 +91,61 @@ export default function Navbar() {
       toast.error("Erreur lors de la déconnexion");
     }
   };
+   const socket = io("http://localhost:3000");
+   //enregistre l'utilisateur récupére du Getway
+   useEffect(()=>{
+    if(CurrentUser){
+      socket.emit("new user",CurrentUser)
+    }
+   },[CurrentUser,socket])
+
+  useEffect( () => {
+      //ecoute les notifications en temps réel
+      socket.on("newNotification", (data)=>{
+        console.log("test",data);
+        setNotifications([...notifications,data]);
+      })
+      return ()=>{
+        socket.disconnect();
+      }
+  }
+  ,[]
+)
+const handleOpenNotification = async (event) => {
+
+  setViewNotifications(event.currentTarget);
+  setUnReadNotifications(0);
+  try {
+
+    const Response = await fetch(`http://localhost:3000/api/marqueAsRead/${userId}`,{
+      method:"PATCH",
+      headers:{
+        "Content-Type":"application/json"
+      }
+    })
+    if(Response.ok){
+      const data = await Response.json();
+      console.log(data);
+    }else{
+      console.log("error");
+    }
+  
+    
+  } catch (error) {
+    console.error(" Erreur lors de la récupération des notifications ",error);
+  }
+
+}
+const handleCloseNotification = () => {
+  setViewNotifications(false);
+ 
+}
+
+
+
+
+
+
 
   return (
     <AppBar
@@ -124,11 +184,29 @@ export default function Navbar() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, justifyContent: 'flex-end' }}>
           {CurrentUser ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <IconButton>
-                <Badge color="error">
+              <IconButton onClick={handleOpenNotification} >
+                <Badge color="error" badgeContent={unReadNotifications}>
                   <NotificationsIcon sx={{ color: '#227FBF' }} />
                 </Badge>
               </IconButton>
+              <Menu 
+                anchorEl={viewNotifications}
+                open={Boolean(viewNotifications)}
+                onClose={handleCloseNotification} 
+                >
+                <Box sx={{overflow: 'auto', height: 300, width: 300, p: 2}}>
+                  {notifications.sort(
+                    (a,b)=>new Date(b.createdAt)-new Date (a.createdAt))
+                    .map((notification)=>{
+                      <MenuItem key={notification._id}>
+                        {notification.title}
+                        {notification.message}
+                      </MenuItem>
+                    }
+                    )
+                  }
+                  </Box>
+                </Menu>
               <Box
                 sx={{
                   display: 'flex',
