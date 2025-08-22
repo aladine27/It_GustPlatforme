@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Inotification } from './interfaces/notification.interface';
 import { NotificationGateway } from './notification.gateway';
 
@@ -28,8 +28,10 @@ export class NotificationService {
     async getUserNotif(userId:string){
         return this.notificationModel.find({user:userId}).sort({createdAt:-1}).exec();
     }
-    async marqueAsRead(notificationId:string,userId:string){
-      return  await this.notificationModel.findByIdAndUpdate({notificationId,userId},{status:true},{new:true}).exec();
+    async marqueAsRead(userId:string){
+      return  await this.notificationModel.updateMany({user:new Types.ObjectId(userId)},
+                                                      {$set:{status:true}},
+                                                      {new:true}).exec();
     } 
     
     async sendNotifToUser(userId: string,title:string, message: string) {

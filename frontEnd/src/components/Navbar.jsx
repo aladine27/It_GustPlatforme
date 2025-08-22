@@ -72,6 +72,8 @@ export default function Navbar() {
   const handleFlagClick = (e) => setLangMenu(e.currentTarget);
   const handleFlagClose = () => setLangMenu(null);
   const [notifications,setNotifications]=useState([]);
+  const [socket,setSocket]=useState(null);
+  
 
   // Changement de langue
   const handleLanguageChange = (lang) => {
@@ -91,38 +93,64 @@ export default function Navbar() {
       toast.error("Erreur lors de la déconnexion");
     }
   };
-   const socket = io("http://localhost:3000");
-   //enregistre l'utilisateur récupére du Getway
-   useEffect(()=>{
-    if(CurrentUser){
-      socket.emit("new user",CurrentUser)
+ useEffect(() => {
+  const newSocket = io("http://localhost:3000");
+  setSocket(newSocket);
+  return () => {
+    newSocket.disconnect();
+  };
+}, []);
+useEffect(() => {            
+  let aborted = false;
+  (async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `http://localhost:3000/notification/getUserNotifByUserId/${userId}`,
+        { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      if (!aborted) {
+        setNotifications(Array.isArray(data) ? data : []);
+        setUnReadNotifications((Array.isArray(data) ? data : []).filter(n => !n.status).length);
+        console.log("all notification", data);
+      }
+    } catch (error) {
+      if (!aborted) console.error("Erreur lors de la récupération des notifications", error);
     }
-   },[CurrentUser,socket])
+  })();
+  return () => { aborted = true; };
+}, [userId]);
 
   useEffect( () => {
       //ecoute les notifications en temps réel
-      socket.on("newNotification", (data)=>{
-        console.log("test",data);
-        setNotifications([...notifications,data]);
-      })
-      return ()=>{
-        socket.disconnect();
+      if(socket && userId) {
+        socket.on('newNotification', (notification) => {
+          setNotifications((prevNotifications) => [...prevNotifications,notification]);   
+          setUnReadNotifications((prevNotifications) => prevNotifications + 1)
       }
+    )
+    return () => {
+    socket.off('newNotification');  
   }
-  ,[]
+}
+},[socket,userId]
 )
 const handleOpenNotification = async (event) => {
 
   setViewNotifications(event.currentTarget);
   setUnReadNotifications(0);
   try {
-
-    const Response = await fetch(`http://localhost:3000/api/marqueAsRead/${userId}`,{
+    const token = localStorage.getItem("token");
+    const Response = await fetch(`http://localhost:3000/notification/marqueAsRead/${userId}`,
+      {
       method:"PATCH",
       headers:{
-        "Content-Type":"application/json"
-      }
-    })
+        "Content-Type":"application/json",
+        Authorization: `Bearer ${token}` },
+      },
+    );
+
     if(Response.ok){
       const data = await Response.json();
       console.log(data);
