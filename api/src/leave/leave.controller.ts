@@ -41,7 +41,7 @@ export class LeaveController {
             'user',
             'reason',
             'leaveType'
-            // NE PAS inclure reasonFile ici !
+         
           ]
         }
       })

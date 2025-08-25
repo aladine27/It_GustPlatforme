@@ -20,7 +20,7 @@ export class NotificationGateway {
   }
  @SubscribeMessage('register')  
   handleRegister(@ConnectedSocket() client: Socket, @MessageBody() message: { userId: string }) {
-    if (message && message.userId) {
+    if ( message.userId) {
       this.connectedUsers.set(message.userId, client.id);
       console.log(`utilisateur ${message.userId} connecté ${client.id}`);
     }
@@ -30,6 +30,7 @@ export class NotificationGateway {
     for (const [userId,socketId] of this.connectedUsers.entries()){
       if(socketId === client.id){
         this.connectedUsers.delete(userId);
+        console.log(`utilisateur ${userId} déconnecté`);
         break;
       }
     }
@@ -41,7 +42,9 @@ handleEmitEventToUsers(userIds: string[], title: string, message: string) {
       this.server.to(socketId).emit('newNotification', {
         title,
         message,
+        createdAt: new Date(),
       });
+
     }
   });
 }

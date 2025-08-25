@@ -94,12 +94,23 @@ export default function Navbar() {
     }
   };
  useEffect(() => {
-  const newSocket = io("http://localhost:3000");
+  const token = localStorage.getItem("token");
+
+  const newSocket = io("http://localhost:3000", {
+    auth: { token },
+    transports: ["websocket"],
+    reconnection: true,
+    //reconnectionDelay: 1000,
+    //reconnectionAttempts: Infinity,
+  });
   setSocket(newSocket);
+  if (userId) {
+    newSocket.emit("register", userId);
+  }
   return () => {
     newSocket.disconnect();
   };
-}, []);
+}, [userId]);
 useEffect(() => {            
   let aborted = false;
   (async () => {
@@ -122,20 +133,19 @@ useEffect(() => {
   return () => { aborted = true; };
 }, [userId]);
 
-  useEffect( () => {
-      //ecoute les notifications en temps réel
-      if(socket && userId) {
-        socket.on('newNotification', (notification) => {
-          setNotifications((prevNotifications) => [...prevNotifications,notification]);   
-          setUnReadNotifications((prevNotifications) => prevNotifications + 1)
-      }
-    )
-    return () => {
-    socket.off('newNotification');  
-  }
-}
-},[socket,userId]
-)
+useEffect(() => {
+  if (!socket || !userId) return;
+  const handleNotification = (notification) => {
+    setNotifications((prev) => [notification, ...prev]);
+    setUnReadNotifications((prev) => prev + 1);
+    console.log(" Nouvelle notification :", notification);
+  };
+  socket.on("newNotification", handleNotification);
+  return () => {
+    socket.off("newNotification", handleNotification);
+  };
+}, [socket, userId]);
+
 const handleOpenNotification = async (event) => {
 
   setViewNotifications(event.currentTarget);
