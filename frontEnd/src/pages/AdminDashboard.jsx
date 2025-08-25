@@ -123,6 +123,28 @@ const headcountTrend = [
   { m: "Déc",  employees: 268, hires: 6,  exits: 2 },
 ];
 const peopleKpis = { totalEmployees: 268, managers: 18, teams: 5 };
+const projectsByTeam = [
+  { id: 'Équipe A', value: 3 },
+  { id: 'Équipe B', value: 5 },
+  { id: 'Équipe C', value: 2 },
+  { id: 'Équipe D', value: 4 },
+  { id: 'Équipe E', value: 2 },
+];
+
+const projectsByMonth = [
+  { month: "Janv", projects: 12 },
+  { month: "Févr", projects: 15 },
+  { month: "Mars", projects: 14 },
+  { month: "Avr", projects: 18 },
+  { month: "Mai", projects: 17 },
+  { month: "Juin", projects: 20 },
+  { month: "Juil", projects: 21 },
+  { month: "Août", projects: 24 },
+  { month: "Sept", projects: 23 },
+  { month: "Oct", projects: 25 },
+  { month: "Nov", projects: 27 },
+  { month: "Déc", projects: 26 },
+];
 /* ================== COMPOSANTS ================== */
 const KpiCard = ({ icon, label, value, sub }) => (
   <Card
@@ -246,112 +268,62 @@ export default function AdminDashboard() {
         </Grid>
       </Grid>
       {/* DELIVERY */}
-      <GroupSection title="Livraison" subtitle="Projets, tâches et sprints">
-        <Grid container spacing={2.5}>
-          <Grid item xs={12} md={4}>
-            <SubBlock
-              title="Achèvement des projets"
-              description="Jauge d’avancement moyen des projets actifs."
-            >
-              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", py: 2 }}>
-                <Gauge value={projectCompletion} startAngle={-110} endAngle={110} width={260} height={170} />
-              </Box>
-              <Typography variant="subtitle2" color="text.secondary" align="center" sx={{ fontWeight: 500 }}>
-                Actifs 34 • Clôturés 27
-              </Typography>
-            </SubBlock>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <SubBlock
-              title="Tâches par statut"
-              description="Répartition des tâches (À faire, En cours, Terminées) sur l’ensemble des projets."
-            >
-              <PieChart
-                series={[{ data: tasksByStatus.map((s, i) => ({ id: i, value: s.value, label: s.id })), innerRadius: 40, paddingAngle: 2 }]}
-                height={230}
-                slotProps={{ legend: { direction: "column", position: { vertical: "middle", horizontal: "right" } } }}
-              />
-            </SubBlock>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <SubBlock
-              title="Burn‑down du sprint"
-           
-              description="Charge de travail restante au fil des jours du sprint. Plus ça descend vite, mieux c’est."
-            >
-              <LineChart
-                xAxis={[{ data: burndown.map(b => b.d), scaleType: "point" }]}
-                series={[{ data: burndown.map(b => b.r), label: "Restant" }]}
-                height={230}
-              />
-            </SubBlock>
-          </Grid>
-        </Grid>
-      </GroupSection>
-      <Box sx={{ height: 24 }} />
-      {/* PEOPLE & TEAMS */}
-      <GroupSection title="Personnes & Équipes" subtitle="Utilisateurs, rôles et dynamique d’équipes">
-        <Grid container spacing={2.5}>
-          <Grid item xs={12} md={5} lg={4}>
-            <SubBlock
-              title="Utilisateurs par rôle"
-             
-              description="Répartition de tous les comptes par rôle. Permet d’équilibrer les profils (Admin, Manager, RH, Employé)."
-            >
-              <PieChart
-                series={[{ data: usersByRole.map((r, i) => ({ id: i, value: r.value, label: r.id })), innerRadius: 32, paddingAngle: 2 }]}
-                height={220}
-                slotProps={{ legend: { direction: "column", position: { vertical: "middle", horizontal: "right" } } }}
-              />
-            </SubBlock>
-          </Grid>
+      <GroupSection title="Livraison" subtitle="Projets et gestion">
+  <Grid container spacing={2.5}>
+    {/* Conservez le bloc d'achèvement des projets */}
+    <Grid item xs={12} md={4}>
+      <SubBlock
+        title="Achèvement des projets"
+        description="Jauge d’avancement moyen des projets actifs."
+      >
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", py: 2 }}>
+          <Gauge value={projectCompletion} startAngle={-110} endAngle={110} width={260} height={170} />
+        </Box>
+        <Typography variant="subtitle2" color="text.secondary" align="center" sx={{ fontWeight: 500 }}>
+          Actifs 34 • Clôturés 27
+        </Typography>
+      </SubBlock>
+    </Grid>
 
-          <Grid item xs={12} md={7} lg={8}>
-            <SubBlock
-              title="Évolution des effectifs (12 mois)"
-              right={
-                <Stack direction="row" spacing={1}>
-                  <Chip label={`Employés : ${peopleKpis.totalEmployees}`} color="primary" />
- 
-                </Stack>
-              }
-              description="Effectif total (zone) et flux mensuels (entrées/sorties). Utile pour suivre la croissance et le turnover."
-            >
-              <LineChart
-                xAxis={[{ data: headcountTrend.map(x => x.m), scaleType: "point" }]}
-                series={[
-                  { label: "Employés", data: headcountTrend.map(x => x.employees), area: true },
-                  { label: "Arrivées", data: headcountTrend.map(x => x.hires) },
-                  { label: "Départs",  data: headcountTrend.map(x => x.exits) },
-                ]}
-                height={260}
-                grid={{ vertical: true, horizontal: true }}
-              />
-            </SubBlock>
-          </Grid>
-        </Grid>
-      </GroupSection>
+    {/* Ajoutez le nouveau graphique d'évolution des projets */}
+    <Grid item xs={12} md={8}>
+      <SubBlock
+        title="Évolution des projets au cours de l'année"
+        description="Nombre de projets actifs par mois."
+      >
+        <LineChart
+          xAxis={[{ data: projectsByMonth.map(p => p.month), scaleType: "point" }]}
+          series={[{ data: projectsByMonth.map(p => p.projects), label: "Projets" }]}
+          height={260}
+          grid={{ vertical: true, horizontal: true }}
+        />
+      </SubBlock>
+    </Grid>
+  </Grid>
+</GroupSection>
       <Box sx={{ height: 24 }} />
       {/* CONGÉS */}
       <GroupSection title="Congés" subtitle="Volumes, statuts et tendances">
         <Grid container spacing={2.5}>
-          <Grid item xs={12} md={7}>
-            <SubBlock
-              title="Statut des congés par mois"
-              description="Barres empilées montrant le nombre de congés Approuvés, En attente et Rejetés pour chaque mois."
-            >
-              <BarChart
-                height={260}
-                xAxis={[{ data: leavesMonthlyStatus.map(x => x.m), scaleType: "band" }]}
-                series={[
-                  { label: "Approuvés", data: leavesMonthlyStatus.map(x => x.ap), stack: "lv" },
-                  { label: "En attente", data: leavesMonthlyStatus.map(x => x.pd), stack: "lv" },
-                  { label: "Rejetés",   data: leavesMonthlyStatus.map(x => x.rj), stack: "lv" },
-                ]}
-                grid={{ vertical: true }}
-              />
-            </SubBlock>
-          </Grid>
+         <Grid item xs={12} md={7}>
+  <SubBlock
+    title="Statut global des congés"
+    description="Répartition totale des congés par statut : Approuvés, En attente, Rejetés."
+  >
+    <PieChart
+      series={[{
+        data: [
+          { id: 'Approuvés', value: leavesMonthlyStatus.reduce((sum, item) => sum + item.ap, 0), label: 'Approuvés' },
+          { id: 'En attente', value: leavesMonthlyStatus.reduce((sum, item) => sum + item.pd, 0), label: 'En attente' },
+          { id: 'Rejetés', value: leavesMonthlyStatus.reduce((sum, item) => sum + item.rj, 0), label: 'Rejetés' },
+        ],
+        innerRadius: 50,
+      }]}
+      height={260}
+      slotProps={{ legend: { direction: 'column', position: { vertical: 'middle', horizontal: 'right' } } }}
+    />
+  </SubBlock>
+</Grid>
 
           <Grid item xs={12} md={5}>
             <SubBlock
@@ -367,18 +339,7 @@ export default function AdminDashboard() {
             </SubBlock>
           </Grid>
 
-          <Grid item xs={12}>
-            <SubBlock
-              title="Tendance globale des congés"
-              description="Évolution du volume total de demandes de congés par mois."
-            >
-              <LineChart
-                xAxis={[{ data: months, scaleType: "point" }]}
-                series={[{ data: monthsVals, label: "Congés", area: true }]}
-                height={230}
-              />
-            </SubBlock>
-          </Grid>
+          
         </Grid>
       </GroupSection>
       <Box sx={{ height: 24 }} />
@@ -415,22 +376,55 @@ export default function AdminDashboard() {
       
         </Grid>
       </GroupSection>
+    
       <Box sx={{ height: 24 }} />
-      {/* DOCUMENTS */}
-      <GroupSection title="Documents" subtitle="Volumes, statuts et répartition par type">
+
+       <GroupSection title="Personnes & Équipes" subtitle="Utilisateurs, rôles et dynamique d’équipes">
+        <Grid container spacing={2.5}>
+          <Grid item xs={12} md={5} lg={4}>
+            <SubBlock
+              title="Utilisateurs par rôle"
+             
+              description="Répartition de tous les comptes par rôle. Permet d’équilibrer les profils (Admin, Manager, RH, Employé)."
+            >
+              <PieChart
+                series={[{ data: usersByRole.map((r, i) => ({ id: i, value: r.value, label: r.id })), innerRadius: 32, paddingAngle: 2 }]}
+                height={220}
+                slotProps={{ legend: { direction: "column", position: { vertical: "middle", horizontal: "right" } } }}
+              />
+            </SubBlock>
+          </Grid>
+<Grid item xs={12} md={7} lg={8}>
+  <SubBlock
+    title="Projets par équipe"
+    description="Répartition des projets en cours entre les différentes équipes. Aide à identifier la charge de travail."
+  >
+    <BarChart
+      height={260}
+      xAxis={[{ scaleType: 'band', data: projectsByTeam.map(p => p.id) }]}
+      series={[{ data: projectsByTeam.map(p => p.value), label: 'Nombre de projets' }]}
+      grid={{ vertical: true }}
+    />
+  </SubBlock>
+</Grid>
+        </Grid>
+      </GroupSection>
+      <Box sx={{ height: 24 }} />
+      {/* CONGÉS */}
+      <GroupSection title="Congés" subtitle="Volumes, statuts et tendances">
         <Grid container spacing={2.5}>
           <Grid item xs={12} md={7}>
             <SubBlock
-              title="Documents par mois (empilé)"
-              description="Production de documents par mois : générés, validés, en attente."
+              title="Statut des congés par mois"
+              description="Barres empilées montrant le nombre de congés Approuvés, En attente et Rejetés pour chaque mois."
             >
               <BarChart
                 height={260}
-                xAxis={[{ data: documentsMonthly.map(x => x.m), scaleType: "band" }]}
+                xAxis={[{ data: leavesMonthlyStatus.map(x => x.m), scaleType: "band" }]}
                 series={[
-                  { label: "Générés",  data: documentsMonthly.map(x => x.gen), stack: "doc" },
-                  { label: "Validés",  data: documentsMonthly.map(x => x.val), stack: "doc" },
-                  { label: "En attente", data: documentsMonthly.map(x => x.aw),  stack: "doc" },
+                  { label: "Approuvés", data: leavesMonthlyStatus.map(x => x.ap), stack: "lv" },
+                  { label: "En attente", data: leavesMonthlyStatus.map(x => x.pd), stack: "lv" },
+                  { label: "Rejetés",   data: leavesMonthlyStatus.map(x => x.rj), stack: "lv" },
                 ]}
                 grid={{ vertical: true }}
               />
@@ -439,12 +433,14 @@ export default function AdminDashboard() {
 
           <Grid item xs={12} md={5}>
             <SubBlock
-              title="Documents par type"
-              description="Répartition des documents RH (contrats, attestations, politiques…)."
+              title="Top des types de congés"
+              description="Types de congés les plus demandés. Permet d’anticiper les périodes de forte demande."
             >
-              <PieChart
-                series={[{ data: docByType.map((d, i) => ({ id: i, value: d.value, label: d.id })), innerRadius: 45 }]}
-                height={230}
+              <BarChart
+                height={260}
+                xAxis={[{ data: leaveTypesTop3.map(l => l.type), scaleType: 'band' }]}
+                series={[{ label: 'Demandes', data: leaveTypesTop3.map(l => l.v) }]}
+                grid={{ vertical: true }}
               />
             </SubBlock>
           </Grid>
@@ -506,39 +502,6 @@ export default function AdminDashboard() {
         </Grid>
       </GroupSection>
       <Box sx={{ height: 24 }} />
-      {/* NOTIFICATIONS */}
-      <GroupSection title="Notifications" subtitle="Alertes et distribution des messages">
-        <Grid container spacing={2.5}>
-          <Grid item xs={12} md={6}>
-            <SubBlock
-              title="Statut des notifications"
-              description="Part des notifications lues vs non lues par les utilisateurs."
-            >
-              <PieChart
-                series={[{ data: notifStats.map((n, i) => ({ id: i, value: n.value, label: n.id })), innerRadius: 50 }]}
-                height={200}
-              />
-            </SubBlock>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <SubBlock
-              title="Notifications récentes"
-              description="Derniers messages envoyés aux utilisateurs."
-            >
-              <Stack spacing={1}>
-                {recentNotifications.map((n, i) => (
-                  <Stack key={i} direction="row" justifyContent="space-between"
-                    sx={{ p: 1, borderRadius: 1.5, background: n.unread ? "rgba(251,192,45,.12)" : "rgba(25,118,210,.06)" }}>
-                    <Typography variant="body2" sx={{ fontWeight: n.unread ? 700 : 500 }}>{n.title}</Typography>
-                    <Typography variant="caption" color="text.secondary">{n.ago}</Typography>
-                  </Stack>
-                ))}
-              </Stack>
-            </SubBlock>
-          </Grid>
-        </Grid>
-      </GroupSection>
       <Box sx={{ textAlign: "center", mt: 4, color: "text.secondary" }}>
         <Typography
           variant="caption"

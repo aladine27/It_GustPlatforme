@@ -22,8 +22,10 @@ export class NotificationGateway {
   handleRegister(@ConnectedSocket() client: Socket, @MessageBody() message: { userId: string }) {
     if ( message.userId) {
       this.connectedUsers.set(message.userId, client.id);
-      console.log(`utilisateur ${message.userId} connecté ${client.id}`);
-    }
+       console.log(`✅ Utilisateur ${message.userId} connecté avec socket ${client.id}`);
+    }else {
+    console.log("⚠️ Aucun userId reçu dans register !");
+  }
   }
   //supprimé les utilisateurs qui sont deconnecté (notification n'est pas en temp réel dans ce cas)
   handleDisconnect(client: Socket){
@@ -35,23 +37,28 @@ export class NotificationGateway {
       }
     }
   }
-handleEmitEventToUsers(userIds: string[], title: string, message: string) {
-  userIds.forEach((userId) => {
+ handleEmitEventToUsers(userIds: string[], title: string, message: string) {
+    userIds.forEach((userId) => {
+      const socketId = this.connectedUsers.get(userId);
+      if (socketId) {
+        this.server.to(socketId).emit('newNotification', {
+          title,
+          message,
+          createdAt: new Date(),
+        });
+      }
+    });
+  }
+
+  handleEmitEventToUser(userId: string, message: string, title: string) {
     const socketId = this.connectedUsers.get(userId);
     if (socketId) {
+      // Corrected line: emit a structured object with a fixed event name
       this.server.to(socketId).emit('newNotification', {
         title,
         message,
-        createdAt: new Date(),
+        createdAt: new Date(), // It's good practice to send the timestamp from the server
       });
-
-    }
-  });
-}
-  handleEmitEventToUser(userId: string, message: string,title:string) {
-    const socketId = this.connectedUsers.get(userId);
-    if (socketId) {
-      this.server.to(socketId).emit(message,title);
     }
   }
 

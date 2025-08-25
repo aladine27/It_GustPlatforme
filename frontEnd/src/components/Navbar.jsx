@@ -104,9 +104,10 @@ export default function Navbar() {
     //reconnectionAttempts: Infinity,
   });
   setSocket(newSocket);
-  if (userId) {
-    newSocket.emit("register", userId);
-  }
+ if (userId) {
+  newSocket.emit("register", { userId }); // ✅ envoyer un objet
+}
+
   return () => {
     newSocket.disconnect();
   };
