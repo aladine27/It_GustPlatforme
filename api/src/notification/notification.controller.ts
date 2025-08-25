@@ -11,14 +11,14 @@ import { Roles } from 'src/decorators/roles.decorators';
 export class NotificationController {
     constructor(private readonly notificationService: NotificationService) {}
     @Post('send')
-      @UseGuards( RolesGuard)
-       @Roles('Admin','Rh','Employe','Manager')
+    @UseGuards( RolesGuard)
+    @Roles('Admin','Rh','Employe','Manager')
     async sendNotifToUsers(@Body() body: { userIds: string[],title:string, message: string }) {
         return this.notificationService.sendNotifToUsers(body.userIds,body.title, body.message);
     }
     @Get('getUserNotifByUserId/:userId')
-       @UseGuards( RolesGuard)
-      @Roles('Admin','Rh','Employe','Manager')
+    @UseGuards( RolesGuard)
+    @Roles('Admin','Rh','Employe','Manager')
     async getUserNotifByUserId(@Param('userId')  userId: string ) {
         return this.notificationService.getUserNotif(userId);
     }

@@ -5,11 +5,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { leaveSchema } from './entities/leave.entity';
 import { LeaveTypeSchema } from 'src/leave-type/entities/leave-type.entity';
 import { userSchema } from 'src/users/entities/user.entity';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
    imports: [MongooseModule.forFeature([{ name: 'leaves', schema: leaveSchema }]),
    MongooseModule.forFeature([{ name: 'leaveTypes', schema: LeaveTypeSchema }]),
-   MongooseModule.forFeature([{ name: 'users', schema: userSchema }])
+   MongooseModule.forFeature([{ name: 'users', schema: userSchema }]),
+  NotificationModule
    
   
   

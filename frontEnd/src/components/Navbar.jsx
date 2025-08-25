@@ -217,24 +217,91 @@ const handleCloseNotification = () => {
                   <NotificationsIcon sx={{ color: '#227FBF' }} />
                 </Badge>
               </IconButton>
-              <Menu 
-                anchorEl={viewNotifications}
-                open={Boolean(viewNotifications)}
-                onClose={handleCloseNotification} 
-                >
-                <Box sx={{overflow: 'auto', height: 300, width: 300, p: 2}}>
-                  {notifications.sort(
-                    (a,b)=>new Date(b.createdAt)-new Date (a.createdAt))
-                    .map((notification)=>{
-                      <MenuItem key={notification._id}>
-                        {notification.title}
-                        {notification.message}
-                      </MenuItem>
-                    }
-                    )
-                  }
-                  </Box>
-                </Menu>
+              <Menu
+  anchorEl={viewNotifications}
+  open={Boolean(viewNotifications)}
+  onClose={handleCloseNotification}
+   anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+   transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+  PaperProps={{
+    sx: {
+      borderRadius: 1.5,
+      minWidth: 280,
+      maxHeight: 340,
+      boxShadow: '0 6px 20px rgba(25,118,210,0.12)',
+      backgroundColor: 'background.paper',
+      border: '1px solid #e3f2fd',
+      p: 0,
+    },
+  }}
+>
+  <Box sx={{ maxHeight: 320, overflowY: 'auto'}}>
+    {(notifications?.length || 0) > 0 ? (
+      notifications
+        .slice()
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .map((n) => (
+          <MenuItem
+            key={n._id}
+            dense
+            sx={{
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              py: 1,
+              px: 1.8,
+              borderBottom: '1px solid #e3f2fd',
+              '&:hover': {
+                backgroundColor: '#f4f8fd',
+              },
+            }}
+          >
+            <Typography
+              variant="subtitle2"
+              sx={{
+                fontWeight: 600,
+                color: 'primary.dark',
+                fontSize: '0.9rem',
+                mb: 0.3,
+              }}
+            >
+              {n.title}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'text.secondary',
+                fontSize: '0.82rem',
+                lineHeight: 1.2,
+                mb: 0.2,
+              }}
+            >
+              {n.message}
+            </Typography>
+            <Typography
+              variant="caption"
+              color="text.disabled"
+              sx={{ fontSize: '0.75rem' }}
+            >
+              {new Date(n.createdAt).toLocaleString()}
+            </Typography>
+          </MenuItem>
+        ))
+    ) : (
+      <Box
+        sx={{
+          py: 5,
+          textAlign: 'center',
+          color: 'text.secondary',
+          fontSize: '0.9rem',
+        }}
+      >
+        Aucune notification
+      </Box>
+    )}
+  </Box>
+</Menu>
+
+
               <Box
                 sx={{
                   display: 'flex',
