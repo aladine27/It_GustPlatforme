@@ -120,6 +120,7 @@ export default function DocumentPersonnalisationPage() {
     toast.success("Signature ajoutée !");
   };
  const handleGeneratePdf = async () => {
+  try{
   const currentHtml = editorRef.current?.getHTML() || editedHtml;
   const tempDiv = document.createElement("div");
   tempDiv.innerHTML = currentHtml;
@@ -144,8 +145,13 @@ export default function DocumentPersonnalisationPage() {
   }
   const finalHtml = tempDiv.innerHTML;
   console.log("[DEBUG] HTML final avant génération PDF:", finalHtml);
-  dispatch(generatePdfFromHtml({ id: docId, html: finalHtml }));
-};
+  await dispatch(generatePdfFromHtml({ id: docId, html: finalHtml })).unwrap();
+  toast.success("PDF généré et document validé");
+  navigate("/dashboard/document");
+}catch (e) {
+    toast.error(e?.message || "Erreur lors de la génération du PDF");
+  }
+ }
 
   const renderContent = () => (
     <Box sx={{

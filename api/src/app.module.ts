@@ -24,6 +24,7 @@ import { join } from 'path';
 import { SprintsModule } from './sprints/sprints.module';
 import { TeamsModule } from './teams/teams.module';
 import { NotificationModule } from './notification/notification.module';
+import { ApplicationAnalysisModule } from './application-analysis/application-analysis.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { NotificationModule } from './notification/notification.module';
     SprintsModule,
     TeamsModule,
     NotificationModule,
+    ApplicationAnalysisModule,
   ],
   controllers: [AppController],
   providers: [AppService],

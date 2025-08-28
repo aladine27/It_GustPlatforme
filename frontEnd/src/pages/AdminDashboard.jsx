@@ -1,295 +1,301 @@
+// src/pages/AdminDashboard.jsx
 import { useMemo, useState } from "react";
-import {Box, Grid, Card, CardContent, Typography, Chip, Stack, Avatar,Divider} from "@mui/material";
+import { Box, Grid, Card, CardContent, Typography, Chip, Stack, Avatar, Divider } from "@mui/material";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
-import {PieChart,BarChart,LineChart,Gauge} from "@mui/x-charts";
-
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
+import AssignmentTurnedInRoundedIcon from "@mui/icons-material/AssignmentTurnedInRounded";
+import { PieChart, BarChart, LineChart, Gauge } from "@mui/x-charts";
 import { StyledCard } from "../style/style";
 
-/* ================== DONNÉES MOCK ================== */
+/* ================== DONNÉES MOCK — basées sur TES TABLES ==================
+   > user(roleString), Project(status,startDate,endDate), Sprint, Task(status, startDate, endDate),
+   > Leave(status, startDate, endDate, leaveType), Joboffer(status), Application(jobOffer ref),
+   > applicationAnalysis(scoreIA, email, filename), Documents(status, deliveryDate, traitementDateLimiteDate),
+   > Event(status, startDate, type_event), Notification(status:Boolean)
+========================================================================== */
 const kpi = {
-  users: 1432,
-  projectsActive: 12,
-  jobOpen: 8,
-  applications: 245,
-  notifications: 325,
+  employeesActive: 268,                 // user
+  projectsActive: 12,                   // Project(status=active)
+  tasksDoneThisMonth: 120,              // Task(status=Terminées, mois courant)
+  leavesPending: 9,                     // Leave(status=Pending)
+  offersOpen: 8,                        // Joboffer(status=Open)
+  notifUnread: 325,                     // Notification(status=false)
 };
-const usersByRole = [
-  { id: "Admin", value: 8 },
-  { id: "Manager", value: 18 },
-  { id: "RH", value: 12 },
-  { id: "Employé", value: 208 },
-];
-const leavesMonthlyStatus = [
-  { m: "Janv", ap: 6, rj: 1, pd: 2 },
-  { m: "Févr", ap: 7, rj: 2, pd: 3 },
-  { m: "Mars", ap: 6, rj: 1, pd: 3 },
-  { m: "Avr",  ap: 8, rj: 2, pd: 2 },
-  { m: "Mai",  ap: 7, rj: 1, pd: 3 },
-  { m: "Juin", ap: 9, rj: 2, pd: 2 },
-];
-const leaveTypesTop3 = [
-  { type: "Annuel", v: 34 },
-  { type: "Maladie", v: 22 },
-  { type: "Sans solde", v: 12 },
-];
-const monthlyLeaves = [
-  { month: "Janv", v: 18 }, { month: "Févr", v: 22 }, { month: "Mars", v: 20 },
-  { month: "Avr",  v: 25 }, { month: "Mai",  v: 21 }, { month: "Juin", v: 26 },
-  { month: "Juil", v: 24 }, { month: "Août", v: 29 }, { month: "Sept", v: 30 },
-  { month: "Oct",  v: 28 }, { month: "Nov",  v: 31 }, { month: "Déc",  v: 33 },
-];
-const applicationsPerOffer = [
-  { offer: "DevOps",   v: 210 },
-  { offer: "Frontend", v: 160 },
-  { offer: "Backend",  v: 130 },
-  { offer: "QA",       v: 95  },
-  { offer: "Data",     v: 80  },
-];
-const jobByCategory = [
-  { id: "Informatique", value: 6 },
-  { id: "Ressources Humaines", value: 3 },
-  { id: "Ventes", value: 2 },
-  { id: "Design", value: 4 },
-];
-const offersStatus = [
-  { id: "Ouvertes", value: 8 },
-  { id: "Clôturées", value: 5 },
-];
+const peopleKpis = { totalEmployees: 20 };
+
+// Tâches par statut (Task.status)
 const tasksByStatus = [
   { id: "À faire", value: 42 },
   { id: "En cours", value: 68 },
   { id: "Terminées", value: 120 },
 ];
-const sprintsStats = { inProgress: 3, done: 5 };
-const burndown = [
-  { d: "Lun", r: 50 }, { d: "Mar", r: 44 }, { d: "Mer", r: 38 },
-  { d: "Jeu", r: 29 }, { d: "Ven", r: 22 }, { d: "Sam", r: 15 }, { d: "Dim", r: 8 },
+
+// Vitesse par sprint = tasks terminées / sprint (Task lié à Sprint)
+const sprintVelocity = [
+  { sprint: "S1", done: 18 },
+  { sprint: "S2", done: 22 },
+  { sprint: "S3", done: 25 },
+  { sprint: "S4", done: 27 },
 ];
-const projectCompletion = 75;
-const documentsMonthly = [
-  { m: "Janv", gen: 10, val: 7,  aw: 2 },
-  { m: "Févr", gen: 15, val: 12, aw: 3 },
-  { m: "Mars", gen: 16, val: 13, aw: 2 },
-  { m: "Avr",  gen: 18, val: 14, aw: 3 },
-  { m: "Mai",  gen: 19, val: 15, aw: 2 },
-  { m: "Juin", gen: 22, val: 17, aw: 3 },
+
+// Achèvement moyen portefeuille (Project) – jauge simple
+const portfolioCompletion = 76;
+
+// Projets actifs par mois (Project.startDate) — vue de charge
+const projectsByMonth = [
+  { month: "Janv", projects: 12 }, { month: "Févr", projects: 15 }, { month: "Mars", projects: 14 },
+  { month: "Avr",  projects: 18 }, { month: "Mai",  projects: 17 }, { month: "Juin", projects: 20 },
+  { month: "Juil", projects: 21 }, { month: "Août", projects: 24 }, { month: "Sept", projects: 23 },
+  { month: "Oct",  projects: 25 }, { month: "Nov",  projects: 27 }, { month: "Déc",  projects: 26 },
 ];
-const docByType = [
-  { id: "Contrat", value: 64 },
-  { id: "Attestation", value: 48 },
-  { id: "Politique", value: 32 },
-  { id: "Autre", value: 20 },
+
+// Congés: stack mensuel par statut (Leave.status + startDate)
+const leavesMonthlyStatus = [
+  { m: "Janv", ap: 20, pd: 6, rj: 2 },
+  { m: "Févr", ap: 22, pd: 7, rj: 2 },
+  { m: "Mars", ap: 18, pd: 6, rj: 3 },
+  { m: "Avr",  ap: 25, pd: 5, rj: 2 },
+  { m: "Mai",  ap: 21, pd: 7, rj: 3 },
+  { m: "Juin", ap: 26, pd: 6, rj: 2 },
 ];
-const eventsStatus = [
+
+// Types de congés (Leave.leaveType)
+const leaveTypesTop = [
+  { type: "Annuel", v: 34 },
+  { type: "Maladie", v: 22 },
+  { type: "Sans solde", v: 12 },
+];
+
+// Recrutement: candidatures par offre (Application -> Joboffer)
+const applicationsPerOffer = [
+  { offer: "DevOps", v: 210 },
+  { offer: "Frontend", v: 160 },
+  { offer: "Backend", v: 130 },
+  { offer: "QA", v: 95 },
+];
+
+// Qualité moyenne IA par offre (applicationAnalysis.scoreIA agrégé par jobOffer)
+const avgScoreByOffer = [
+  { offer: "DevOps", v: 78 },
+  { offer: "Frontend", v: 72 },
+  { offer: "Backend", v: 69 },
+  { offer: "QA", v: 65 },
+];
+
+// Documents: statut + SLA retard (deliveryDate > traitementDateLimiteDate)
+const documentsStatus = [
+  { id: "Validés", value: 96 },
+  { id: "En cours", value: 28 },
+  { id: "Refusés", value: 7 },
+];
+const documentsSLA = [
+  { id: "Dans les délais", value: 88 },
+  { id: "En retard", value: 20 },
+];
+
+// Événements (Event.type / status)
+const eventsByType = [
+  { id: "Réunion", value: 12 },
+  { id: "Formation", value: 5 },
+  { id: "Atelier", value: 4 },
+];
+const eventsByStatus = [
   { id: "Planifié", value: 14 },
   { id: "Réalisé", value: 22 },
   { id: "Annulé", value: 3 },
 ];
-const typeEvents = [
-  { id: "Réunion", value: 12 },
-  { id: "Formation", value: 5 },
-  { id: "Atelier", value: 4 },
-  { id: "Autre", value: 3 },
-];
-const upcomingEvents = [
-  { title: "Réunion plénière T3", date: "2025-09-05 10:00", type: "Réunion",   location: "Siège" },
-  { title: "Formation sécurité",  date: "2025-09-10 14:00", type: "Formation", location: "En ligne" },
-  { title: "Atelier d’équipe",    date: "2025-09-15 09:30", type: "Atelier",    location: "Salle B" },
-];
-const notifStats = [
-  { id: "Non lues", value: kpi.notifications },
-  { id: "Lues",     value: 955 },
-];
-const recentNotifications = [
-  { title: "Nouvelle politique ajoutée", ago: "il y a 2 h", unread: true },
-  { title: "Sprint de projet clôturé",   ago: "hier",       unread: false },
-  { title: "Nouvelle offre publiée",     ago: "il y a 2 j", unread: false },
-];
-const headcountTrend = [
-  { m: "Janv", employees: 210, hires: 8,  exits: 3 },
-  { m: "Févr", employees: 218, hires: 12, exits: 4 },
-  { m: "Mars", employees: 225, hires: 9,  exits: 2 },
-  { m: "Avr",  employees: 233, hires: 10, exits: 2 },
-  { m: "Mai",  employees: 236, hires: 6,  exits: 3 },
-  { m: "Juin", employees: 242, hires: 9,  exits: 3 },
-  { m: "Juil", employees: 246, hires: 7,  exits: 3 },
-  { m: "Août", employees: 251, hires: 8,  exits: 3 },
-  { m: "Sept", employees: 255, hires: 6,  exits: 2 },
-  { m: "Oct",  employees: 260, hires: 8,  exits: 3 },
-  { m: "Nov",  employees: 264, hires: 7,  exits: 3 },
-  { m: "Déc",  employees: 268, hires: 6,  exits: 2 },
-];
-const peopleKpis = { totalEmployees: 268, managers: 18, teams: 5 };
-const projectsByTeam = [
-  { id: 'Équipe A', value: 3 },
-  { id: 'Équipe B', value: 5 },
-  { id: 'Équipe C', value: 2 },
-  { id: 'Équipe D', value: 4 },
-  { id: 'Équipe E', value: 2 },
+// --- ÉVÉNEMENTS : par mois et par statut (Event.startDate, Event.status) ---
+const eventsMonthlyStatus = [
+  { m: "Janv", plan: 6, en: 2, done: 3 },
+  { m: "Févr", plan: 7, en: 3, done: 4 },
+  { m: "Mars", plan: 5, en: 2, done: 5 },
+  { m: "Avr",  plan: 8, en: 3, done: 6 },
+  { m: "Mai",  plan: 6, en: 4, done: 5 },
+  { m: "Juin", plan: 7, en: 3, done: 7 },
 ];
 
-const projectsByMonth = [
-  { month: "Janv", projects: 12 },
-  { month: "Févr", projects: 15 },
-  { month: "Mars", projects: 14 },
-  { month: "Avr", projects: 18 },
-  { month: "Mai", projects: 17 },
-  { month: "Juin", projects: 20 },
-  { month: "Juil", projects: 21 },
-  { month: "Août", projects: 24 },
-  { month: "Sept", projects: 23 },
-  { month: "Oct", projects: 25 },
-  { month: "Nov", projects: 27 },
-  { month: "Déc", projects: 26 },
+// --- Durée moyenne en heures par mois (Event.duration) ---
+const eventsAvgDuration = [
+  { m: "Janv", h: 1.4 },
+  { m: "Févr", h: 1.7 },
+  { m: "Mars", h: 1.3 },
+  { m: "Avr",  h: 2.0 },
+  { m: "Mai",  h: 1.6 },
+  { m: "Juin", h: 1.9 },
 ];
-/* ================== COMPOSANTS ================== */
-const KpiCard = ({ icon, label, value, sub }) => (
+
+
+// Notifications: lues vs non lues (Notification.status)
+const notifRead = [
+  { id: "Non lues", value: kpi.notifUnread },
+  { id: "Lues", value: 955 },
+];
+// ---- au-dessus du composant, ajoute ces mocks (ou branche ta data réelle) ----
+const totalEmployees = Number(
+  (peopleKpis?.totalEmployees) ??
+  (kpi?.employeesActive) ??
+  (kpi?.users) ??
+  0
+);
+
+// Employés en congé par mois (à calculer côté backend depuis Leave.approuvés)
+const employeesOnLeaveMonthly = [
+  { m: "Janv", on: 12 },
+  { m: "Févr", on: 15 },
+  { m: "Mars", on: 14 },
+  { m: "Avr",  on: 18 },
+  { m: "Mai",  on: 16 },
+  { m: "Juin", on: 19 },
+];
+const upcomingEvents = [
+  { title: "Réunion plénière T3",    date: "2025-09-05T10:00:00", type: "Réunion",   location: "Siège",     status: "Planifié" },
+  { title: "Formation sécurité",     date: "2025-09-10T14:00:00", type: "Formation", location: "En ligne",  status: "Planifié" },
+  { title: "Atelier d’équipe",       date: "2025-09-15T09:30:00", type: "Atelier",    location: "Salle B",  status: "Planifié" },
+  { title: "Démo projet Phoenix",    date: "2025-09-18T16:00:00", type: "Réunion",   location: "Salle A",  status: "Planifié" },
+  { title: "Onboarding juniors",     date: "2025-09-20T09:00:00", type: "Formation", location: "Open space",status: "Planifié" },
+  { title: "Rétro sprint S5",        date: "2025-09-23T11:00:00", type: "Réunion",   location: "Teams",     status: "Planifié" },
+];
+
+// Petit helper pour formater la date en FR
+const formatDateTime = (iso) =>
+  new Date(iso).toLocaleString("fr-FR", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+/* ================== UI HELPERS ================== */
+const KpiCard = ({ icon, label, value }) => (
   <Card
     sx={{
-      p: 0,
-      background: "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.8) 100%)",
-      backdropFilter: "blur(10px)",
-      border: "1px solid rgba(25,118,210,0.1)",
-      borderRadius: 4,
-      boxShadow: "0 8px 32px rgba(25,118,210,0.12)",
-      transition: "all .3s",
-      "&:hover": { transform: "translateY(-4px)", boxShadow: "0 16px 48px rgba(25,118,210,.2)", border: "1px solid rgba(25,118,210,.2)" },
+      px: 2, py: 1.25,
+      borderRadius: 6,
+      maxWidth: 240,           // carte plus fine
+      boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
     }}
   >
-    <CardContent sx={{ p: 2.5 }}>
-      <Stack direction="row" alignItems="center" spacing={2}>
-        <Avatar variant="rounded" sx={{
-          background: "linear-gradient(135deg,#1976d2 0%,#42a5f5 100%)",
-          color: "#fff", width: 48, height: 48, boxShadow: "0 4px 16px rgba(25,118,210,.3)"
-        }}>
-          {icon}
-        </Avatar>
-        <Box flex={1}>
-          <Typography variant="h6" sx={{
-            fontWeight: 700,
-            background: "linear-gradient(135deg,#1a1a1a 0%,#333 100%)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-          }}>
-            {value}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-            {label}
-          </Typography>
-        </Box>
-        {sub && <Chip size="small" color="primary" label={sub} sx={{ fontWeight: 600 }} />}
+    <Stack direction="row" spacing={1.5} alignItems="center">
+      <Avatar
+        variant="rounded"
+        sx={{ bgcolor: "primary.main", color: "#fff", width: 40, height: 40 }}
+      >
+        {icon}
+      </Avatar>
+
+      {/* chiffre + libellé sur UNE ligne */}
+      <Stack
+        direction="row"
+        spacing={1}
+        alignItems="baseline"
+        flexWrap="nowrap"
+      >
+        <Typography component="span" variant="h6" sx={{ fontWeight: 700 }}>
+          {value}
+        </Typography>
+        <Typography
+          component="span"
+          variant="body2"
+          color="text.secondary"
+          sx={{ whiteSpace: "nowrap" }}  // évite le retour à la ligne
+        >
+          {label}
+        </Typography>
       </Stack>
-    </CardContent>
+    </Stack>
   </Card>
 );
+
 const GroupSection = ({ title, subtitle, children }) => (
-  <StyledCard
-    sx={{
-      p: 0,
-      background: "linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(248,250,252,.9) 100%)",
-      backdropFilter: "blur(20px)",
-      border: "1px solid rgba(255,255,255,.2)",
-      borderRadius: 5,
-      boxShadow: "0 12px 40px rgba(0,0,0,.08)"
-    }}
-  >
+  <StyledCard sx={{ p: 0, background: "linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(248,250,252,.9) 100%)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,.2)", borderRadius: 5, boxShadow: "0 12px 40px rgba(0,0,0,.08)" }}>
     <CardContent sx={{ pb: 2, p: 3 }}>
-      <Typography
-        variant="h3"
-        sx={{
-          mb: .5,
-          background: "linear-gradient(135deg,#1976d2 0%,#1565c0 100%)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          fontWeight: 700
-        }}
-      >
-        {title}
-      </Typography>
-      {subtitle && (
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2, fontWeight: 500, opacity: .8 }}>
-          {subtitle}
-        </Typography>
-      )}
+      <Typography variant="h3" sx={{ mb: .5, background: "linear-gradient(135deg,#1976d2 0%,#1565c0 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", fontWeight: 700 }}>{title}</Typography>
+      {subtitle && <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2, fontWeight: 500, opacity: .8 }}>{subtitle}</Typography>}
       <Divider sx={{ mb: 2.5, background: "linear-gradient(90deg,rgba(25,118,210,.3) 0%,rgba(25,118,210,.1) 50%,rgba(25,118,210,.3) 100%)", height: 2, borderRadius: 1 }} />
       {children}
     </CardContent>
   </StyledCard>
 );
 const SubBlock = ({ title, children, right, description }) => (
-  <StyledCard
-    sx={{
-      background: "linear-gradient(135deg,rgba(255,255,255,.9) 0%,rgba(250,252,255,.8) 100%)",
-      backdropFilter: "blur(10px)",
-      border: "1px solid rgba(25,118,210,.08)",
-      borderRadius: 4,
-      boxShadow: "0 6px 24px rgba(25,118,210,.08)"
-    }}
-  >
+  <StyledCard sx={{ background: "linear-gradient(135deg,rgba(255,255,255,.9) 0%,rgba(250,252,255,.8) 100%)", backdropFilter: "blur(10px)", border: "1px solid rgba(25,118,210,.08)", borderRadius: 4, boxShadow: "0 6px 24px rgba(25,118,210,.08)" }}>
     <CardContent sx={{ p: 2.5 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.2 }}>
         <Typography variant="h4" sx={{ fontWeight: 600, color: "#1a1a1a" }}>{title}</Typography>
         {right}
       </Stack>
       {children}
-      {description && (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          {description}
-        </Typography>
-      )}
+      {description && <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{description}</Typography>}
     </CardContent>
   </StyledCard>
 );
 
 /* ================== PAGE ================== */
 export default function AdminDashboard() {
-  const [tab, setTab] = useState(0);
-  const [period, setPeriod] = useState("12 derniers mois");
-  const months = useMemo(() => monthlyLeaves.map(m => m.month), []);
-  const monthsVals = useMemo(() => monthlyLeaves.map(m => m.v), []);
+  const months = useMemo(() => leavesMonthlyStatus.map(m => m.m), []);
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, pb: 6, background: "linear-gradient(135deg,#f8fafc 0%,#e2e8f0 100%)", minHeight: "100vh" }}>
-      {/* KPIs */}
-      <Grid container spacing={2.5} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} lg={2.4}>
-          <KpiCard icon={<PeopleAltRoundedIcon />} label="Utilisateurs actifs" value={kpi.users} />
-        </Grid>
-        <Grid item xs={12} sm={6} lg={2.4}>
-          <KpiCard icon={<FolderOpenRoundedIcon />} label="Projets en cours" value={kpi.projectsActive} />
-        </Grid>
-        <Grid item xs={12} sm={6} lg={2.4}>
-          <KpiCard icon={<WorkOutlineRoundedIcon />} label="Offres d’emploi ouvertes" value={kpi.jobOpen} />
-        </Grid>
-        <Grid item xs={12} sm={6} lg={2.4}>
-          <KpiCard icon={<ArticleOutlinedIcon />} label="Candidatures totales" value={kpi.applications} />
-        </Grid>
+      {/* KPIs CLÉS */}
+      <Grid container spacing={2} alignItems="center" justifyContent="flex-start" wrap="wrap" sx={{ mb: 3 }}>
+      <Grid item xs="auto">
+        <KpiCard icon={<PeopleAltRoundedIcon />} label="Employés" value={kpi.employeesActive} />
       </Grid>
+      <Grid item xs="auto">
+        <KpiCard icon={<FolderOpenRoundedIcon />} label="Projets actifs" value={kpi.projectsActive} />
+      </Grid>
+      <Grid item xs="auto">
+        <KpiCard icon={<WorkOutlineRoundedIcon />} label="Offres ouvertes" value={kpi.offersOpen} />
+      </Grid>
+      <Grid item xs="auto">
+        <KpiCard icon={<NotificationsActiveRoundedIcon />} label="Notif non lues" value={kpi.notifUnread} />
+      </Grid>
+    </Grid>
+
       {/* DELIVERY */}
-      <GroupSection title="Livraison" subtitle="Projets et gestion">
+<GroupSection title="Delivery" subtitle="Flux de travail et capacité">
   <Grid container spacing={2.5}>
-    {/* Conservez le bloc d'achèvement des projets */}
-    <Grid item xs={12} md={4}>
+    {/* Bloc 1 : Projet accompli */}
+    <Grid item xs={12} md={6}>
       <SubBlock
-        title="Achèvement des projets"
-        description="Jauge d’avancement moyen des projets actifs."
+        title="Projet Accompli par rapport au nombre total de projets"
+        description="Vision instantanée du taux d'accomplissement global du projet en cours"
       >
         <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", py: 2 }}>
-          <Gauge value={projectCompletion} startAngle={-110} endAngle={110} width={260} height={170} />
+          <Gauge
+            value={portfolioCompletion}
+            startAngle={-110}
+            endAngle={110}
+            width={260}
+            height={170}
+          />
         </Box>
-        <Typography variant="subtitle2" color="text.secondary" align="center" sx={{ fontWeight: 500 }}>
-          Actifs 34 • Clôturés 27
-        </Typography>
       </SubBlock>
     </Grid>
 
-    {/* Ajoutez le nouveau graphique d'évolution des projets */}
-    <Grid item xs={12} md={8}>
+    {/* Bloc 2 : Tâches accomplies */}
+    <Grid item xs={12} md={6}>
       <SubBlock
-        title="Évolution des projets au cours de l'année"
-        description="Nombre de projets actifs par mois."
+        title="Tâches accomplies par Sprints"
+        description="Cadence réelle de livraison (Tasks Done / Sprint)."
+      >
+        <BarChart
+          height={240}
+          xAxis={[{ data: sprintVelocity.map(s => s.sprint), scaleType: "band" }]}
+          series={[{ data: sprintVelocity.map(s => s.done), label: "Tâches terminées" }]}
+          grid={{ vertical: true }}
+        />
+      </SubBlock>
+    </Grid>
+
+    {/* Bloc 3 : Projets actifs */}
+    <Grid item xs={12}>
+      <SubBlock
+        title="Projets actifs / mois"
+        description="Charge initiée par mois pour planifier la capacité (Project.startDate)."
       >
         <LineChart
           xAxis={[{ data: projectsByMonth.map(p => p.month), scaleType: "point" }]}
@@ -303,54 +309,41 @@ export default function AdminDashboard() {
 </GroupSection>
       <Box sx={{ height: 24 }} />
       {/* CONGÉS */}
-      <GroupSection title="Congés" subtitle="Volumes, statuts et tendances">
-        <Grid container spacing={2.5}>
-         <Grid item xs={12} md={7}>
+    <Grid item xs={12} md={5}>
   <SubBlock
-    title="Statut global des congés"
-    description="Répartition totale des congés par statut : Approuvés, En attente, Rejetés."
+    title="Employés en congé / Présents"
+    description="Effectif en congé approuvé et effectif présent par mois (Leave.status='Approuvé')."
   >
-    <PieChart
-      series={[{
-        data: [
-          { id: 'Approuvés', value: leavesMonthlyStatus.reduce((sum, item) => sum + item.ap, 0), label: 'Approuvés' },
-          { id: 'En attente', value: leavesMonthlyStatus.reduce((sum, item) => sum + item.pd, 0), label: 'En attente' },
-          { id: 'Rejetés', value: leavesMonthlyStatus.reduce((sum, item) => sum + item.rj, 0), label: 'Rejetés' },
-        ],
-        innerRadius: 50,
-      }]}
-      height={260}
-      slotProps={{ legend: { direction: 'column', position: { vertical: 'middle', horizontal: 'right' } } }}
+    <BarChart
+      height={280}
+      xAxis={[{ data: employeesOnLeaveMonthly.map(e => e.m), scaleType: "band" }]}
+      series={[
+        {
+          label: "En congé",
+          data: employeesOnLeaveMonthly.map(e => e.on),
+          stack: "eff"
+        },
+       {
+          label: "Présents",
+          data: employeesOnLeaveMonthly.map(e =>
+            Math.max(totalEmployees - Number(e.on || 0), 0)
+          ),
+          stack: "eff",
+        }
+      ]}
+      grid={{ vertical: true, horizontal: true }}
     />
+    <Typography variant="caption" color="text.secondary">
+      Présents = {totalEmployees} − En congé (par mois).
+    </Typography>
   </SubBlock>
 </Grid>
-
-          <Grid item xs={12} md={5}>
-            <SubBlock
-              title="Top des types de congés"
-              description="Types de congés les plus demandés. Permet d’anticiper les périodes de forte demande."
-            >
-              <BarChart
-                height={260}
-                xAxis={[{ data: leaveTypesTop3.map(l => l.type), scaleType: 'band' }]}
-                series={[{ label: 'Demandes', data: leaveTypesTop3.map(l => l.v) }]}
-                grid={{ vertical: true }}
-              />
-            </SubBlock>
-          </Grid>
-
-          
-        </Grid>
-      </GroupSection>
       <Box sx={{ height: 24 }} />
       {/* RECRUTEMENT */}
-      <GroupSection title="Recrutement" subtitle="Offres, catégories et candidatures">
+      <GroupSection title="Recrutement" subtitle="Attractivité et qualité des candidatures">
         <Grid container spacing={2.5}>
-          <Grid item xs={12} md={7} lg={6}>
-            <SubBlock
-              title="Candidatures par offre"
-              description="Comparaison du nombre de candidatures par offre pour identifier les postes les plus attractifs."
-            >
+          <Grid item xs={12} md={7}>
+            <SubBlock title="Candidatures par offre" description="Identifie les postes attractifs (Application ↔ Joboffer).">
               <BarChart
                 height={260}
                 yAxis={[{ data: applicationsPerOffer.map(o => o.offer), scaleType: "band" }]}
@@ -361,157 +354,107 @@ export default function AdminDashboard() {
             </SubBlock>
           </Grid>
 
-         <Grid item xs={12} md={6} lg={5} >
-            <SubBlock
-              title="Offres par catégorie"
-              description="Répartition des offres ouvertes par famille de métiers."
-            >
-              <PieChart
-                series={[{ data: jobByCategory.map((c, i) => ({ id: i, value: c.value, label: c.id })), innerRadius: 35 }]}
-                height={230}
-              />
-            </SubBlock>
-          </Grid>
-
-      
-        </Grid>
-      </GroupSection>
-    
-      <Box sx={{ height: 24 }} />
-
-       <GroupSection title="Personnes & Équipes" subtitle="Utilisateurs, rôles et dynamique d’équipes">
-        <Grid container spacing={2.5}>
-          <Grid item xs={12} md={5} lg={4}>
-            <SubBlock
-              title="Utilisateurs par rôle"
-             
-              description="Répartition de tous les comptes par rôle. Permet d’équilibrer les profils (Admin, Manager, RH, Employé)."
-            >
-              <PieChart
-                series={[{ data: usersByRole.map((r, i) => ({ id: i, value: r.value, label: r.id })), innerRadius: 32, paddingAngle: 2 }]}
-                height={220}
-                slotProps={{ legend: { direction: "column", position: { vertical: "middle", horizontal: "right" } } }}
-              />
-            </SubBlock>
-          </Grid>
-<Grid item xs={12} md={7} lg={8}>
-  <SubBlock
-    title="Projets par équipe"
-    description="Répartition des projets en cours entre les différentes équipes. Aide à identifier la charge de travail."
-  >
-    <BarChart
-      height={260}
-      xAxis={[{ scaleType: 'band', data: projectsByTeam.map(p => p.id) }]}
-      series={[{ data: projectsByTeam.map(p => p.value), label: 'Nombre de projets' }]}
-      grid={{ vertical: true }}
-    />
-  </SubBlock>
-</Grid>
-        </Grid>
-      </GroupSection>
-      <Box sx={{ height: 24 }} />
-      {/* CONGÉS */}
-      <GroupSection title="Congés" subtitle="Volumes, statuts et tendances">
-        <Grid container spacing={2.5}>
-          <Grid item xs={12} md={7}>
-            <SubBlock
-              title="Statut des congés par mois"
-              description="Barres empilées montrant le nombre de congés Approuvés, En attente et Rejetés pour chaque mois."
-            >
-              <BarChart
-                height={260}
-                xAxis={[{ data: leavesMonthlyStatus.map(x => x.m), scaleType: "band" }]}
-                series={[
-                  { label: "Approuvés", data: leavesMonthlyStatus.map(x => x.ap), stack: "lv" },
-                  { label: "En attente", data: leavesMonthlyStatus.map(x => x.pd), stack: "lv" },
-                  { label: "Rejetés",   data: leavesMonthlyStatus.map(x => x.rj), stack: "lv" },
-                ]}
-                grid={{ vertical: true }}
-              />
-            </SubBlock>
-          </Grid>
-
           <Grid item xs={12} md={5}>
-            <SubBlock
-              title="Top des types de congés"
-              description="Types de congés les plus demandés. Permet d’anticiper les périodes de forte demande."
-            >
+            <SubBlock title="Score IA moyen par offre" description="Mesure de la qualité des profils (applicationAnalysis.scoreIA).">
               <BarChart
                 height={260}
-                xAxis={[{ data: leaveTypesTop3.map(l => l.type), scaleType: 'band' }]}
-                series={[{ label: 'Demandes', data: leaveTypesTop3.map(l => l.v) }]}
+                xAxis={[{ data: avgScoreByOffer.map(o => o.offer), scaleType: "band" }]}
+                series={[{ data: avgScoreByOffer.map(o => o.v), label: "Score IA (moy.)" }]}
                 grid={{ vertical: true }}
               />
             </SubBlock>
           </Grid>
         </Grid>
       </GroupSection>
-      <Box sx={{ height: 24 }} />
-      {/* ÉVÉNEMENTS */}
-      <GroupSection title="Événements" subtitle="Planification et activité des événements">
-        <Grid container spacing={2.5}>
-          <Grid item xs={12} md={6}>
-            <SubBlock
-              title="Événements par type"
-              description="Types d’événements planifiés (réunions, formations, ateliers…)."
-            >
-              <PieChart
-                series={[{ data: typeEvents.map((e, i) => ({ id: i, value: e.value, label: e.id })), innerRadius: 40 }]}
-                height={230}
-              />
-            </SubBlock>
-          </Grid>
 
-          <Grid item xs={12} md={6}>
-            <SubBlock
-              title="Événements par statut"
-              description="Répartition des événements selon leur statut (Planifié, Réalisé, Annulé)."
-            >
-              <BarChart
-                height={230}
-                xAxis={[{ data: eventsStatus.map(s => s.id), scaleType: "band" }]}
-                series={[{ data: eventsStatus.map(s => s.value) }]}
-                grid={{ vertical: true }}
-              />
-            </SubBlock>
-          </Grid>
-
-          <Grid item xs={12}>
-            <SubBlock
-              title="Prochains événements"
-              description="Les prochains événements à venir avec date, lieu et type."
-            >
-              <Stack spacing={1.2}>
-                {upcomingEvents.map((ev, idx) => (
-                  <Stack key={idx} direction="row" spacing={1.2} alignItems="center"
-                    sx={{ p: 1.2, borderRadius: 2, border: "1px solid #e3f2fd", background: "#fff" }}>
-                    <Avatar sx={{ bgcolor: "primary.main", color: "#fff", width: 36, height: 36 }}>
-                      {ev.type[0]}
-                    </Avatar>
-                    <Box flex={1}>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>{ev.title}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {ev.type} • {ev.location} • {ev.date}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                ))}
-              </Stack>
-            </SubBlock>
-          </Grid>
-        </Grid>
-      </GroupSection>
       <Box sx={{ height: 24 }} />
+      {/* ÉVÉNEMENTS & NOTIFS */}
+  {/* ÉVÉNEMENTS */}
+<GroupSection title="Engagement des Employées" subtitle="Statuts mensuels & durée moyenne">
+  <Grid container spacing={2.5}>
+    {/* Statuts par mois (stack) */}
+    <Grid item xs={12} md={8}>
+      <SubBlock
+        title="Statuts par mois"
+        description="Comptes d'événements planifiés / en cours / terminés (Event.status) par mois (Event.startDate)."
+      >
+        <BarChart
+          height={280}
+          xAxis={[{ data: eventsMonthlyStatus.map(e => e.m), scaleType: "band" }]}
+          series={[
+            { label: "Planifié", data: eventsMonthlyStatus.map(e => e.plan), stack: "evt" },
+            { label: "En cours", data: eventsMonthlyStatus.map(e => e.en),   stack: "evt" },
+            { label: "Terminé",  data: eventsMonthlyStatus.map(e => e.done), stack: "evt" },
+          ]}
+          grid={{ vertical: true, horizontal: true }}
+        />
+      </SubBlock>
+    </Grid>
+
+    {/* Colonne droite : Événements à venir + Notifs */}
+    <Grid item xs={12} md={4}>
+      <Stack spacing={2}>
+        {/* Événements à venir (3 items) */}
+        <SubBlock title="Événements à venir">
+          <Stack spacing={1.2}>
+            {upcomingEvents
+              .filter(e => new Date(e.date) >= new Date() && e.status === "Planifié")
+              .sort((a, b) => new Date(a.date) - new Date(b.date))
+              .slice(0, 3)
+              .map((ev, idx) => (
+                <Stack
+                  key={idx}
+                  direction="row"
+                  spacing={1.2}
+                  alignItems="center"
+                  sx={{ p: 1.2, borderRadius: 2, border: "1px solid #e3f2fd", background: "#fff" }}
+                >
+                  <Avatar sx={{ bgcolor: "primary.main", color: "#fff", width: 36, height: 36, fontWeight: 700 }}>
+                    {ev.type?.[0] || "É"}
+                  </Avatar>
+
+                  <Box flex={1} minWidth={0}>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }} noWrap>
+                      {ev.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" noWrap>
+                      {formatDateTime(ev.date)} • {ev.type} • {ev.location}
+                    </Typography>
+                  </Box>
+
+                  <Chip label="à venir" size="small" color="primary" variant="outlined" />
+                </Stack>
+              ))}
+          </Stack>
+        </SubBlock>
+
+        {/* Notifications lues / non lues (donut) */}
+        <SubBlock title="Notifications (lues / non lues)">
+          <PieChart
+            height={220}
+            series={[
+              {
+                innerRadius: 40,
+                paddingAngle: 4,
+                cornerRadius: 4,
+                data: notifRead.map((d, i) => ({ id: i, value: d.value, label: d.id })),
+              },
+            ]}
+            slotProps={{
+              legend: { position: { vertical: "middle", horizontal: "right" } },
+            }}
+          />
+        </SubBlock>
+      </Stack>
+    </Grid>
+  </Grid>
+</GroupSection>
+
+
+
       <Box sx={{ textAlign: "center", mt: 4, color: "text.secondary" }}>
-        <Typography
-          variant="caption"
-          sx={{
-            fontWeight: 500, opacity: .7, background: "rgba(255,255,255,.8)",
-            backdropFilter: "blur(10px)", p: "8px 16px", borderRadius: 3,
-            border: "1px solid rgba(0,0,0,.05)"
-          }}
-        >
-          Démo statique • Contenu groupé par thèmes • Graphiques diversifiés (MUI X Charts)
+        <Typography variant="caption" sx={{ fontWeight: 500, opacity: .7, background: "rgba(255,255,255,.8)", backdropFilter: "blur(10px)", p: "8px 16px", borderRadius: 3, border: "1px solid rgba(0,0,0,.05)" }}>
+          Données mock alignées sur le schéma • Charts = indicateurs décisionnels (admin)
         </Typography>
       </Box>
     </Box>

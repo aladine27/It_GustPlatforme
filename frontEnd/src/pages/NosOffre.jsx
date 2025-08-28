@@ -174,7 +174,6 @@ const onFileChange = (e) => {
 
   const ext = getExt(file.name);
   const extOk = ALLOWED_EXTENSIONS.includes(ext);
-  // parfois file.type est vide/incorrect -> on tolère vide et on se base sur l'extension
   const mimeOk = !file.type || ALLOWED_MIME.has(file.type);
   const sizeOk = file.size <= MAX_SIZE_MB * 1024 * 1024;
 
@@ -234,18 +233,20 @@ const onFileChange = (e) => {
         }}
       >
         {/* Header */}
-        <Box textAlign="center" px={2} py={3} sx={{ display: "flex", justifyContent: "center" }}>
-          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+       <Box textAlign="center"  px={2} py={3} sx={{justifyContent:"center"
+              ,display:"flex",}}>
+            <Box sx={{alignItems:"center",justifyContent:"center"
+              ,display:"flex",flexDirection:"column"}}>
             <Title variant="h1" sx={{ fontSize: { xs: "2rem", sm: "2.6rem" }, mb: 1 }}>
               <span>Trouvez votre </span>
-              <span style={{ color: "#1976d2" }}>emploi idéal</span>
+              <span style={{ color: "#1976D2" }}>emploi idéal</span>
             </Title>
             <Typography color="text.secondary" variant="body1" mb={2} maxWidth={600} mx="auto">
               Découvrez des opportunités sur mesure et postulez en 1 clic, avec évaluation intelligente.
             </Typography>
-          </Box>
-        </Box>
-
+            </Box>
+       </Box>
+        
         <Box maxWidth="lg" mx={0} px={2} py={isMobile ? 1.5 : 4}>
           <Grid container spacing={isMobile ? 2 : 4}>
             {/* Sidebar */}

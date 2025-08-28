@@ -8,12 +8,14 @@ import { IUser } from 'src/users/interfaces/user.interface';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as puppeteer from 'puppeteer';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class DocumentService {
   constructor(
     @InjectModel('documents') private documentModel: Model<IDocument>,
-    @InjectModel('users') private userModel: Model<IUser>
+    @InjectModel('users') private userModel: Model<IUser>,
+     private readonly notificationService: NotificationService,
   ) {}
 
   async create(createDocumentDto: CreateDocumentDto): Promise<IDocument> {
@@ -22,7 +24,20 @@ export class DocumentService {
       { _id: createDocumentDto.user },
       { $push: { documents: newDocument._id } }
     );
-    return newDocument.save();
+    const saved = await newDocument.save();
+    const approvers = await this.userModel.find(
+    { role: { $in: ['Rh', 'Admin'] } },
+    { _id: 1 }
+  );
+   const approverIds = approvers
+    .map(u => String(u._id))
+    .filter(id => id !== String(createDocumentDto.user));
+     if (approverIds.length) {
+    this.notificationService.sendNotifToUsers(approverIds,'Nouvelle demande de document',
+      `Une demande "${saved.title}" a été créée`
+    );
+  }
+    return saved;
   }
 
   async findDocumentByuserId(user: string): Promise<IDocument[]> {
@@ -49,11 +64,12 @@ export class DocumentService {
     return document;
   }
 
-  async update(id: string, updateDocumentDto: UpdateDocumentDto): Promise<IDocument> {
+  async update(id: string, updateDocumentDto: UpdateDocumentDto): Promise<IDocument> {   
     const document = await this.documentModel.findByIdAndUpdate(id, updateDocumentDto, { new: true });
     if (!document) {
       throw new NotFoundException('No document found');
     }
+   
     return document;
   }
 
@@ -288,6 +304,11 @@ export class DocumentService {
     (doc as any).status = 'Génerated';
 
     await doc.save();
+    this.notificationService.sendNotifToUser(
+    String((doc as any).user),
+    'Document Générer',
+    `Votre document "${doc.title}" est disponible`
+  );
     return doc;
   }
 }

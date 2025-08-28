@@ -134,15 +134,7 @@ const Employe = () => {
 
   const actions = [
     { icon: <DeleteIcon />, tooltip: t('Supprimer'), onClick: handleOpenDelete },
-    {
-      icon: <VisibilityIcon sx={{ color: "#2563eb" }} />,
-      tooltip: t('Détails'),
-      onClick: (emp) => {
-        setSelectedEmploye(emp);
-        setOpenDetail(true);
-    }
-
-    },
+  
     {
   icon: <EditIcon sx={{ color: "#2e7d32" }} />,
   tooltip: t('Editer'),
