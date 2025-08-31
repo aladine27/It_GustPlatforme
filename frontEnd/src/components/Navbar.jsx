@@ -212,13 +212,15 @@ const handleCloseNotification = () => {
 
         {/* Middle: nav links */}
         <Box sx={{ display: { xs: 'none', sm: 'flex', flex: 1 }, alignItems: 'center' }}>
-          {navItems.map((item) => (
-            <StyledNavLink key={item} to={`/${item.toLowerCase()}`}>
-              {item}
-            </StyledNavLink>
-          ))}
+          {!CurrentUser &&
+            navItems.map((item) => (
+              <StyledNavLink key={item} to={`/${item.toLowerCase()}`}>
+                {item}
+              </StyledNavLink>
+            ))
+          }
         </Box>
-
+        
         {/* Right: login/logout + langue */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, justifyContent: 'flex-end' }}>
           {CurrentUser ? (

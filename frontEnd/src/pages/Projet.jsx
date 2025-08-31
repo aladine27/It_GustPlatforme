@@ -1,30 +1,59 @@
-import React, { useEffect, useState } from "react";
+// src/pages/Projet.jsx
+import React, { useEffect, useState, useMemo } from "react";
 import {
-  Box, Typography, InputAdornment, IconButton, Grid, CircularProgress, TextField, Button,
-  useTheme, Divider, Select, MenuItem
+  Box, Typography, InputAdornment, IconButton, CircularProgress, TextField,
+  useTheme, Divider, Select, MenuItem, Chip, Link, Tooltip
 } from "@mui/material";
 import { AddCircleOutline, Search } from "@mui/icons-material";
+import TimelineIcon from "@mui/icons-material/Timeline";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import DownloadIcon from "@mui/icons-material/Download";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+
 import PaginationComponent from "../components/Global/PaginationComponent";
 import CreateProjectModal from "../components/projet/CreateProjectModal";
 import DeleteProjectModal from "../components/projet/DeleteProjectModal";
 import EditProjectModal from "../components/projet/EditProjectModal";
 import ProjectDetailModal from "../components/projet/ProjectDetailModal";
-import ProjectCard from "../components/projet/ProjectCard";
-import { deleteProject, fetchAllProjects } from "../redux/actions/projectActions";
+import { fetchAllProjects, deleteProject, updateProject } from "../redux/actions/projectActions";
 import { clearProjectMessages } from "../redux/slices/projectSlice";
-import staticProjectImage from "../assets/project_static.jpg";
 import { StyledPaper } from "../style/style";
 import { ButtonComponent } from "../components/Global/ButtonComponent";
+import TableComponent from "../components/Global/TableComponent";
 
 const STATUS = [
   { key: "All", label: "All" },
   { key: "Ongoing", label: "Ongoing" },
   { key: "Completed", label: "Completed" },
 ];
+
+// couleurs pour statuts
+const statusColor = (value) => {
+  const v = (value || "").toString().toLowerCase();
+  if (["completed", "completé", "complete", "terminé", "termine"].includes(v))
+    return { bg: "#ffe4e4", color: "#e04747" }; // rouge
+  if (["ongoing", "en cours"].includes(v))
+    return { bg: "#e4faeb", color: "#22a77c" }; // vert
+  if (["planned", "planifié", "planifie"].includes(v))
+    return { bg: "#e3f2fd", color: "#1976d2" };
+  return { bg: "#f3f4f6", color: "#607d8b" };
+};
+
+// calcul statut dynamique
+const computeProjectStatus = (p) => {
+  const now = new Date();
+  const start = p.startDate ? new Date(p.startDate) : null;
+  const end = p.endDate ? new Date(p.endDate) : null;
+  if (p.completedAt || p.progress === 100) return "Completed";
+  if (end && now > end) return "Completed";
+  if (start && now >= start && (!end || now <= end)) return "Ongoing";
+  return "Planned";
+};
 
 const Projet = () => {
   const theme = useTheme();
@@ -36,21 +65,21 @@ const Projet = () => {
   const userRole = CurrentUser?.role || CurrentUser?.user?.role;
   const isAdminOrManager = ["Admin", "Manager"].includes(userRole);
 
-  const { projects: allRows, loading, error: loadError, success } = useSelector((state) => state.project);
+  const { projects: allRows = [], loading, error: loadError, success } = useSelector((state) => state.project);
 
-  // Filtres & pagination
+  // state filtres + pagination
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 8;
 
-  // Modals
+  // state modals
   const [openAdd, setOpenAdd] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [openEdit, setOpenEdit] = useState(false);
 
-  // Modal détail projet
+  // détails
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedDetailProject, setSelectedDetailProject] = useState(null);
 
@@ -60,45 +89,151 @@ const Projet = () => {
     if (loadError) { toast.error(loadError); dispatch(clearProjectMessages()); }
   }, [success, loadError, dispatch]);
 
-  // Filtrage
-  const filteredRows = allRows.filter((row) => {
-    const searchMatch =
-      row.title?.toLowerCase().includes(search.toLowerCase()) ||
-      row.description?.toLowerCase().includes(search.toLowerCase());
-    let statusMatch = true;
-    if (statusFilter !== "All") {
-      statusMatch = row.status?.toLowerCase() === statusFilter.toLowerCase();
-    }
-    return searchMatch && statusMatch;
-  });
-  const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
-  const paginatedRows = filteredRows.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  // filtre recherche & statut
+  const filteredRows = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    return (allRows || []).filter((row) => {
+      const searchMatch =
+        !s ||
+        row.title?.toLowerCase().includes(s) ||
+        row.description?.toLowerCase().includes(s);
+      const statusMatch =
+        statusFilter === "All" ||
+        (row.status || "").toLowerCase() === statusFilter.toLowerCase();
+      return searchMatch && statusMatch;
+    });
+  }, [allRows, search, statusFilter]);
 
-  // Loader & Error
+  const totalPages = Math.ceil(filteredRows.length / itemsPerPage) || 1;
+  const paginatedRows = useMemo(
+    () => filteredRows.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
+    [filteredRows, currentPage]
+  );
+
+  // 🔄 update status si différent
+  useEffect(() => {
+    (async () => {
+      for (const p of paginatedRows) {
+        const computed = computeProjectStatus(p);
+        if (computed && p.status !== computed) {
+          await dispatch(updateProject({ id: p._id, updateData: { status: computed } }));
+        }
+      }
+    })();
+  }, [paginatedRows, dispatch]);
+
+  // rows pour table
+  const tableRows = useMemo(() => paginatedRows.map(p => ({ ...p, id: p._id })), [paginatedRows]);
+
+  // colonnes
+  const columns = useMemo(() => ([
+    {
+      id: "title",
+      label: t("Titre"),
+      align: "left",
+      render: (row) => (
+        <Typography fontWeight={700} sx={{ whiteSpace: "normal", wordBreak: "break-word" }}>
+          {row.title || "-"}
+        </Typography>
+      ),
+    },
+ 
+    {
+      id: "status",
+      label: t("Statut"),
+      render: (row) => {
+        const c = statusColor(row.status);
+        return (
+          <Chip
+            label={t(row.status || "—")}
+            size="small"
+            sx={{ bgcolor: c.bg, color: c.color, fontWeight: 600, border: `1px solid ${c.color}20` }}
+          />
+        );
+      },
+    },
+    {
+      id: "duration",
+      label: t("Durée"),
+      render: (row) => <Typography>{row.duration || t("Non définie")}</Typography>,
+    },
+    {
+      id: "sprints",
+      label: t("Sprints"),
+      render: (row) => <Typography fontWeight={700}>{row.sprints?.length || 0}</Typography>,
+    },
+    {
+      id: "teams",
+      label: t("Équipes"),
+      render: (row) => <Typography fontWeight={700}>{row.teams?.length || 0}</Typography>,
+    },
+    {
+      id: "file",
+      label: t("Fichier"),
+      align: "left",
+      render: (row) =>
+        row.file ? (
+          <Link
+            href={`http://localhost:3000/uploads/projects/${row.file}`}
+            target="_blank"
+            underline="hover"
+            sx={{ display: "inline-flex", alignItems: "center", gap: .5, fontWeight: 600 }}
+          >
+            {t("Fichier de description")}
+            <DownloadIcon sx={{ fontSize: 18 }} />
+          </Link>
+        ) : (
+          <Typography color="text.disabled">—</Typography>
+        ),
+    },
+  ]), [t]);
+
+  // actions
+  const baseActions = [
+    {
+      tooltip: t("Voir les tâches"),
+      icon: <TimelineIcon sx={{ color: "#0ea5e9" }} />,
+      onClick: (row) => navigate(`/dashboard/tache/${row._id}`),
+    },
+    {
+      tooltip: t("Détails"),
+      icon: <InfoOutlinedIcon sx={{ color: "#2563eb" }} />,
+      onClick: (row) => { setSelectedDetailProject(row); setOpenDetail(true); },
+    },
+  ];
+  const adminActions = isAdminOrManager
+    ? [
+        {
+          tooltip: t("Modifier"),
+          icon: <EditIcon sx={{ color: "#16a34a" }} />,
+          onClick: (row) => { setSelectedProject(row); setOpenEdit(true); },
+        },
+        {
+          tooltip: t("Supprimer"),
+          icon: <DeleteIcon sx={{ color: "#dc2626" }} />,
+          onClick: (row) => { setSelectedProject(row); setOpenDelete(true); },
+        },
+      ]
+    : [];
+
   if (loading)
-    return (
-      <Box sx={{ p: 6, textAlign: "center" }}>
-        <CircularProgress color="primary" />
-      </Box>
-    );
+    return <Box sx={{ p: 6, textAlign: "center" }}><CircularProgress color="primary" /></Box>;
   if (loadError)
-    return (
-      <Box sx={{ p: 4 }}>
-        <Typography color="error" fontWeight={600}>{loadError}</Typography>
-      </Box>
-    );
+    return <Box sx={{ p: 4 }}><Typography color="error" fontWeight={600}>{loadError}</Typography></Box>;
 
   return (
     <>
-      {/* === BOUTON AJOUTER EN HAUT À DROITE (HORS PAPER) === */}
- <Box sx={{display: "flex", justifyContent: "flex-end" }}>
-          {isAdminOrManager && (
-            <ButtonComponent
-              onClick={() => setOpenAdd(true)}
-             icon={<AddCircleOutline />}
-              text={t("Ajouter un nouveau Projet")}
-             />)}
-        </Box>
+      {/* bouton ajouter */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+        {isAdminOrManager && (
+          <ButtonComponent
+            onClick={() => setOpenAdd(true)}
+            icon={<AddCircleOutline />}
+            text={t("Ajouter un nouveau Projet")}
+          />
+        )}
+      </Box>
+
       <StyledPaper
         sx={{
           p: { xs: 2, md: 4 },
@@ -112,8 +247,7 @@ const Projet = () => {
           flexDirection: "column",
         }}
       >
-       
-        {/* === HEADER FILTRE & RECHERCHE === */}
+        {/* filtres + recherche */}
         <Box
           sx={{
             display: "flex",
@@ -125,12 +259,10 @@ const Projet = () => {
             width: "100%",
           }}
         >
-          {/* Filtres à gauche */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography variant="subtitle2" color="primary" fontWeight={700} sx={{ mr: 2 }}>
               {t("Filtrer par statut :")}
             </Typography>
-            {/* MENU DEROULANT */}
             <Select
               size="small"
               value={statusFilter}
@@ -142,17 +274,16 @@ const Projet = () => {
               ))}
             </Select>
           </Box>
-    
-          {/* Barre de recherche à droite */}
+
           <TextField
-            label={t('Rechercher')}
+            label={t("Rechercher")}
             value={search}
             onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
-            placeholder={t('Titre, Description...')}
+            placeholder={t("Titre, Description...")}
             sx={{
-              width: { xs: '100%', md: 320 },
-              borderRadius: '50px',
-              bgcolor: '#fff',
+              width: { xs: "100%", md: 360 },
+              borderRadius: "50px",
+              bgcolor: "#fff",
               boxShadow: 1,
               minWidth: 200,
             }}
@@ -162,59 +293,34 @@ const Projet = () => {
                   <IconButton size="small" color="primary"><Search /></IconButton>
                 </InputAdornment>
               ),
-              sx: { borderRadius: '16px', fontSize: '1.03rem' }
+              sx: { borderRadius: "16px", fontSize: "1.03rem" }
             }}
           />
         </Box>
+
         <Divider sx={{ mb: 2 }} />
 
-        {/* Cards grid */}
-        <Box sx={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-start",
-        }}>
-          <Grid container spacing={3} sx={{ mt: 0.5 }}>
-            {paginatedRows.length === 0 ? (
-              <Grid item xs={12}>
-                <Box sx={{ py: 7, textAlign: "center" }}>
-                  <Typography color="text.secondary" fontWeight={500} fontSize={19}>
-                    Aucun projet trouvé
-                  </Typography>
-                </Box>
-              </Grid>
-            ) : (
-              paginatedRows.map((project) => (
-                <Grid item xs={12} sm={6} md={4} lg={4} xl={3} key={project._id} sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                }}>
-                  <ProjectCard
-                    project={project}
-                    staticProjectImage={staticProjectImage}
-                    navigate={navigate}
-                    isAdminOrManager={isAdminOrManager}
-                    setSelectedProject={setSelectedProject}
-                    setOpenEdit={setOpenEdit}
-                    setOpenDelete={setOpenDelete}
-                    setOpenDetail={setOpenDetail}
-                    setSelectedDetailProject={setSelectedDetailProject}
-                  />
-                </Grid>
-              ))
-            )}
-          </Grid>
+        {/* tableau */}
+        <Box sx={{ width: "100%" }}>
+          <TableComponent
+            rows={tableRows}
+            columns={columns}
+            actions={[...baseActions, ...adminActions]}
+          />
         </Box>
 
-        {/* Pagination */}
+        {/* pagination */}
         {totalPages > 1 && (
           <Box mt={4} display="flex" justifyContent="center">
-            <PaginationComponent count={totalPages} page={currentPage} onChange={(_, v) => setCurrentPage(v)} />
+            <PaginationComponent
+              count={totalPages}
+              page={currentPage}
+              onChange={(_, v) => setCurrentPage(v)}
+            />
           </Box>
         )}
 
-        {/* Modals */}
+        {/* modals */}
         {openAdd && <CreateProjectModal open={openAdd} handleClose={() => setOpenAdd(false)} />}
         {openEdit && selectedProject && (
           <EditProjectModal open={openEdit} handleClose={() => setOpenEdit(false)} project={selectedProject} />
@@ -227,8 +333,6 @@ const Projet = () => {
             onDelete={() => dispatch(deleteProject(selectedProject._id))}
           />
         )}
-
-        {/* MODAL DE DETAIL */}
         {openDetail && selectedDetailProject && (
           <ProjectDetailModal
             open={openDetail}

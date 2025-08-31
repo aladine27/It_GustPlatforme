@@ -3,7 +3,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Box, Stack, Typography, Chip, Grid, Divider, Button, Select, MenuItem,
   InputAdornment, FormControl, InputLabel, useMediaQuery, Dialog, DialogTitle,
-  DialogContent, DialogActions, Card
+  DialogContent, DialogActions, Card,
+  Paper
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
@@ -57,6 +58,7 @@ export default function NosOffre() {
   const dispatch = useDispatch();
   const isMobile = useMediaQuery("(max-width:900px)");
   const [sort, setSort] = useState("recent");
+  const today = new Date();
 
   // Redux offres
   const { list: offers = [], loading, error } = useSelector((s) => s.jobOffre || {});
@@ -211,7 +213,7 @@ const onFileChange = (e) => {
   }, [offers, categories]);
 
   return (
-    <Box sx={{ minHeight: "100vh", width: "100vw", bgcolor: "#f8fafc" }}>
+    <Box sx={{ minHeight: "100vh", width: "100vw", bgcolor: "#f8fafc",}}>
       {/* Toasts */}
       <ToastContainer position="top-right" autoClose={1800} newestOnTop />
 
@@ -229,33 +231,31 @@ const onFileChange = (e) => {
           width: "100vw",
           height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
           overflowY: "auto",
-          bgcolor: "#f8fafc",
+          bgcolor: "#dfe9f3ff",
+          
         }}
       >
         {/* Header */}
-       <Box textAlign="center"  px={2} py={3} sx={{justifyContent:"center"
-              ,display:"flex",}}>
+       <Paper textAlign="center" sx={{justifyContent:"center",px:5,py:3
+              ,display:"flex",backgroundColor:"#4398edff",marginLeft:"10%",marginRight:"10%",}}>
             <Box sx={{alignItems:"center",justifyContent:"center"
               ,display:"flex",flexDirection:"column"}}>
-            <Title variant="h1" sx={{ fontSize: { xs: "2rem", sm: "2.6rem" }, mb: 1 }}>
-              <span>Trouvez votre </span>
-              <span style={{ color: "#1976D2" }}>emploi idéal</span>
-            </Title>
-            <Typography color="text.secondary" variant="body1" mb={2} maxWidth={600} mx="auto">
-              Découvrez des opportunités sur mesure et postulez en 1 clic, avec évaluation intelligente.
+                <Typography variant="h6" >Trouvez votre emploi idéal </Typography>
+           
+            <Typography variant="h7" >
+              Votre avenir professionnel commence ici : explorez nos offres et candidatez en un clic.
             </Typography>
             </Box>
-       </Box>
+       </Paper>
         
         <Box maxWidth="lg" mx={0} px={2} py={isMobile ? 1.5 : 4}>
           <Grid container spacing={isMobile ? 2 : 4}>
             {/* Sidebar */}
             <Grid item xs={12} md={4} lg={4}>
-              <Card sx={{ boxShadow: "none", border: "none", background: "transparent" }}>
+              <Card sx={{ boxShadow: "none", border: "none" }}>
                 <Box
                   sx={{
-                    bgcolor: "#fff",
-                    borderRadius: 3,
+                    bgcolor: " #f8fafcff",
                     boxShadow: 1,
                     border: "1.5px solid #b3d6fc",
                     p: 3,
@@ -395,8 +395,8 @@ const onFileChange = (e) => {
                 {sortedFiltered.map((job) => {
                   const st = statusStyle(job.status);
                   return (
-                    <Card key={job.id} sx={{ transition: "all .17s", p: 2.4, boxShadow: 8, "&:hover": { boxShadow: 12 } }}>
-                      <Grid container spacing={2}>
+                    <Card key={job.id} sx={{  p: 2.4, boxShadow: 8, "&:hover": { boxShadow: 12 } }}>
+                      <Grid container spacing={1}>
                         <Grid item xs={12} md={10}>
                           <Box>
                             {/* Titre + type + statut */}
@@ -443,7 +443,7 @@ const onFileChange = (e) => {
 
                             {/* Requirements */}
                             <Stack direction="row" alignItems="center" spacing={0.5} mb={1.2} flexWrap="wrap">
-                              <Typography variant="h5">Requirements&nbsp;:</Typography>
+                              <Typography variant="h4">Requirements&nbsp;:</Typography>
                               {job.requirements.slice(0, 4).map((s) => (
                                 <Chip key={s} label={s} size="small" sx={{ bgcolor: "#fafafa", color: "#1976d2", fontWeight: 700 }} />
                               ))}
@@ -458,7 +458,7 @@ const onFileChange = (e) => {
 
                             {/* Bonus */}
                             <Stack direction="row" spacing={1} flexWrap="wrap">
-                              <Typography variant="h5">Bonus&nbsp;:</Typography>
+                              <Typography variant="h4">Bonus&nbsp;:</Typography>
                               {job.bonuses.slice(0, 3).map((b) => (
                                 <Chip
                                   key={b}

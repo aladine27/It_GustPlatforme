@@ -49,6 +49,19 @@ function formatDate(dateStr) {
   if (isNaN(d)) return dateStr;
   return d.toLocaleDateString("en-GB");
 }
+function computeOfferStatus(o) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); 
+  if (o.status && o.status.toLowerCase() === "closed") return "closed";
+
+  // closingDate : fermé si le jour de clôture est passé
+  if (o.closingDate) {
+    const end = new Date(o.closingDate);
+    end.setHours(23, 59, 59, 999); // fin de journée de clôture
+    return today > end ? "closed" : "open";
+  }
+  return "open";
+}
 
 export default function JobOfferList({ onOpenApplications }) {
   const { t } = useTranslation();
@@ -73,32 +86,54 @@ export default function JobOfferList({ onOpenApplications }) {
   const [page, setPage] = useState(1);
   const rowsPerPage = 3;
 
+   // tick pour recalculer automatiquement au changement de jour (toutes les 60s)
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((v) => v + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
+ 
+
   useEffect(() => {
     dispatch(fetchAllJobOffres());
     dispatch(fetchAllJobCategories());
   }, [dispatch]);
 
-  // Filtres dynamiques
+
+  // Filtres dynamiques avec statut calculé
   const offers = useMemo(() => {
-    let arr = offersBackend;
+    // enrichir avec computedStatus à chaque rendu (tick déclenche le recalcul)
+    let arr = offersBackend.map((o) => ({
+      ...o,
+      status: computeOfferStatus(o),
+    }));
+
     if (statusFilter !== "all")
-      arr = arr.filter(o => (o.status && o.status.toLowerCase() === statusFilter));
+      arr = arr.filter((o) => o.computedStatus === statusFilter);
+
     if (typeFilter !== "all")
-      arr = arr.filter(o => (o.type && o.type.toLowerCase() === typeFilter));
+      arr = arr.filter((o) => (o.type && o.type.toLowerCase() === typeFilter));
+
     if (searchTerm)
-      arr = arr.filter(o =>
-        (o.title && o.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (o.location && o.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (o.type && o.type.toLowerCase().includes(searchTerm.toLowerCase()))
+      arr = arr.filter(
+        (o) =>
+          (o.title && o.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (o.location && o.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (o.type && o.type.toLowerCase().includes(searchTerm.toLowerCase()))
       );
+
     if (sortBy === "salary")
-      arr = [...arr].sort((a, b) => (Number(b.salaryRange) || 0) - (Number(a.salaryRange) || 0));
+      arr = [...arr].sort(
+        (a, b) => (Number(b.salaryRange) || 0) - (Number(a.salaryRange) || 0)
+      );
     else if (sortBy === "title")
       arr = [...arr].sort((a, b) => (a.title || "").localeCompare(b.title || ""));
     else if (sortBy === "date")
       arr = [...arr].sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate));
+
     return arr;
-  }, [offersBackend, searchTerm, statusFilter, typeFilter, sortBy]);
+    // tick dans les deps pour recalculer au fil du temps
+  }, [offersBackend, searchTerm, statusFilter, typeFilter, sortBy, tick]);
 
   // Chargement par catégorie
   useEffect(() => {
@@ -108,6 +143,7 @@ export default function JobOfferList({ onOpenApplications }) {
       dispatch(fetchAllJobOffres());
     }
   }, [categoryFilter, dispatch]);
+  
 
   const paginatedOffers = useMemo(() => {
     const start = (page - 1) * rowsPerPage;

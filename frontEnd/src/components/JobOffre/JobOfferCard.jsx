@@ -1,7 +1,6 @@
+// src/components/JobOffre/JobOfferCard.jsx
 import React, { useMemo } from "react";
-import {
-  Box, Typography, Chip, Divider, IconButton, Link, Paper
-} from "@mui/material";
+import { Box, Typography, Chip, Divider, IconButton, Link, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
@@ -48,15 +47,17 @@ export default function JobOfferCard({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const status = getStatusColor(offer.status);
+
+  // === utilise le statut calculé envoyé par la liste ===
+  const effectiveStatus = (offer.computedStatus || offer.status || "open");
+  const status = getStatusColor(effectiveStatus);
   const type = getTypeColor(offer.type);
 
-  // --- Salaire en Dinar Tunisien (DT)
+  // Salaire (DT)
   const salary =
     typeof offer.salaryRange === "number" && !isNaN(offer.salaryRange)
       ? offer.salaryRange
       : null;
-
   const formatDT = (n) =>
     n == null ? "-" : `${new Intl.NumberFormat("fr-TN").format(n)} DT`;
 
@@ -112,6 +113,7 @@ export default function JobOfferCard({
         <Typography variant="h5" fontWeight={700} sx={{ color: "#1a237e", mb: 0.5 }}>
           {offer.title}
         </Typography>
+
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mt: 1 }}>
           <Typography
             sx={{ color: "#1976d2", fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 0.5 }}
@@ -125,6 +127,7 @@ export default function JobOfferCard({
             <LocationOnOutlinedIcon sx={{ fontSize: 18, color: "#1976d2" }} />
             {offer.location}
           </Typography>
+
           <Chip
             icon={<WorkOutlineIcon sx={{ fontSize: 16, color: type.color }} />}
             label={t(offer.type || "")}
@@ -140,8 +143,10 @@ export default function JobOfferCard({
             }}
           />
         </Box>
+
+        {/* Pastille statut (utilise effectiveStatus) */}
         <Chip
-          label={t(offer.status || "")}
+          label={t(effectiveStatus)}
           sx={{
             position: "absolute",
             top: 12,
@@ -159,11 +164,12 @@ export default function JobOfferCard({
       </Box>
 
       {/* Body */}
+      {/* ... (reste de la carte inchangé) ... */}
+
       <Box sx={{ px: 3, pt: 2.5, flex: 1 }}>
-        {/* styles communs */}
         {(() => {
           const lineSx = { display: "flex", alignItems: "flex-start", gap: 1, mb: 2 };
-          const panelSx = { bgcolor: "#f8fafc", borderRadius: "12px", p: 1.2 };
+        const panelSx = { bgcolor: "#f8fafc", borderRadius: "12px", p: 1.2 };
 
           return (
             <>
@@ -266,7 +272,7 @@ export default function JobOfferCard({
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, pl: 3, pb: 1 }}>
         <Chip
           icon={<MonetizationOnOutlinedIcon sx={{ fontSize: 16, color: "#2e7d32" }} />}
-          label={formatDT(salary)}  // <--- ICI : affichage en Dinar Tunisien
+          label={formatDT(salary)}
           sx={{ bgcolor: "#e8f5e9", color: "#2e7d32", fontWeight: 600, fontSize: 13, borderRadius: "12px", px: 1, height: 26 }}
         />
         <Chip

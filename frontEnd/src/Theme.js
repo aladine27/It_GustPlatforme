@@ -1,5 +1,4 @@
 import { createTheme, responsiveFontSizes } from '@mui/material/styles';
-
 let theme = createTheme({
   palette: {
     primary: {
@@ -10,7 +9,7 @@ let theme = createTheme({
     },
     secondary: {
       main: '#0082c8',
-      contrastText: '#fff'
+      contrastText: '#fff',
     },
     background: {
       default: '#f5f7fa',
@@ -26,9 +25,10 @@ let theme = createTheme({
     h1: { fontSize: '2.5rem', fontWeight: 800, color: '#1976d2' },
     h2: { fontSize: '2rem',   fontWeight: 700, color: '#1976d2' },
     h3: { fontSize: '1.5rem', fontWeight: 700, color: '#1976d2' },
-    h4: { fontSize: '1.25rem',fontWeight: 600 },
+    h4: { fontSize: '1.25rem',fontWeight: 600,color: '#0f4c8aff' },
     h5: { fontSize: '1.1rem', fontWeight: 500 },
-    h6: { fontSize: '1rem',   fontWeight: 500 },
+    h6: { fontSize: '2rem',   fontWeight: 800,color:'#fff',marginBottom:2 },
+    h7: { fontSize: '1.1rem',   fontWeight: 600,color:'#fff',marginBottom:2 },
     subtitle1: { fontSize: '1.08rem', color: '#333' },
     subtitle2: { fontSize: '0.96rem', color: '#555' },
     body1: { fontSize: '1rem', color: '#333' },
@@ -238,9 +238,7 @@ let theme = createTheme({
         }
       }
     },
-
     // ==== Nouveaux éléments ====
-
     // Switch stylé
     MuiSwitch: {
       styleOverrides: {
@@ -393,14 +391,8 @@ MuiSelect: {
     },
   },
 },
-
-
-
   }
 });
-
 theme = responsiveFontSizes(theme);
-
 // ! Ici export nommé :
 export { theme };
-

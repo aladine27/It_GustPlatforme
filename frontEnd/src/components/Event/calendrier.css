@@ -1,16 +1,24 @@
-/* Enhanced Calendar Header - Day Headers */
+/* === Enhanced Calendar Header - Day Headers === */
+:root {
+    --brand: #227FBF;
+    /* bleu bouton */
+    --brand-dark: #1a5f94;
+    /* variante pour "aujourd'hui" */
+}
+
 .rbc-header {
     color: #FFFFFF;
     z-index: 1;
     font-size: 15px !important;
     font-weight: 600 !important;
     height: 44px !important;
-    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #A855F7 100%);
+    background: var(--brand) !important;
+    /* Bleu charte */
     border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-bottom: 2px solid #ede9fe !important;
     text-transform: capitalize;
     letter-spacing: 0.3px;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.09);
+    box-shadow: none !important;
     position: relative;
     display: table-cell;
     vertical-align: middle;
@@ -21,29 +29,25 @@
     border-right: none !important;
 }
 
+/* Supprimer le voile diagonal */
 .rbc-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(255, 255, 255, 0.09) 0%, transparent 70%);
-    pointer-events: none;
+    display: none !important;
 }
 
 .rbc-allday-cell {
     display: none !important;
 }
 
+/* Jour courant */
+.rbc-header.rbc-today,
 .rbc-today {
-    background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%) !important;
+    background: var(--brand-dark) !important;
     color: #FFFFFF !important;
-    box-shadow: 0 1px 6px rgba(6, 182, 212, 0.15);
+    box-shadow: 0 1px 6px rgba(26, 95, 148, 0.25);
     border-radius: 0 !important;
 }
 
-/* Buttons & toolbar */
+/* === Buttons & toolbar === */
 .rbc-toolbar {
     display: grid !important;
     grid-template-columns: 1fr auto 1fr;
@@ -99,7 +103,7 @@
     border: 1px solid #b4aee8;
 }
 
-/* Time slots et heures à gauche */
+/* === Time slots et heures à gauche === */
 .rbc-time-slot {
     color: #4B5563;
     font-weight: 500;
@@ -115,7 +119,7 @@
     color: #0369A1;
 }
 
-/* Events : gradients et ombres */
+/* === Events : gradients et ombres === */
 .rbc-event,
 .rbc-background-event {
     z-index: 2;
@@ -155,10 +159,9 @@
     color: #fff !important;
 }
 
-/* Grille, calendrier, conteneur principal */
+/* === Grille, calendrier, conteneur principal === */
 .CalendarContainer {
     height: 80vh;
-    /* Hauteur fixée pour bien gérer le scroll */
     width: 75vw;
     margin: 0 auto;
     background: #FFFFFF;
@@ -170,10 +173,8 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    /* Pas de scroll ici ! */
 }
 
-/* Ajoute ce wrapper autour du calendrier pour gérer le scroll vertical uniquement sur la grille */
 .CalendarScrollWrapper {
     flex: 1 1 0;
     min-height: 0;
@@ -183,20 +184,20 @@
     scroll-behavior: smooth;
 }
 
-/* Scrollbar customisée sur le wrapper */
+/* Scrollbar customisée */
 .CalendarScrollWrapper::-webkit-scrollbar {
     width: 8px;
     background: #F3FAFF;
 }
 
 .CalendarScrollWrapper::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #6366F1, #8B5CF6);
+    background: var(--brand);
     border-radius: 4px;
 }
 
 .CalendarScrollWrapper {
     scrollbar-width: thin;
-    scrollbar-color: #8B5CF6 #F3FAFF;
+    scrollbar-color: var(--brand) #F3FAFF;
 }
 
 .rbc-calendar {
@@ -205,14 +206,14 @@
     height: 100% !important;
 }
 
-/* Focus accessibility */
+/* === Focus accessibility === */
 .rbc-calendar *:focus {
-    outline: 2px solid #06B6D4 !important;
+    outline: 2px solid var(--brand) !important;
     outline-offset: 2px !important;
     border-radius: 4px !important;
 }
 
-/* Responsive */
+/* === Responsive === */
 @media (max-width: 1024px) {
     .CalendarContainer {
         width: 97vw;

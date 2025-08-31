@@ -341,7 +341,36 @@ const resources = {
   "closed": "Closed",
   "full-time": "Full-time",
   "part-time": "Part-time",
-  "internship": "Internship"
+  "internship": "Internship",
+  "jobs": {
+  "header": {
+    "title": "Find your ideal job",
+    "subtitle": "Your future starts here: explore our offers and apply in one click."
+  },
+  "search": { "label": "Role, skills or company", "placeholder": "Role, skills, company..." },
+  "location": { "label": "City or region", "placeholder": "City, region..." },
+  "filters": { "title": "Filters", "type": "Contract type", "category": "Category", "all": "All", "reset": "Reset" },
+  "sort": { "recent": "Most recent", "salary": "Salary (asc)", "relevance": "Relevance" },
+  "common": { "loading": "Loading...", "error": "Error", "close": "Close", "cancel": "Cancel" },
+  "list": { "count": "{{n}} offers found", "for": "for \"{{q}}\"" },
+  "meta": { "published": "Published", "closing": "Closing: {{d}}", "closingShort": "Closing", "candidates": "Candidates: {{n}}" },
+  "requirements": "Requirements",
+  "bonuses": "Perks",
+  "details": { "view": "View details" },
+  "process": "Process",
+  "apply": { "btn": "Apply", "title": "Apply to {{title}}", "dropCv": "Upload your CV", "send": "Send application" },
+  "toast": {
+    "types": "Allowed types: PDF, DOC, DOCX, PNG, JPG, JPEG.",
+    "size": "Max size {{n}} MB.",
+    "sent": "Application sent!",
+    "error": "Error while applying"
+  },
+  "info": {
+    "title": "Info:",
+    "body": "If you receive no answer within 15 days, please consider your application not retained. Thank you."
+  }
+}
+
 
         
                   
@@ -674,7 +703,8 @@ const resources = {
   "closed": "Clôturée",
   "full-time": "Temps plein",
   "part-time": "Temps partiel",
-  "internship": "Stage"
+  "internship": "Stage",
+  
 
 
 
