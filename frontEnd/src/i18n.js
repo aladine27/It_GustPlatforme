@@ -703,17 +703,7 @@ const resources = {
   "closed": "Clôturée",
   "full-time": "Temps plein",
   "part-time": "Temps partiel",
-  "internship": "Stage",
-  
-
-
-
-
-
-
-  
-            
-      
+  "internship": "Stage",               
     }
   }
 };

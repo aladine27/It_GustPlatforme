@@ -240,9 +240,9 @@ const onFileChange = (e) => {
               ,display:"flex",backgroundColor:"#4398edff",marginLeft:"10%",marginRight:"10%",}}>
             <Box sx={{alignItems:"center",justifyContent:"center"
               ,display:"flex",flexDirection:"column"}}>
-                <Typography variant="h6" >Trouvez votre emploi idéal </Typography>
+                <Typography variant="h8" >Trouvez votre emploi idéal </Typography>
            
-            <Typography variant="h7" >
+            <Typography variant="h9" >
               Votre avenir professionnel commence ici : explorez nos offres et candidatez en un clic.
             </Typography>
             </Box>

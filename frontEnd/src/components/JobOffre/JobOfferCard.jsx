@@ -1,6 +1,8 @@
 // src/components/JobOffre/JobOfferCard.jsx
 import React, { useMemo } from "react";
-import { Box, Typography, Chip, Divider, IconButton, Link, Paper } from "@mui/material";
+import { Box, Typography, Chip, Divider, IconButton, Link, Paper, Button } from "@mui/material";
+import PeopleOutlineOutlinedIcon from "@mui/icons-material/PeopleOutlineOutlined";
+import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import { useNavigate } from "react-router-dom";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
@@ -14,6 +16,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { styled } from "@mui/material/styles";
 import MuiTooltip, { tooltipClasses } from "@mui/material/Tooltip";
 import { useTranslation } from "react-i18next";
+import { ButtonComponent } from "../Global/ButtonComponent";
 
 const WhiteTooltip = styled(({ className, ...props }) => (
   <MuiTooltip {...props} arrow classes={{ popper: className }} placement="top" />
@@ -88,6 +91,12 @@ export default function JobOfferCard({
   const visibleBonus = bonusList.slice(0, MAX_BONUS);
   const hiddenBonus = bonusList.slice(MAX_BONUS);
   const hasMoreBonus = hiddenBonus.length > 0;
+  const applicantsCount = Array.isArray(offer.applications) ? offer.applications.length : 0;
+
+const goToApplicants = () => {
+  if (onOpenApplications) onOpenApplications(offer);
+  else navigate(`/dashboard/recrutement/applications/${offer._id}`, { state: { offer } });
+};
 
   return (
     <Paper
@@ -163,9 +172,7 @@ export default function JobOfferCard({
         />
       </Box>
 
-      {/* Body */}
-      {/* ... (reste de la carte inchangé) ... */}
-
+ 
       <Box sx={{ px: 3, pt: 2.5, flex: 1 }}>
         {(() => {
           const lineSx = { display: "flex", alignItems: "flex-start", gap: 1, mb: 2 };
@@ -282,21 +289,17 @@ export default function JobOfferCard({
         />
       </Box>
 
-      <Box
-        sx={{ pl: 3, pb: 2, mt: 2, cursor: "pointer" }}
-        onClick={() => {
-          if (onOpenApplications) onOpenApplications(offer);
-          else navigate(`/dashboard/recrutement/applications/${offer._id}`, { state: { offer } });
-        }}
-        title={t("View this offer's applicants")}
-      >
-        <Typography component="span" sx={{ fontWeight: 700, color: "#1e3a8a", fontSize: 18 }}>
-          {Array.isArray(offer.applications) ? offer.applications.length : 0}
-        </Typography>
-        <Typography component="span" sx={{ color: "#1e3a8a", fontWeight: 500, ml: 0.5, fontSize: 16 }}>
-          {t("applicants")}
-        </Typography>
-      </Box>
+ <Box sx={{ px: 3, pb: 2, pt: 1 }}>
+  <ButtonComponent
+    onClick={goToApplicants}
+    text={`${t("Voir candidats")} (${applicantsCount})`}
+    icon={<PeopleOutlineOutlinedIcon />}
+    endIcon={<ArrowForwardIosRoundedIcon />}
+    variant="outlined"
+    count={applicantsCount}
+  />
+</Box>
+
 
       {/* Actions + Posted */}
       <Box

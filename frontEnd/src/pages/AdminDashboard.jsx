@@ -307,37 +307,7 @@ export default function AdminDashboard() {
     </Grid>
   </Grid>
 </GroupSection>
-      <Box sx={{ height: 24 }} />
-      {/* CONGÉS */}
-    <Grid item xs={12} md={5}>
-  <SubBlock
-    title="Employés en congé / Présents"
-    description="Effectif en congé approuvé et effectif présent par mois (Leave.status='Approuvé')."
-  >
-    <BarChart
-      height={280}
-      xAxis={[{ data: employeesOnLeaveMonthly.map(e => e.m), scaleType: "band" }]}
-      series={[
-        {
-          label: "En congé",
-          data: employeesOnLeaveMonthly.map(e => e.on),
-          stack: "eff"
-        },
-       {
-          label: "Présents",
-          data: employeesOnLeaveMonthly.map(e =>
-            Math.max(totalEmployees - Number(e.on || 0), 0)
-          ),
-          stack: "eff",
-        }
-      ]}
-      grid={{ vertical: true, horizontal: true }}
-    />
-    <Typography variant="caption" color="text.secondary">
-      Présents = {totalEmployees} − En congé (par mois).
-    </Typography>
-  </SubBlock>
-</Grid>
+  
       <Box sx={{ height: 24 }} />
       {/* RECRUTEMENT */}
       <GroupSection title="Recrutement" subtitle="Attractivité et qualité des candidatures">

@@ -56,9 +56,11 @@ function App() {
 
   return (
     <>
+
       <BrowserRouter>
+           <ToastContainer position="bottom-right" autoClose={2000} />
         <Routes>
-       
+          
           <Route path="/login" element={<Login />} />
           <Route path="/resetPassword" element={<ResetPassword />} />
           <Route path="/google-redirect" element={<GoogleRedirect />} />
@@ -113,7 +115,7 @@ function App() {
         </Routes>
       </BrowserRouter>
 
-      <ToastContainer position="top-right" autoClose={2000} />
+    
     </>
   );
 }

@@ -7,6 +7,7 @@ import { AccessTokenGuard } from 'src/guards/accessToken.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Response } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Public } from 'src/decorators/public.decorator';
 @ApiBearerAuth("access-token")
 @UseGuards(AccessTokenGuard) 
 @Controller('joboffre')
@@ -60,7 +61,7 @@ export class JobOffreController {
   
   @Get('/getJobOffreByjobCategory/:jobCategory')
   @UseGuards( RolesGuard)
-  @Roles('Admin','Rh')
+    @Public()
   async findJobOffreByJobCategory(@Param('jobCategory') jobCategory: string, @Res() res) {
     try {
       const jobOffre = await this.jobOffreService.getJobOffreByjobCategory(jobCategory);
@@ -87,7 +88,7 @@ export class JobOffreController {
 
   @Get()
   @UseGuards( RolesGuard)
-  @Roles('Admin','Rh')
+     @Public()
   async findAll(@Res() res) {
     try {
       const jobOffres = await this.jobOffreService.findAll();
@@ -106,7 +107,7 @@ export class JobOffreController {
 
   @Get(':id')
   @UseGuards( RolesGuard)
-  @Roles('Admin','Rh')
+     @Public()
   async findOne(@Param('id') id: string,@Res() res) {
   try {
     const jobOffre = await this.jobOffreService.findOne(id);

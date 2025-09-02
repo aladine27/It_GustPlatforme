@@ -20,7 +20,7 @@ import AddEmployeModal from '../components/Employe/AddEmploye';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
 import ExportModal from '../components/ExportModal';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import { StyledPaper } from '../style/style';
 import axios from 'axios';
 import CustomDeleteForm from '../components/Global/CustomDeleteForm';
@@ -44,9 +44,6 @@ const Employe = () => {
   setIsEdit(false); 
   setSelectedEmploye(null); 
 };
-
-
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -184,6 +181,7 @@ const Employe = () => {
 
   return (
     <>
+     <ToastContainer position="top-right" autoClose={3500} />
       <StyledPaper sx={{ p: { xs: 2, md: 4 }, mt: 2 }}>
         <Box
           sx={{
@@ -257,10 +255,10 @@ const Employe = () => {
       </StyledPaper>
 
       <AddEmployeModal
-  open={openAdd}
-  handleClose={handleCloseAdd}
-  isEdit={isEdit}
-  employeToEdit={selectedEmploye}
+        open={openAdd}
+        handleClose={handleCloseAdd}
+        isEdit={isEdit}
+        employeToEdit={selectedEmploye}
 />
       {openDelete && selectedEmploye && (
         <CustomDeleteForm

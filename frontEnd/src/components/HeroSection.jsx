@@ -1,5 +1,6 @@
 import { Box, Typography, Container, Button, Stack, useTheme } from "@mui/material"
 import { ArrowForward } from "@mui/icons-material"
+import test from "../assets/test.png"
 
 const HeroSection = () => {
   const theme = useTheme()
@@ -8,19 +9,24 @@ const HeroSection = () => {
     <Box
       sx={{
         position: "relative",
-        background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.secondary.light} 100%)`,
+        backgroundImage: `linear-gradient(
+          rgba(0, 0, 0, 0.5),
+          rgba(0, 0, 0, 0.5)
+        ), url(${test})`,
         color: "#fff",
         py: { xs: 8, md: 12 },
         px: 2,
         textAlign: "center",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
       <Container maxWidth="lg">
         <Typography
-          variant="h2"
+          variant="h10"
           sx={{
             fontWeight: 800,
-            mb: 3,
+            mb: 6,
             fontSize: { xs: "2rem", md: "3.5rem" },
             lineHeight: 1.2,
           }}

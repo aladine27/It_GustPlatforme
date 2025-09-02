@@ -26,6 +26,7 @@ export default function EventDetailsModal({
   userRole
 }) {
   const { t, i18n } = useTranslation();
+const canSeeGuests = ['Admin', 'RH'].includes(userRole);
 
   if (!event) return null;
 
@@ -166,26 +167,30 @@ export default function EventDetailsModal({
             </Typography>
           </DetailRow>
 
-          <DetailRow label={t("Invités")}>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {Array.isArray(event.invited) && event.invited.length > 0
-                ? event.invited
-                    .filter(user => !!user && (user.fullName || user.name))
-                    .map(user => (
-                      <Chip
-                        key={user._id || user.id || Math.random()}
-                        label={user.fullName || user.name || t("invité")}
-                        size="small"
-                        variant="outlined"
-                        sx={{ fontWeight: 500, bgcolor: "#e3f2fd", color: "#227FBF" }}
-                      />
-                    ))
-                : <Typography variant="body2" color="text.secondary">{t("Aucun invité")}</Typography>
-              }
-            </Box>
-          </DetailRow>
+                  {/* ⬇️ Afficher "Invités" uniquement pour Admin/RH */}
+          {canSeeGuests && (
+            <DetailRow label={t('Invités')}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {Array.isArray(event.invited) && event.invited.length > 0
+                  ? event.invited
+                      .filter(u => !!u && (u.fullName || u.name))
+                      .map(u => (
+                        <Chip
+                          key={u._id || u.id || Math.random()}
+                          label={u.fullName || u.name || t('invité')}
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontWeight: 500, bgcolor: '#e3f2fd', color: '#227FBF' }}
+                        />
+                      ))
+                  : <Typography variant="body2" color="text.secondary">{t('Aucun invité')}</Typography>}
+              </Box>
+            </DetailRow>
+          )}
         </Stack>
       </DialogContent>
+
+       
 
       {["Admin", "RH"].includes(userRole) && (
         <>

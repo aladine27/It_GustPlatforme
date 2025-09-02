@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Box, Paper, Typography, Divider, Stack, TextField, InputAdornment, Slider,
-  Tooltip, IconButton
+  Tooltip, IconButton,LinearProgress
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -22,6 +22,35 @@ import PaginationComponent from "../../components/Global/PaginationComponent";
 import { ButtonComponent } from "../../components/Global/ButtonComponent";
 import { fetchApplicationsByJobOffre } from "../../redux/actions/applicationAction";
 import ModelComponent from "../../components/Global/ModelComponent";
+
+const DotLoader = () => (
+  <Box
+    sx={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 0.6,
+      ml: 1,
+      "& span": {
+        width: 8,
+        height: 8,
+        borderRadius: "50%",
+        bgcolor: "#2563eb",
+        animation: "pulse 1s infinite ease-in-out",
+      },
+      "& span:nth-of-type(2)": { animationDelay: "0.15s" },
+      "& span:nth-of-type(3)": { animationDelay: "0.3s" },
+      "@keyframes pulse": {
+        "0%, 80%, 100%": { transform: "scale(0)" },
+        "40%": { transform: "scale(1)" },
+      },
+    }}
+  >
+    <span />
+    <span />
+    <span />
+  </Box>
+);
+
 
 const FILE_BASE = "http://localhost:3000/uploads/applications";
 const API_ANALYSIS_BASE = "http://localhost:3000/application-analysis";
@@ -357,9 +386,39 @@ export default function ApplicationList({ selectedOffer }) {
             <Typography color="#64748b" fontStyle="italic" mb={2}>
               {t("Lance l'analyse via le bouton {{btn}} au-dessus.", { btn: t("Filtrer via IA") })}
             </Typography>
-          ) : iaLoading ? (
-            <Typography>{t("Analyse en cours...")}</Typography>
-          ) : iaError ? (
+          )  : iaLoading ? (
+  <Box
+    sx={{
+      p: 2,
+      borderRadius: 2,
+      bgcolor: "#f3f6ff",
+      border: "1px solid #e0e7ff",
+    }}
+  >
+    <Typography fontWeight={700} color="primary" sx={{ mb: 1 }}>
+      {t("Analyse des CV avec l'IA...")} <DotLoader />
+    </Typography>
+
+    <LinearProgress
+      variant="indeterminate"
+      sx={{
+        height: 8,
+        borderRadius: 999,
+        overflow: "hidden",
+        "& .MuiLinearProgress-bar": {
+          borderRadius: 999,
+          backgroundImage:
+            "linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa)",
+        },
+      }}
+    />
+
+    <Typography variant="caption" sx={{ display: "block", mt: 1, color: "#64748b" }}>
+      {t("Cela peut prendre quelques secondes.")}
+    </Typography>
+  </Box>
+) : iaError ? (
+
             <Typography color="error">{iaError}</Typography>
           ) : (
             <>

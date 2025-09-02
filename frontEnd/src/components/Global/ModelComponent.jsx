@@ -58,7 +58,6 @@ const ModelComponent = ({ open, handleClose, title, children, icon }) => {
             <Grid item>
               <Typography
                 id="modal-title"
-                variant="h6"
                 component="h2"
                 sx={{ fontWeight: 600, color: '#1A9BC3', textAlign: 'center' }}
               >

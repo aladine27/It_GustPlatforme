@@ -55,11 +55,7 @@ export default function ExportModal({ open, onClose, entity }) {
     }
   
     try {
-      const resultAction = await dispatch(action(payload)).unwrap();
-  
-      // Check debug:  
-      console.log(resultAction, typeof resultAction, resultAction.size);
-  
+      const resultAction = await dispatch(action(payload)).unwrap();  
       // Téléchargement du blob
       const url = window.URL.createObjectURL(new Blob([resultAction]));
       const link = document.createElement("a");
@@ -69,7 +65,6 @@ export default function ExportModal({ open, onClose, entity }) {
       link.click();
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
-  
       toast.success(`Export ${format} réussi !`);
       onClose();
     } catch (err) {
@@ -77,11 +72,9 @@ export default function ExportModal({ open, onClose, entity }) {
       onClose();
     }
   };
-  
-
   return (
     <>
-      <ToastContainer position="bottom-right" autoClose={4000} />
+      <ToastContainer position="bottom-right" autoClose={700} />
       <ModelComponent open={open} handleClose={onClose} title={title} icon={null}>
       <Box
   sx={{

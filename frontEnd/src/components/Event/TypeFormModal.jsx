@@ -8,10 +8,6 @@ import {
   Divider,
   Chip,
   Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   List,
   ListItem,
@@ -21,18 +17,19 @@ import {
   Tooltip,
 } from "@mui/material"
 import ModelComponent from "../Global/ModelComponent"
+import CustomDeleteForm from "../Global/CustomDeleteForm"
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline"
 import DeleteIcon from "@mui/icons-material/Delete"
+import DeleteOutline from "@mui/icons-material/DeleteOutline"
 import EditIcon from "@mui/icons-material/Edit"
 import SaveIcon from "@mui/icons-material/Save"
 import CancelIcon from "@mui/icons-material/Cancel"
 import EventIcon from "@mui/icons-material/Event"
-import WarningIcon from "@mui/icons-material/Warning"
 
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm, Controller } from "react-hook-form";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useTranslation } from 'react-i18next';
 
@@ -69,7 +66,6 @@ export default function TypeFormModal({
     control,
     handleSubmit,
     reset,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: { eventType: "" },
@@ -300,32 +296,26 @@ export default function TypeFormModal({
           </Box>
         </Box>
       </ModelComponent>
-      {/* Dialog de confirmation de suppression */}
-      <Dialog open={deleteConfirmOpen} onClose={cancelDelete} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <WarningIcon color="warning" />
-          {t("Confirmer la suppression")}
-        </DialogTitle>
-        <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            {t("Cette action est irréversible")}
-          </Alert>
-          <Typography>
-            {t("Êtes-vous sûr de vouloir supprimer le type d'événement")} <strong>"{typeToDelete?.name}"</strong> ?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {t("Tous les événements associés à ce type pourraient être affectés.")}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
+
+      {/* ✅ Modal de suppression personnalisé */}
+      <CustomDeleteForm
+        open={deleteConfirmOpen}
+        handleClose={cancelDelete}
+        title={t("Confirmer la suppression")}
+        icon={<DeleteOutline sx={{ color: "red", fontSize: 38 }} />}
+      >
+        <Typography sx={{ mb: 1 }}>
+          {t("Êtes-vous sûr de vouloir supprimer le type d'événement")} <strong>"{typeToDelete?.name}"</strong> ?
+        </Typography>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
           <Button onClick={cancelDelete} color="inherit">
             {t("Annuler")}
           </Button>
           <Button onClick={confirmDelete} color="error" variant="contained" startIcon={<DeleteIcon />}>
             {t("Supprimer")}
           </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      </CustomDeleteForm>
     </>
   )
 }

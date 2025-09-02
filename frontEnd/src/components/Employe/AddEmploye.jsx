@@ -154,7 +154,6 @@ const AddEmployeModal = ({
         newErrors[validationErr.path] = validationErr.message;
       }
       setErrors(newErrors);
-      toast.error(Object.values(newErrors)[0] || "Erreur de validation.");
       return false;
     }
   };
@@ -184,54 +183,62 @@ const AddEmployeModal = ({
   };
 
   // ------------------ Submit ------------------
-  const handleSubmit = async () => {
-    if (!(await validateStep(2))) return;
-    try {
-      let payload = { ...form };
+const handleSubmit = async () => {
+  if (!(await validateStep(2))) return;
 
-      if (isEdit && employeToEdit) {
-        Object.keys(payload).forEach((key) => {
-          if (key !== "image" && (payload[key] === "" || payload[key] == null)) {
-            payload[key] = employeToEdit[key];
-          }
-        });
-        // Empêche la modif du password, email et du rôle !
-        payload.email = employeToEdit.email;
-        payload.password = employeToEdit.password;
-        payload.role = employeToEdit.role;
-        if (!payload.image) {
-          payload.image = employeToEdit.image;
+  try {
+    let payload = { ...form };
+
+    if (isEdit && employeToEdit) {
+      // Remplir les champs vides avec les valeurs existantes
+      Object.keys(payload).forEach((key) => {
+        if (key !== "image" && (payload[key] === "" || payload[key] == null)) {
+          payload[key] = employeToEdit[key];
         }
-      }
-
-      if (isEdit) {
-        await dispatch(
-          UpdateEmployeAction({ id: employeToEdit._id, userData: payload })
-        ).unwrap();
-        toast.success("Employé modifié avec succès !");
-      } else {
-        await dispatch(CreateUserAction(payload)).unwrap();
-        toast.success("Employé créé avec succès !");
-      }
-      dispatch(FetchEmployesAction());
-      handleClose();
-      setForm({
-        fullName: "",
-        address: "",
-        phone: "",
-        email: "",
-        role: "",
-        domain: "",
-        image: null,
-        password: "admin123",
       });
-      setPreviewUrl(null);
-      setActiveStep(0);
-      setErrors({});
-    } catch (e) {
-      toast.error(e.message || "Erreur lors de la sauvegarde.");
+      // Forcer ces champs en édition
+      payload.email = employeToEdit.email;
+      payload.password = employeToEdit.password;
+      payload.role = employeToEdit.role;
+      if (!payload.image) payload.image = employeToEdit.image;
     }
-  };
+
+    // === Construire UNE SEULE promesse selon le mode ===
+    const actionPromise = isEdit
+      ? dispatch(UpdateEmployeAction({ id: employeToEdit._id, userData: payload })).unwrap()
+      : dispatch(CreateUserAction(payload)).unwrap();
+
+    // === Afficher le toast pour les deux cas ===
+    await toast.promise(actionPromise, {
+      pending: "Enregistrement en cours...",
+      success: isEdit ? "Employé modifié avec succès !" : "Employé créé avec succès !",
+      error: "Erreur lors de la sauvegarde.",
+    });
+
+    // Rafraîchir la liste puis fermer
+    dispatch(FetchEmployesAction());
+    handleClose();
+
+    // Reset state local
+    setForm({
+      fullName: "",
+      address: "",
+      phone: "",
+      email: "",
+      role: "",
+      domain: "",
+      image: null,
+      password: "admin123",
+    });
+    setPreviewUrl(null);
+    setActiveStep(0);
+    setErrors({});
+  } catch (e) {
+    // En cas d'exception hors du flux toast.promise
+    toast.error(e?.message || "Erreur lors de la sauvegarde.");
+  }
+};
+
 
   // ------------------ Stepper content ------------------
   const getStepContent = (step) => {
@@ -325,7 +332,6 @@ const AddEmployeModal = ({
             <Button
               variant="outlined"
               component="label"
-              onClick={() => fileInputRef.current && fileInputRef.current.click()}
             >
               {form.image || previewUrl ? "Changer l'image" : "Importer une image"}
               <input
@@ -367,7 +373,7 @@ const AddEmployeModal = ({
   // ------------------ Render ------------------
   return (
     <>
-      <ToastContainer position="top-right" autoClose={3500} />
+   
       <ModelComponent
         open={open}
         handleClose={handleClose}
