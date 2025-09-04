@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import {
   Box, Typography, InputAdornment, IconButton, CircularProgress, TextField,
-  useTheme, Divider, Select, MenuItem, Chip, Link, Tooltip
+  useTheme, Divider, Select, MenuItem, Chip, Link
 } from "@mui/material";
 import { AddCircleOutline, Search } from "@mui/icons-material";
 import TimelineIcon from "@mui/icons-material/Timeline";
@@ -26,25 +26,29 @@ import { StyledPaper } from "../style/style";
 import { ButtonComponent } from "../components/Global/ButtonComponent";
 import TableComponent from "../components/Global/TableComponent";
 
-const STATUS = [
-  { key: "All", label: "All" },
-  { key: "Ongoing", label: "Ongoing" },
-  { key: "Completed", label: "Completed" },
-];
+const STATUS_KEYS = ["All", "Planned", "Ongoing", "Completed"];
 
-// couleurs pour statuts
+const normalizeStatusToEN = (raw) => {
+  const v = (raw || "").toString().trim().toLowerCase();
+  if (["completed", "complete", "terminé", "termine", "completé", "complété"].includes(v)) return "Completed";
+  if (["ongoing", "en cours"].includes(v)) return "Ongoing";
+  if (["planned", "planifié", "planifie"].includes(v)) return "Planned";
+  return "Planned";
+};
+
+// couleurs pour statuts (accepte EN et quelques FR legacy)
 const statusColor = (value) => {
   const v = (value || "").toString().toLowerCase();
   if (["completed", "completé", "complete", "terminé", "termine"].includes(v))
-    return { bg: "#ffe4e4", color: "#e04747" }; // rouge
+    return { bg: "#ffe4e4", color: "#e04747" };
   if (["ongoing", "en cours"].includes(v))
-    return { bg: "#e4faeb", color: "#22a77c" }; // vert
+    return { bg: "#e4faeb", color: "#22a77c" };
   if (["planned", "planifié", "planifie"].includes(v))
     return { bg: "#e3f2fd", color: "#1976d2" };
   return { bg: "#f3f4f6", color: "#607d8b" };
 };
 
-// calcul statut dynamique
+// statut calculé (codes EN)
 const computeProjectStatus = (p) => {
   const now = new Date();
   const start = p.startDate ? new Date(p.startDate) : null;
@@ -57,52 +61,72 @@ const computeProjectStatus = (p) => {
 
 const Projet = () => {
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const CurrentUser = useSelector((state) => state.user.CurrentUser);
+  const CurrentUser = useSelector((s) => s.user.CurrentUser);
   const userRole = CurrentUser?.role || CurrentUser?.user?.role;
   const isAdminOrManager = ["Admin", "Manager"].includes(userRole);
 
-  const { projects: allRows = [], loading, error: loadError, success } = useSelector((state) => state.project);
+  const { projects: allRows = [], loading, error: loadError, success } = useSelector((s) => s.project);
 
-  // state filtres + pagination
+  // ===== Helper de libellé avec fallback local =====
+  const STATUS_LABELS_LOCAL = {
+    en: { All: "All", Planned: "Planned", Ongoing: "Ongoing", Completed: "Completed" },
+    fr: { All: "Tous", Planned: "Planifié", Ongoing: "En cours", Completed: "Terminé" },
+  };
+  const statusLabel = (code) =>
+    t(`status.${code}`, {
+      defaultValue:
+        STATUS_LABELS_LOCAL[i18n.language]?.[code] ??
+        STATUS_LABELS_LOCAL.en[code] ??
+        code,
+    });
+
+  // filtres/pagination
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  // state modals
+  // modals
   const [openAdd, setOpenAdd] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [openEdit, setOpenEdit] = useState(false);
-
-  // détails
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedDetailProject, setSelectedDetailProject] = useState(null);
 
   useEffect(() => { dispatch(fetchAllProjects()); }, [dispatch]);
+
   useEffect(() => {
     if (success) { toast.success(success); dispatch(clearProjectMessages()); }
     if (loadError) { toast.error(loadError); dispatch(clearProjectMessages()); }
   }, [success, loadError, dispatch]);
 
-  // filtre recherche & statut
+  // normalisation locale → EN
+  const normalizedRows = useMemo(
+    () =>
+      (allRows || []).map((p) => ({
+        ...p,
+        status: normalizeStatusToEN(p.status ?? computeProjectStatus(p)),
+      })),
+    [allRows]
+  );
+
+  // recherche & filtre
   const filteredRows = useMemo(() => {
     const s = search.trim().toLowerCase();
-    return (allRows || []).filter((row) => {
+    return normalizedRows.filter((row) => {
       const searchMatch =
         !s ||
         row.title?.toLowerCase().includes(s) ||
         row.description?.toLowerCase().includes(s);
-      const statusMatch =
-        statusFilter === "All" ||
-        (row.status || "").toLowerCase() === statusFilter.toLowerCase();
+      const statusMatch = statusFilter === "All" || row.status === statusFilter;
       return searchMatch && statusMatch;
     });
-  }, [allRows, search, statusFilter]);
+  }, [normalizedRows, search, statusFilter]);
 
   const totalPages = Math.ceil(filteredRows.length / itemsPerPage) || 1;
   const paginatedRows = useMemo(
@@ -110,7 +134,7 @@ const Projet = () => {
     [filteredRows, currentPage]
   );
 
-  // 🔄 update status si différent
+  // sync DB si statut calculé diffère
   useEffect(() => {
     (async () => {
       for (const p of paginatedRows) {
@@ -122,104 +146,93 @@ const Projet = () => {
     })();
   }, [paginatedRows, dispatch]);
 
-  // rows pour table
-  const tableRows = useMemo(() => paginatedRows.map(p => ({ ...p, id: p._id })), [paginatedRows]);
+  const tableRows = useMemo(() => paginatedRows.map((p) => ({ ...p, id: p._id })), [paginatedRows]);
 
   // colonnes
-  const columns = useMemo(() => ([
-    {
-      id: "title",
-      label: t("Titre"),
-      align: "left",
-      render: (row) => (
-        <Typography fontWeight={700} sx={{ whiteSpace: "normal", wordBreak: "break-word" }}>
-          {row.title || "-"}
-        </Typography>
-      ),
-    },
- 
-    {
-      id: "status",
-      label: t("Statut"),
-      render: (row) => {
-        const c = statusColor(row.status);
-        return (
-          <Chip
-            label={t(row.status || "—")}
-            size="small"
-            sx={{ bgcolor: c.bg, color: c.color, fontWeight: 600, border: `1px solid ${c.color}20` }}
-          />
-        );
-      },
-    },
-    {
-      id: "duration",
-      label: t("Durée"),
-      render: (row) => <Typography>{row.duration || t("Non définie")}</Typography>,
-    },
-    {
-      id: "sprints",
-      label: t("Sprints"),
-      render: (row) => <Typography fontWeight={700}>{row.sprints?.length || 0}</Typography>,
-    },
-    {
-      id: "teams",
-      label: t("Équipes"),
-      render: (row) => <Typography fontWeight={700}>{row.teams?.length || 0}</Typography>,
-    },
-    {
-      id: "file",
-      label: t("Fichier"),
-      align: "left",
-      render: (row) =>
-        row.file ? (
-          <Link
-            href={`http://localhost:3000/uploads/projects/${row.file}`}
-            target="_blank"
-            underline="hover"
-            sx={{ display: "inline-flex", alignItems: "center", gap: .5, fontWeight: 600 }}
-          >
-            {t("Fichier de description")}
-            <DownloadIcon sx={{ fontSize: 18 }} />
-          </Link>
-        ) : (
-          <Typography color="text.disabled">—</Typography>
+  const columns = useMemo(
+    () => [
+      {
+        id: "title",
+        label: t("Titre"),
+        align: "left",
+        render: (row) => (
+          <Typography fontWeight={700} sx={{ whiteSpace: "normal", wordBreak: "break-word" }}>
+            {row.title || "-"}
+          </Typography>
         ),
-    },
-  ]), [t]);
+      },
+      {
+        id: "status",
+        label: t("Statut"),
+        render: (row) => {
+          const c = statusColor(row.status);
+          return (
+            <Chip
+              label={statusLabel(row.status)}
+              size="small"
+              sx={{
+                bgcolor: c.bg,
+                color: c.color,
+                fontWeight: 600,
+                border: `1px solid ${c.color}20`,
+              }}
+            />
+          );
+        },
+      },
+      {
+        id: "duration",
+        label: t("Durée"),
+        render: (row) => <Typography>{row.duration || t("Non définie")}</Typography>,
+      },
+      {
+        id: "sprints",
+        label: t("Sprints"),
+        render: (row) => <Typography fontWeight={700}>{row.sprints?.length || 0}</Typography>,
+      },
+      {
+        id: "teams",
+        label: t("Équipes"),
+        render: (row) => <Typography fontWeight={700}>{row.teams?.length || 0}</Typography>,
+      },
+      {
+        id: "file",
+        label: t("Fichier"),
+        align: "left",
+        render: (row) =>
+          row.file ? (
+            <Link
+              href={`http://localhost:3000/uploads/projects/${row.file}`}
+              target="_blank"
+              underline="hover"
+              sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, fontWeight: 600 }}
+            >
+              {t("Fichier de description")}
+              <DownloadIcon sx={{ fontSize: 18 }} />
+            </Link>
+          ) : (
+            <Typography color="text.disabled">—</Typography>
+          ),
+      },
+    ],
+    // ⚠️ re-calculer quand la langue change
+    [t, i18n.language]
+  );
 
   // actions
   const baseActions = [
-    {
-      tooltip: t("Voir les tâches"),
-      icon: <TimelineIcon sx={{ color: "#0ea5e9" }} />,
-      onClick: (row) => navigate(`/dashboard/tache/${row._id}`),
-    },
-    {
-      tooltip: t("Détails"),
-      icon: <InfoOutlinedIcon sx={{ color: "#2563eb" }} />,
-      onClick: (row) => { setSelectedDetailProject(row); setOpenDetail(true); },
-    },
+    { tooltip: t("Voir les tâches"), icon: <TimelineIcon sx={{ color: "#0ea5e9" }} />, onClick: (row) => navigate(`/dashboard/tache/${row._id}`) },
+    { tooltip: t("Détails"), icon: <InfoOutlinedIcon sx={{ color: "#2563eb" }} />, onClick: (row) => { setSelectedDetailProject(row); setOpenDetail(true); } },
   ];
   const adminActions = isAdminOrManager
     ? [
-        {
-          tooltip: t("Modifier"),
-          icon: <EditIcon sx={{ color: "#16a34a" }} />,
-          onClick: (row) => { setSelectedProject(row); setOpenEdit(true); },
-        },
-        {
-          tooltip: t("Supprimer"),
-          icon: <DeleteIcon sx={{ color: "#dc2626" }} />,
-          onClick: (row) => { setSelectedProject(row); setOpenDelete(true); },
-        },
+        { tooltip: t("Modifier"), icon: <EditIcon sx={{ color: "#16a34a" }} />, onClick: (row) => { setSelectedProject(row); setOpenEdit(true); } },
+        { tooltip: t("Supprimer"), icon: <DeleteIcon sx={{ color: "#dc2626" }} />, onClick: (row) => { setSelectedProject(row); setOpenDelete(true); } },
       ]
     : [];
 
-  if (loading)
-    return <Box sx={{ p: 6, textAlign: "center" }}><CircularProgress color="primary" /></Box>;
-  if (loadError)
-    return <Box sx={{ p: 4 }}><Typography color="error" fontWeight={600}>{loadError}</Typography></Box>;
+  if (loading) return <Box sx={{ p: 6, textAlign: "center" }}><CircularProgress color="primary" /></Box>;
+  if (loadError) return <Box sx={{ p: 4 }}><Typography color="error" fontWeight={600}>{loadError}</Typography></Box>;
 
   return (
     <>
@@ -266,11 +279,16 @@ const Projet = () => {
             <Select
               size="small"
               value={statusFilter}
-              onChange={e => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              sx={{ minWidth: 140, borderRadius: 2, background: "#fff" }}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              sx={{ minWidth: 160, borderRadius: 2, background: "#fff" }}
             >
-              {STATUS.map(st => (
-                <MenuItem key={st.key} value={st.key}>{st.label}</MenuItem>
+              {STATUS_KEYS.map((k) => (
+                <MenuItem key={k} value={k}>
+                  {statusLabel(k)}
+                </MenuItem>
               ))}
             </Select>
           </Box>
@@ -278,7 +296,10 @@ const Projet = () => {
           <TextField
             label={t("Rechercher")}
             value={search}
-            onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder={t("Titre, Description...")}
             sx={{
               width: { xs: "100%", md: 360 },
@@ -290,10 +311,12 @@ const Projet = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <IconButton size="small" color="primary"><Search /></IconButton>
+                  <IconButton size="small" color="primary">
+                    <Search />
+                  </IconButton>
                 </InputAdornment>
               ),
-              sx: { borderRadius: "16px", fontSize: "1.03rem" }
+              sx: { borderRadius: "16px", fontSize: "1.03rem" },
             }}
           />
         </Box>
@@ -302,21 +325,13 @@ const Projet = () => {
 
         {/* tableau */}
         <Box sx={{ width: "100%" }}>
-          <TableComponent
-            rows={tableRows}
-            columns={columns}
-            actions={[...baseActions, ...adminActions]}
-          />
+          <TableComponent rows={tableRows} columns={columns} actions={[...baseActions, ...adminActions]} />
         </Box>
 
         {/* pagination */}
         {totalPages > 1 && (
           <Box mt={4} display="flex" justifyContent="center">
-            <PaginationComponent
-              count={totalPages}
-              page={currentPage}
-              onChange={(_, v) => setCurrentPage(v)}
-            />
+            <PaginationComponent count={totalPages} page={currentPage} onChange={(_, v) => setCurrentPage(v)} />
           </Box>
         )}
 
@@ -339,8 +354,16 @@ const Projet = () => {
             handleClose={() => setOpenDetail(false)}
             project={selectedDetailProject}
             userRole={userRole}
-            onEdit={() => { setSelectedProject(selectedDetailProject); setOpenEdit(true); setOpenDetail(false); }}
-            onDelete={() => { setSelectedProject(selectedDetailProject); setOpenDelete(true); setOpenDetail(false); }}
+            onEdit={() => {
+              setSelectedProject(selectedDetailProject);
+              setOpenEdit(true);
+              setOpenDetail(false);
+            }}
+            onDelete={() => {
+              setSelectedProject(selectedDetailProject);
+              setOpenDelete(true);
+              setOpenDetail(false);
+            }}
           />
         )}
       </StyledPaper>

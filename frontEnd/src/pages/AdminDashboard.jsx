@@ -1,208 +1,43 @@
 // src/pages/AdminDashboard.jsx
-import { useMemo, useState } from "react";
-import { Box, Grid, Card, CardContent, Typography, Chip, Stack, Avatar, Divider } from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import {
+  Box, Grid, Card, CardContent, Typography, Chip, Stack, Avatar, Divider
+} from "@mui/material";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
-import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
-import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
-import AssignmentTurnedInRoundedIcon from "@mui/icons-material/AssignmentTurnedInRounded";
-import { PieChart, BarChart, LineChart, Gauge } from "@mui/x-charts";
+import { BarChart, LineChart, Gauge } from "@mui/x-charts";
+import { useDispatch, useSelector } from "react-redux";
 import { StyledCard } from "../style/style";
 
-/* ================== DONNÉES MOCK — basées sur TES TABLES ==================
-   > user(roleString), Project(status,startDate,endDate), Sprint, Task(status, startDate, endDate),
-   > Leave(status, startDate, endDate, leaveType), Joboffer(status), Application(jobOffer ref),
-   > applicationAnalysis(scoreIA, email, filename), Documents(status, deliveryDate, traitementDateLimiteDate),
-   > Event(status, startDate, type_event), Notification(status:Boolean)
-========================================================================== */
-const kpi = {
-  employeesActive: 268,                 // user
-  projectsActive: 12,                   // Project(status=active)
-  tasksDoneThisMonth: 120,              // Task(status=Terminées, mois courant)
-  leavesPending: 9,                     // Leave(status=Pending)
-  offersOpen: 8,                        // Joboffer(status=Open)
-  notifUnread: 325,                     // Notification(status=false)
+/* actions */
+import { FetchEmployesAction } from "../redux/actions/employeAction";
+import { fetchAllProjects } from "../redux/actions/projectActions";
+import { fetchAllSprints } from "../redux/actions/sprintActions";
+import { fetchAllJobOffres } from "../redux/actions/jobOffreAction";
+import { fetchAllApplications } from "../redux/actions/applicationAction";
+import { fetchAllEvents } from "../redux/actions/eventAction";
+
+/* API IA (comme ApplicationList.jsx) */
+const API_ANALYSIS_BASE = "http://localhost:3000/application-analysis";
+const getAuth = () => {
+  const t1 = localStorage.getItem("access-token");
+  const t2 = localStorage.getItem("token");
+  const token = t1 || t2;
+  return token ? { Authorization: `Bearer ${token}` } : {};
 };
-const peopleKpis = { totalEmployees: 20 };
 
-// Tâches par statut (Task.status)
-const tasksByStatus = [
-  { id: "À faire", value: 42 },
-  { id: "En cours", value: 68 },
-  { id: "Terminées", value: 120 },
-];
-
-// Vitesse par sprint = tasks terminées / sprint (Task lié à Sprint)
-const sprintVelocity = [
-  { sprint: "S1", done: 18 },
-  { sprint: "S2", done: 22 },
-  { sprint: "S3", done: 25 },
-  { sprint: "S4", done: 27 },
-];
-
-// Achèvement moyen portefeuille (Project) – jauge simple
-const portfolioCompletion = 76;
-
-// Projets actifs par mois (Project.startDate) — vue de charge
-const projectsByMonth = [
-  { month: "Janv", projects: 12 }, { month: "Févr", projects: 15 }, { month: "Mars", projects: 14 },
-  { month: "Avr",  projects: 18 }, { month: "Mai",  projects: 17 }, { month: "Juin", projects: 20 },
-  { month: "Juil", projects: 21 }, { month: "Août", projects: 24 }, { month: "Sept", projects: 23 },
-  { month: "Oct",  projects: 25 }, { month: "Nov",  projects: 27 }, { month: "Déc",  projects: 26 },
-];
-
-// Congés: stack mensuel par statut (Leave.status + startDate)
-const leavesMonthlyStatus = [
-  { m: "Janv", ap: 20, pd: 6, rj: 2 },
-  { m: "Févr", ap: 22, pd: 7, rj: 2 },
-  { m: "Mars", ap: 18, pd: 6, rj: 3 },
-  { m: "Avr",  ap: 25, pd: 5, rj: 2 },
-  { m: "Mai",  ap: 21, pd: 7, rj: 3 },
-  { m: "Juin", ap: 26, pd: 6, rj: 2 },
-];
-
-// Types de congés (Leave.leaveType)
-const leaveTypesTop = [
-  { type: "Annuel", v: 34 },
-  { type: "Maladie", v: 22 },
-  { type: "Sans solde", v: 12 },
-];
-
-// Recrutement: candidatures par offre (Application -> Joboffer)
-const applicationsPerOffer = [
-  { offer: "DevOps", v: 210 },
-  { offer: "Frontend", v: 160 },
-  { offer: "Backend", v: 130 },
-  { offer: "QA", v: 95 },
-];
-
-// Qualité moyenne IA par offre (applicationAnalysis.scoreIA agrégé par jobOffer)
-const avgScoreByOffer = [
-  { offer: "DevOps", v: 78 },
-  { offer: "Frontend", v: 72 },
-  { offer: "Backend", v: 69 },
-  { offer: "QA", v: 65 },
-];
-
-// Documents: statut + SLA retard (deliveryDate > traitementDateLimiteDate)
-const documentsStatus = [
-  { id: "Validés", value: 96 },
-  { id: "En cours", value: 28 },
-  { id: "Refusés", value: 7 },
-];
-const documentsSLA = [
-  { id: "Dans les délais", value: 88 },
-  { id: "En retard", value: 20 },
-];
-
-// Événements (Event.type / status)
-const eventsByType = [
-  { id: "Réunion", value: 12 },
-  { id: "Formation", value: 5 },
-  { id: "Atelier", value: 4 },
-];
-const eventsByStatus = [
-  { id: "Planifié", value: 14 },
-  { id: "Réalisé", value: 22 },
-  { id: "Annulé", value: 3 },
-];
-// --- ÉVÉNEMENTS : par mois et par statut (Event.startDate, Event.status) ---
-const eventsMonthlyStatus = [
-  { m: "Janv", plan: 6, en: 2, done: 3 },
-  { m: "Févr", plan: 7, en: 3, done: 4 },
-  { m: "Mars", plan: 5, en: 2, done: 5 },
-  { m: "Avr",  plan: 8, en: 3, done: 6 },
-  { m: "Mai",  plan: 6, en: 4, done: 5 },
-  { m: "Juin", plan: 7, en: 3, done: 7 },
-];
-
-// --- Durée moyenne en heures par mois (Event.duration) ---
-const eventsAvgDuration = [
-  { m: "Janv", h: 1.4 },
-  { m: "Févr", h: 1.7 },
-  { m: "Mars", h: 1.3 },
-  { m: "Avr",  h: 2.0 },
-  { m: "Mai",  h: 1.6 },
-  { m: "Juin", h: 1.9 },
-];
-
-
-// Notifications: lues vs non lues (Notification.status)
-const notifRead = [
-  { id: "Non lues", value: kpi.notifUnread },
-  { id: "Lues", value: 955 },
-];
-// ---- au-dessus du composant, ajoute ces mocks (ou branche ta data réelle) ----
-const totalEmployees = Number(
-  (peopleKpis?.totalEmployees) ??
-  (kpi?.employeesActive) ??
-  (kpi?.users) ??
-  0
-);
-
-// Employés en congé par mois (à calculer côté backend depuis Leave.approuvés)
-const employeesOnLeaveMonthly = [
-  { m: "Janv", on: 12 },
-  { m: "Févr", on: 15 },
-  { m: "Mars", on: 14 },
-  { m: "Avr",  on: 18 },
-  { m: "Mai",  on: 16 },
-  { m: "Juin", on: 19 },
-];
-const upcomingEvents = [
-  { title: "Réunion plénière T3",    date: "2025-09-05T10:00:00", type: "Réunion",   location: "Siège",     status: "Planifié" },
-  { title: "Formation sécurité",     date: "2025-09-10T14:00:00", type: "Formation", location: "En ligne",  status: "Planifié" },
-  { title: "Atelier d’équipe",       date: "2025-09-15T09:30:00", type: "Atelier",    location: "Salle B",  status: "Planifié" },
-  { title: "Démo projet Phoenix",    date: "2025-09-18T16:00:00", type: "Réunion",   location: "Salle A",  status: "Planifié" },
-  { title: "Onboarding juniors",     date: "2025-09-20T09:00:00", type: "Formation", location: "Open space",status: "Planifié" },
-  { title: "Rétro sprint S5",        date: "2025-09-23T11:00:00", type: "Réunion",   location: "Teams",     status: "Planifié" },
-];
-
-// Petit helper pour formater la date en FR
-const formatDateTime = (iso) =>
-  new Date(iso).toLocaleString("fr-FR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-/* ================== UI HELPERS ================== */
+/* UI helpers */
 const KpiCard = ({ icon, label, value }) => (
-  <Card
-    sx={{
-      px: 2, py: 1.25,
-      borderRadius: 6,
-      maxWidth: 240,           // carte plus fine
-      boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-    }}
-  >
+  <Card sx={{ px: 2, py: 1.25, borderRadius: 6, maxWidth: 240, boxShadow: "0 4px 16px rgba(0,0,0,.08)" }}>
     <Stack direction="row" spacing={1.5} alignItems="center">
-      <Avatar
-        variant="rounded"
-        sx={{ bgcolor: "primary.main", color: "#fff", width: 40, height: 40 }}
-      >
+      <Avatar variant="rounded" sx={{ bgcolor: "primary.main", color: "#fff", width: 40, height: 40 }}>
         {icon}
       </Avatar>
-
-      {/* chiffre + libellé sur UNE ligne */}
-      <Stack
-        direction="row"
-        spacing={1}
-        alignItems="baseline"
-        flexWrap="nowrap"
-      >
-        <Typography component="span" variant="h6" sx={{ fontWeight: 700 }}>
-          {value}
-        </Typography>
-        <Typography
-          component="span"
-          variant="body2"
-          color="text.secondary"
-          sx={{ whiteSpace: "nowrap" }}  // évite le retour à la ligne
-        >
+      <Stack direction="row" spacing={1} alignItems="baseline" flexWrap="nowrap">
+        <Typography component="span" variant="h6" sx={{ fontWeight: 700 }}>{value ?? 0}</Typography>
+        <Typography component="span" variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
           {label}
         </Typography>
       </Stack>
@@ -220,6 +55,7 @@ const GroupSection = ({ title, subtitle, children }) => (
     </CardContent>
   </StyledCard>
 );
+
 const SubBlock = ({ title, children, right, description }) => (
   <StyledCard sx={{ background: "linear-gradient(135deg,rgba(255,255,255,.9) 0%,rgba(250,252,255,.8) 100%)", backdropFilter: "blur(10px)", border: "1px solid rgba(25,118,210,.08)", borderRadius: 4, boxShadow: "0 6px 24px rgba(25,118,210,.08)" }}>
     <CardContent sx={{ p: 2.5 }}>
@@ -233,87 +69,212 @@ const SubBlock = ({ title, children, right, description }) => (
   </StyledCard>
 );
 
-/* ================== PAGE ================== */
-export default function AdminDashboard() {
-  const months = useMemo(() => leavesMonthlyStatus.map(m => m.m), []);
+/* utils */
+const monthLabels = ["Janv","Févr","Mars","Avr","Mai","Juin","Juil","Août","Sept","Oct","Nov","Déc"];
+const monthIndex = (d) => (d ? new Date(d).getMonth() : -1);
+const countByMonth = (items, dateField) => {
+  const arr = new Array(12).fill(0);
+  items?.forEach(i => {
+    const m = monthIndex(i?.[dateField]);
+    if (m >= 0) arr[m] += 1;
+  });
+  return arr;
+};
 
+/* normalisation des statuts (EN/FR → plan/en/done) */
+const normalizeStatus = (s = "") => {
+  const x = s.toLowerCase().trim();
+  if (/plan|plann|planifié/.test(x)) return "plan";                     // Planned / Planifié
+  if (/cours|progress|ongoing|in\s*progress/.test(x)) return "en";      // En cours
+  if (/term|complete|réalis|realiz|done|finish/.test(x)) return "done"; // Completed / Terminé
+  if (/annul|cancel/.test(x)) return "cancel";
+  return "other";
+};
+
+/* ---- Helpers progression projet (fix jauge) ---- */
+const normalizeProjectStatus = (s = "") => {
+  const x = s.toLowerCase().trim();
+  if (/completed|termin|réalis/.test(x)) return "done";
+  if (/ongoing|in\s*progress|encours/.test(x)) return "ongoing";
+  if (/planned|planifi/.test(x)) return "planned";
+  return "other";
+};
+const clamp = (v, min = 0, max = 100) => Math.max(min, Math.min(max, v));
+const progressForProject = (p) => {
+  const manual = Number(p?.progress);
+  if (Number.isFinite(manual)) return clamp(manual);
+  const st = normalizeProjectStatus(p?.status);
+  if (st === "done") return 100;
+  if (st === "ongoing") {
+    const start = p?.startDate ? new Date(p.startDate).getTime() : NaN;
+    const end   = p?.endDate   ? new Date(p.endDate).getTime()   : NaN;
+    const now   = Date.now();
+    if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+      const ratio = ((now - start) / (end - start)) * 100;
+      return clamp(Math.floor(ratio), 0, 99); // 99 max pour distinguer d'un Completed
+    }
+    return 0;
+  }
+  return 0;
+};
+
+export default function AdminDashboard() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(FetchEmployesAction());
+    dispatch(fetchAllProjects());
+    dispatch(fetchAllSprints());
+    dispatch(fetchAllJobOffres());
+    dispatch(fetchAllApplications());
+    dispatch(fetchAllEvents());
+  }, [dispatch]);
+
+  /* store */
+  const users        = useSelector(s => s.employe?.list || s.employe?.users || s.user?.list || []);
+  const projects     = useSelector(s => s.project?.projects || s.project?.list || []);
+  const jobOffres    = useSelector(s => s.jobOffre?.list || s.jobOffre?.jobOffres || []);
+  const applications = useSelector(s => s.application?.list || s.application?.applications || []);
+  const events       = useSelector(s => s.event?.list || s.event?.events || []);
+
+  /* KPI */
+  const kpi = useMemo(() => ({
+    employeesActive: users?.length || 0,
+    projectsActive : projects?.filter(p => !/(archiv)/i.test(p?.status || "")).length || 0,
+    offersOpen     : jobOffres?.filter(o => (o?.status || "").toLowerCase() === "open").length || 0,
+  }), [users, projects, jobOffres]);
+
+  /* Delivery (FIXED) */
+  const portfolioCompletion = useMemo(() => {
+    const total = projects?.length || 0;
+    if (!total) return 0;
+    const sum = projects.reduce((acc, p) => acc + progressForProject(p), 0);
+    return Math.round(sum / total);
+  }, [projects]);
+
+  const projectsByMonth = useMemo(() => {
+    const series = countByMonth(projects, "startDate");
+    return monthLabels.map((m,i) => ({ month: m, projects: series[i] || 0 }));
+  }, [projects]);
+
+  /* Recrutement – candidatures par offre */
+  const applicationsPerOffer = useMemo(() => {
+    const map = new Map();
+    applications?.forEach(a => {
+      const k = a?.jobOffre?.title || a?.jobOffre || "N/A";
+      map.set(k, (map.get(k) || 0) + 1);
+    });
+    return Array.from(map.entries()).map(([offer, v]) => ({ offer, v })).slice(0, 10);
+  }, [applications]);
+
+  /* Recrutement – Score IA moyen par offre (API IA) */
+  const [avgScoreByOffer, setAvgScoreByOffer] = useState([]);
+  useEffect(() => {
+    if (!Array.isArray(jobOffres) || jobOffres.length === 0) {
+      setAvgScoreByOffer([]);
+      return;
+    }
+    const run = async () => {
+      const results = await Promise.all(
+        jobOffres.map(async (o) => {
+          try {
+            const res = await axios.get(`${API_ANALYSIS_BASE}/${o._id}`, { headers: { ...getAuth() } });
+            const payload = Array.isArray(res.data?.data) ? res.data.data
+                          : (Array.isArray(res.data) ? res.data : []);
+            const scores = (payload || [])
+              .map(r => Number(r?.score))
+              .filter(Number.isFinite);
+            const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0) / scores.length) : 0;
+            return { offer: o?.title || o?.name || String(o?._id), v: avg };
+          } catch {
+            return { offer: o?.title || String(o?._id), v: 0 };
+          }
+        })
+      );
+      setAvgScoreByOffer(results.filter(r => r.v > 0).slice(0, 8));
+    };
+    run();
+  }, [jobOffres]);
+
+  /* Events — normalisés */
+  const eventsMonthlyStatus = useMemo(() => {
+    const plan = new Array(12).fill(0);
+    const en   = new Array(12).fill(0);
+    const done = new Array(12).fill(0);
+
+    (events || []).forEach(e => {
+      const idx = monthIndex(e?.startDate || e?.date);
+      if (idx < 0) return;
+      switch (normalizeStatus(e?.status)) {
+        case "plan": plan[idx]++; break;
+        case "en":   en[idx]++;   break;
+        case "done": done[idx]++; break;
+        default: break;
+      }
+    });
+
+    return monthLabels.map((m,i) => ({ m, plan: plan[i], en: en[i], done: done[i] }));
+  }, [events]);
+
+  const upcomingEvents = useMemo(() => (
+    events
+      ?.filter(e =>
+        new Date(e?.startDate || e?.date) >= new Date() &&
+        normalizeStatus(e?.status) === "plan"
+      )
+      ?.sort((a,b) => new Date(a?.startDate || a?.date) - new Date(b?.startDate || b?.date))
+      ?.slice(0,3)
+      ?.map(e => ({
+        title: e?.title || e?.name || "Événement",
+        date : e?.startDate || e?.date,
+        type : e?.type_event || e?.type || "Événement",
+        location: e?.location || "-",
+      })) || []
+  ), [events]);
+
+  const fmt = (iso) => new Date(iso).toLocaleString("fr-FR", { weekday:"short", day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" });
+
+  /* render */
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, pb: 6, background: "linear-gradient(135deg,#f8fafc 0%,#e2e8f0 100%)", minHeight: "100vh" }}>
-      {/* KPIs CLÉS */}
-      <Grid container spacing={2} alignItems="center" justifyContent="flex-start" wrap="wrap" sx={{ mb: 3 }}>
-      <Grid item xs="auto">
-        <KpiCard icon={<PeopleAltRoundedIcon />} label="Employés" value={kpi.employeesActive} />
+      {/* KPIs */}
+      <Grid container spacing={2} alignItems="center" wrap="wrap" sx={{ mb: 3 }}>
+        <Grid item xs="auto"><KpiCard icon={<PeopleAltRoundedIcon />} label="Employés" value={kpi.employeesActive} /></Grid>
+        <Grid item xs="auto"><KpiCard icon={<FolderOpenRoundedIcon />} label="Projets actifs" value={kpi.projectsActive} /></Grid>
+        <Grid item xs="auto"><KpiCard icon={<WorkOutlineRoundedIcon />} label="Offres ouvertes" value={kpi.offersOpen} /></Grid>
       </Grid>
-      <Grid item xs="auto">
-        <KpiCard icon={<FolderOpenRoundedIcon />} label="Projets actifs" value={kpi.projectsActive} />
-      </Grid>
-      <Grid item xs="auto">
-        <KpiCard icon={<WorkOutlineRoundedIcon />} label="Offres ouvertes" value={kpi.offersOpen} />
-      </Grid>
-      <Grid item xs="auto">
-        <KpiCard icon={<NotificationsActiveRoundedIcon />} label="Notif non lues" value={kpi.notifUnread} />
-      </Grid>
-    </Grid>
 
       {/* DELIVERY */}
-<GroupSection title="Delivery" subtitle="Flux de travail et capacité">
-  <Grid container spacing={2.5}>
-    {/* Bloc 1 : Projet accompli */}
-    <Grid item xs={12} md={6}>
-      <SubBlock
-        title="Projet Accompli par rapport au nombre total de projets"
-        description="Vision instantanée du taux d'accomplissement global du projet en cours"
-      >
-        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", py: 2 }}>
-          <Gauge
-            value={portfolioCompletion}
-            startAngle={-110}
-            endAngle={110}
-            width={260}
-            height={170}
-          />
-        </Box>
-      </SubBlock>
-    </Grid>
+      <GroupSection title="Delivery" subtitle="Flux de travail et capacité">
+        <Grid container spacing={2.5}>
+          <Grid item xs={12} md={6}>
+            <SubBlock title="Achèvement portefeuille" description="Taux global d'avancement des projets.">
+              <Box sx={{ display:"flex", justifyContent:"center", alignItems:"center", py:2 }}>
+                <Gauge value={portfolioCompletion} startAngle={-110} endAngle={110} width={260} height={170} />
+              </Box>
+            </SubBlock>
+          </Grid>
 
-    {/* Bloc 2 : Tâches accomplies */}
-    <Grid item xs={12} md={6}>
-      <SubBlock
-        title="Tâches accomplies par Sprints"
-        description="Cadence réelle de livraison (Tasks Done / Sprint)."
-      >
-        <BarChart
-          height={240}
-          xAxis={[{ data: sprintVelocity.map(s => s.sprint), scaleType: "band" }]}
-          series={[{ data: sprintVelocity.map(s => s.done), label: "Tâches terminées" }]}
-          grid={{ vertical: true }}
-        />
-      </SubBlock>
-    </Grid>
+          <Grid item xs={12} md={6}>
+            <SubBlock title="Projets actifs / mois" description="Créations/activations de projets par mois.">
+              <LineChart
+                xAxis={[{ data: monthLabels, scaleType: "point" }]}
+                series={[{ data: projectsByMonth.map(p => p.projects), label: "Projets" }]}
+                height={260}
+                grid={{ vertical: true, horizontal: true }}
+              />
+            </SubBlock>
+          </Grid>
+        </Grid>
+      </GroupSection>
 
-    {/* Bloc 3 : Projets actifs */}
-    <Grid item xs={12}>
-      <SubBlock
-        title="Projets actifs / mois"
-        description="Charge initiée par mois pour planifier la capacité (Project.startDate)."
-      >
-        <LineChart
-          xAxis={[{ data: projectsByMonth.map(p => p.month), scaleType: "point" }]}
-          series={[{ data: projectsByMonth.map(p => p.projects), label: "Projets" }]}
-          height={260}
-          grid={{ vertical: true, horizontal: true }}
-        />
-      </SubBlock>
-    </Grid>
-  </Grid>
-</GroupSection>
-  
       <Box sx={{ height: 24 }} />
+
       {/* RECRUTEMENT */}
       <GroupSection title="Recrutement" subtitle="Attractivité et qualité des candidatures">
         <Grid container spacing={2.5}>
           <Grid item xs={12} md={7}>
-            <SubBlock title="Candidatures par offre" description="Identifie les postes attractifs (Application ↔ Joboffer).">
+            <SubBlock title="Candidatures par offre" description="(Applications ↔ JobOffers).">
               <BarChart
                 height={260}
                 yAxis={[{ data: applicationsPerOffer.map(o => o.offer), scaleType: "band" }]}
@@ -325,7 +286,7 @@ export default function AdminDashboard() {
           </Grid>
 
           <Grid item xs={12} md={5}>
-            <SubBlock title="Score IA moyen par offre" description="Mesure de la qualité des profils (applicationAnalysis.scoreIA).">
+            <SubBlock title="Score IA moyen par offre" description="Moyenne des scores analysés par offre.">
               <BarChart
                 height={260}
                 xAxis={[{ data: avgScoreByOffer.map(o => o.offer), scaleType: "band" }]}
@@ -338,93 +299,49 @@ export default function AdminDashboard() {
       </GroupSection>
 
       <Box sx={{ height: 24 }} />
-      {/* ÉVÉNEMENTS & NOTIFS */}
-  {/* ÉVÉNEMENTS */}
-<GroupSection title="Engagement des Employées" subtitle="Statuts mensuels & durée moyenne">
-  <Grid container spacing={2.5}>
-    {/* Statuts par mois (stack) */}
-    <Grid item xs={12} md={8}>
-      <SubBlock
-        title="Statuts par mois"
-        description="Comptes d'événements planifiés / en cours / terminés (Event.status) par mois (Event.startDate)."
-      >
-        <BarChart
-          height={280}
-          xAxis={[{ data: eventsMonthlyStatus.map(e => e.m), scaleType: "band" }]}
-          series={[
-            { label: "Planifié", data: eventsMonthlyStatus.map(e => e.plan), stack: "evt" },
-            { label: "En cours", data: eventsMonthlyStatus.map(e => e.en),   stack: "evt" },
-            { label: "Terminé",  data: eventsMonthlyStatus.map(e => e.done), stack: "evt" },
-          ]}
-          grid={{ vertical: true, horizontal: true }}
-        />
-      </SubBlock>
-    </Grid>
 
-    {/* Colonne droite : Événements à venir + Notifs */}
-    <Grid item xs={12} md={4}>
-      <Stack spacing={2}>
-        {/* Événements à venir (3 items) */}
-        <SubBlock title="Événements à venir">
-          <Stack spacing={1.2}>
-            {upcomingEvents
-              .filter(e => new Date(e.date) >= new Date() && e.status === "Planifié")
-              .sort((a, b) => new Date(a.date) - new Date(b.date))
-              .slice(0, 3)
-              .map((ev, idx) => (
-                <Stack
-                  key={idx}
-                  direction="row"
-                  spacing={1.2}
-                  alignItems="center"
-                  sx={{ p: 1.2, borderRadius: 2, border: "1px solid #e3f2fd", background: "#fff" }}
-                >
-                  <Avatar sx={{ bgcolor: "primary.main", color: "#fff", width: 36, height: 36, fontWeight: 700 }}>
-                    {ev.type?.[0] || "É"}
-                  </Avatar>
+      {/* ÉVÉNEMENTS */}
+      <GroupSection title="Engagement des Employés" subtitle="Statuts mensuels & prochains événements">
+        <Grid container spacing={2.5}>
+          <Grid item xs={12} md={8}>
+            <SubBlock title="Statuts par mois" description="Event.status via Event.startDate">
+              <BarChart
+                height={280}
+                xAxis={[{ data: monthLabels, scaleType: "band" }]}
+                series={[
+                  { label: "Planifié", data: eventsMonthlyStatus.map(e => e.plan), stack: "evt" },
+                  { label: "En cours", data: eventsMonthlyStatus.map(e => e.en),   stack: "evt" },
+                  { label: "Terminé",  data: eventsMonthlyStatus.map(e => e.done), stack: "evt" },
+                ]}
+                grid={{ vertical: true, horizontal: true }}
+              />
+            </SubBlock>
+          </Grid>
 
-                  <Box flex={1} minWidth={0}>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }} noWrap>
-                      {ev.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {formatDateTime(ev.date)} • {ev.type} • {ev.location}
-                    </Typography>
-                  </Box>
-
-                  <Chip label="à venir" size="small" color="primary" variant="outlined" />
-                </Stack>
-              ))}
-          </Stack>
-        </SubBlock>
-
-        {/* Notifications lues / non lues (donut) */}
-        <SubBlock title="Notifications (lues / non lues)">
-          <PieChart
-            height={220}
-            series={[
-              {
-                innerRadius: 40,
-                paddingAngle: 4,
-                cornerRadius: 4,
-                data: notifRead.map((d, i) => ({ id: i, value: d.value, label: d.id })),
-              },
-            ]}
-            slotProps={{
-              legend: { position: { vertical: "middle", horizontal: "right" } },
-            }}
-          />
-        </SubBlock>
-      </Stack>
-    </Grid>
-  </Grid>
-</GroupSection>
-
-
+          <Grid item xs={12} md={4}>
+            <SubBlock title="Événements à venir">
+              <Stack spacing={1.2}>
+                {upcomingEvents.map((ev, idx) => (
+                  <Stack key={idx} direction="row" spacing={1.2} alignItems="center" sx={{ p: 1.2, borderRadius: 2, border: "1px solid #e3f2fd", background: "#fff" }}>
+                    <Avatar sx={{ bgcolor: "primary.main", color: "#fff", width: 36, height: 36, fontWeight: 700 }}>
+                      {ev.type?.[0] || "É"}
+                    </Avatar>
+                    <Box flex={1} minWidth={0}>
+                      <Typography variant="body1" sx={{ fontWeight: 600 }} noWrap>{ev.title}</Typography>
+                      <Typography variant="body2" color="text.secondary" noWrap>{fmt(ev.date)} • {ev.type} • {ev.location}</Typography>
+                    </Box>
+                    <Chip label="à venir" size="small" color="primary" variant="outlined" />
+                  </Stack>
+                ))}
+              </Stack>
+            </SubBlock>
+          </Grid>
+        </Grid>
+      </GroupSection>
 
       <Box sx={{ textAlign: "center", mt: 4, color: "text.secondary" }}>
         <Typography variant="caption" sx={{ fontWeight: 500, opacity: .7, background: "rgba(255,255,255,.8)", backdropFilter: "blur(10px)", p: "8px 16px", borderRadius: 3, border: "1px solid rgba(0,0,0,.05)" }}>
-          Données mock alignées sur le schéma • Charts = indicateurs décisionnels (admin)
+          Données live via Redux + API IA • aucun mock
         </Typography>
       </Box>
     </Box>

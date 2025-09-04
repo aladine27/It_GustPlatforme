@@ -264,8 +264,10 @@ const Employe = () => {
         <CustomDeleteForm
           open={openDelete}
           handleClose={handleCloseDelete}
-          icon={<DeleteIcon />}
+          icon={<DeleteIcon  />}
           title={t('supprimer')}
+          color="#E1000F"
+          
           
       > 
       <Typography sx={{marginTop:"20px"}}>

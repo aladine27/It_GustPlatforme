@@ -263,7 +263,7 @@ export default function Evenement() {
     <Box sx={{ width: "100%", p: 0, mt: 0 }}>
       {/* BARRE DE BOUTONS EN HAUT DE PAGE */}
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, width: "100%", mt: 2, mb: 1, pr: 5 }}>
-        {["Admin", "RH"].includes(userRole) && (
+        {["Admin","Rh"].includes(userRole) && (
           <>
             <Button
               onClick={() => setTypeModalOpen(true)}
@@ -305,7 +305,7 @@ export default function Evenement() {
               style={{ minHeight: 1100, height: 'auto', background: 'transparent', width: '100%' }}
               min={new Date(1970, 0, 1, 7, 0)}
               max={new Date(1970, 0, 1, 22, 0)}
-              onSelectSlot={["Admin", "RH"].includes(userRole) ? handleSelectSlot : undefined}
+              onSelectSlot={["Admin","Rh"].includes(userRole) ? handleSelectSlot : undefined}
               onSelectEvent={handleSelectEvent}
               views={['month', 'week', 'day', 'agenda']}
               view={view}

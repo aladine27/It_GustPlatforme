@@ -46,7 +46,7 @@ export class ProjectsController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles('Admin', 'Rh')
+  @Roles('Admin', 'Manager')
   async create(@Body() createProjectDto: CreateProjectDto, @Res() res,@UploadedFile()file: Express.Multer.File) {
     try {
       createProjectDto.file = file?.filename
@@ -63,6 +63,8 @@ export class ProjectsController {
     }
   }
    @Get('/findProjectByUserId/:user')
+     @UseGuards(RolesGuard)
+  @Roles('Admin', 'Manager','Employe')
   async findProjectbyUserId(@Param('user') user: string, @Res() res) {
     try {
        const userProject = await this.projectsService.findProjectByuserId(user);
@@ -79,12 +81,9 @@ export class ProjectsController {
       
     }
   }
-
-
-
-
-
  @Get() 
+    @UseGuards(RolesGuard)
+  @Roles('Admin', 'Manager','Employe')
 async findAll( @Res() res) {
     try {
       const newProject = await this.projectsService.findAll();
@@ -102,6 +101,8 @@ async findAll( @Res() res) {
   }
 
   @Get(':id')
+     @UseGuards(RolesGuard)
+  @Roles('Admin', 'Manager','Employe')
   async findOne(@Param('id') id: string, @Res() res) {
     try {
        const Project = await this.projectsService.findOne(id);
@@ -146,6 +147,8 @@ async findAll( @Res() res) {
       )
 
   @Patch(':id')
+     @UseGuards(RolesGuard)
+  @Roles('Admin', 'Manager')
   async update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto, @Res() res,@UploadedFile()file: Express.Multer.File) {
     try {
       updateProjectDto.file = file?.filename
@@ -163,6 +166,8 @@ async findAll( @Res() res) {
   }
 
   @Delete(':id')
+     @UseGuards(RolesGuard)
+  @Roles('Admin', 'Manager','Employe')
   async remove(@Param('id') id: string, @Res() res) {
     try {
       const project = await this.projectsService.remove(id);
