@@ -60,14 +60,12 @@ function App() {
       <BrowserRouter>
            <ToastContainer position="bottom-right" autoClose={2000} />
         <Routes>
-          
           <Route path="/login" element={<Login />} />
           <Route path="/resetPassword" element={<ResetPassword />} />
           <Route path="/google-redirect" element={<GoogleRedirect />} />
           <Route path="/" element={<Home />} />
           <Route path="/auth/github-redirect" element={<GithubRedirect />} />
            <Route path="/offres" element={<NosOffre/>} />
-
           <Route
             path="/dashboard"
             element={<PrivateRoute><Dashboard /></PrivateRoute>}

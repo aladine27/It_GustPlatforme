@@ -261,7 +261,6 @@ useEffect(() => {
                   ampm={false}
                   format="dd/MM/yyyy HH:mm"
                   locale={fr}
-                  disablePast
                   slotProps={{
                     textField: {
                       fullWidth: true,

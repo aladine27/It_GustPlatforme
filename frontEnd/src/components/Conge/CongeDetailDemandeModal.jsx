@@ -129,12 +129,12 @@ export default function CongeDetailModal({
   // Boutons d’action
   const handleApproveClick = () => {
     if (onApprove) onApprove(leave._id);
-    toast.success("Demande de congé acceptée !");
+    toast.success("Demande approuvée !");
     handleClose();
   };
   const handleRejectClick = () => {
     if (onReject) onReject(leave._id);
-    toast.error("Demande de congé refusée !");
+    toast.success("Demande refusée !");
     handleClose();
   };
 

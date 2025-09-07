@@ -34,11 +34,11 @@ import 'moment/locale/fr';
 
 const localizer = momentLocalizer(moment);
 
-// === Couleurs par statut (statut EN venant de la base) ===
+// === Couleurs par statut (statut EN) ===
 const STATUS_COLORS = {
-  Planned :   '#36a747ff', // bleu
-  Ongoing:   '#b9a210ff', // vert
-  Completed: '#ef4444', // rouge
+  Planned :   '#36a747ff',
+  Ongoing:   '#b9a210ff',
+  Completed: '#ef4444',
 };
 const getStatusColor = (enStatus) => STATUS_COLORS[enStatus] || '#64748b';
 
@@ -48,7 +48,6 @@ export default function Evenement() {
   const { CurrentUser } = useSelector((state) => state.user);
   const userId = CurrentUser?.user?._id || CurrentUser?._id;
   const userRole = CurrentUser?.user?.role || CurrentUser?.role || "";
-  
 
   const { eventTypes } = useSelector(state => state.eventType);
   const { events = [] } = useSelector(state => state.event);
@@ -110,19 +109,17 @@ export default function Evenement() {
       startDate: calEvent.start,
       duration: ext.duration,
       location: ext.location,
-      status: ext.status, // EN (DB)
+      status: ext.status, // EN (auto calculé ci-dessous)
       types: mappedTypes,
       invited: invitedFullObjects,
     };
     setSelectedEvent(fullEvent);
     setDetailsModalOpen(true);
   };
-
-  const handleEditEvent = () => {
+ const handleEditEvent = () => {
     setDetailsModalOpen(false);
     setModalOpen(true);
   };
-
   // conflit de salle (uniquement à la création)
   const hasRoomConflict = (eventData, calendarEvents) => {
     return calendarEvents.some(ev => {
@@ -144,7 +141,7 @@ export default function Evenement() {
       const hMatch = eventData.duration?.match(/(\d+)h/);
       const mMatch = eventData.duration?.match(/(\d+)min/);
       if (hMatch) totalMin += parseInt(hMatch[1], 10) * 60;
-      if (mMatch) totalMin += parseInt(mMatch[1], 10);
+      if (mMatch) totalMin += parseInt(hMatch[1], 10);
       const end2 = new Date(start2.getTime() + totalMin * 60000);
 
       return start1 < end2 && start2 < end1;
@@ -156,28 +153,43 @@ export default function Evenement() {
     const hMatch = durationStr?.match(/(\d+)h/);
     const mMatch = durationStr?.match(/(\d+)min/);
     if (hMatch) totalMin += parseInt(hMatch[1], 10) * 60;
-    if (mMatch) totalMin += parseInt(mMatch[1], 10);
+    if (mMatch) totalMin += parseInt(hMatch[1], 10);
     return totalMin * 60000;
   };
 
-  // events pour le calendrier (status EN + label FR via t())
+  // ✅ statut automatique (EN) à partir des dates
+  const computeAutoStatus = (startDate, durationStr, now = new Date()) => {
+    const start = new Date(startDate);
+    const end = new Date(start.getTime() + parseDurationToMs(durationStr || "0min"));
+    if (now < start) return "Planned";
+    if (now >= start && now < end) return "Ongoing";
+    return "Completed";
+  };
+
+  // events pour le calendrier (status EN auto + label via i18n)
   const calendarEvents = useMemo(() =>
-    (events || []).map((e) => ({
-      ...e,
-      id: e._id,
-      title: e.title,
-      start: new Date(e.startDate),
-      end: new Date(new Date(e.startDate).getTime() + parseDurationToMs(e.duration)),
-      extendedProps: {
-        description: e.description,
-        duration: e.duration,
-        location: e.location,
-        status: e.status,        // EN (DB)
-        statusLabel: t(e.status),// FR (UI) => prévoir clés "Planned","Ongoing","Completed" dans i18n
-        types: e.eventType ? [e.eventType] : [],
-        invited: e.invited,
-      }
-    }))
+    (events || []).map((e) => {
+      const start = new Date(e.startDate);
+      const end = new Date(start.getTime() + parseDurationToMs(e.duration));
+      const autoStatus = computeAutoStatus(e.startDate, e.duration); // EN
+
+      return {
+        ...e,
+        id: e._id,
+        title: e.title,
+        start,
+        end,
+        extendedProps: {
+          description: e.description,
+          duration: e.duration,
+          location: e.location,
+          status: autoStatus,              // EN pour couleur/affichage
+          statusLabel: t(autoStatus),      // FR/EN selon i18n
+          types: e.eventType ? [e.eventType] : [],
+          invited: e.invited,
+        }
+      };
+    })
   , [events, t]);
 
   const handleSaveEvent = async (eventData) => {
@@ -189,7 +201,7 @@ export default function Evenement() {
       return;
     }
 
-    // status EN en base (ne change rien ici si ton formulaire renvoie déjà EN)
+    // status EN en base (on garde la logique existante)
     const eventTypeId = eventData.types?.[0]?._id || eventData.types?._id || eventData.eventType?._id;
     const payload = {
       title: eventData.title,
@@ -197,7 +209,7 @@ export default function Evenement() {
       startDate: eventData.startDate,
       duration: eventData.duration,
       location: eventData.location,
-      status: eventData.status, // EN attendu
+      status: eventData.status, // EN attendu (inchangé)
       eventType: eventTypeId,
       user: userId,
       invited: eventData.invited?.map(emp => emp._id) || []
@@ -253,10 +265,10 @@ export default function Evenement() {
     dispatch(fetchEventTypes());
   };
   const handleAddType = async (name) => {
-    await dispatch(createEventType({ name }));
-    setTypeModalOpen(false);
-    setNewTypeName('');
-    dispatch(fetchEventTypes());
+    const res = await dispatch(createEventType({ name }));
+    if (res?.meta?.requestStatus === "fulfilled") {
+      dispatch(fetchEventTypes());
+    }
   };
 
   return (
@@ -313,7 +325,7 @@ export default function Evenement() {
               date={currentDate}
               onNavigate={handleNavigate}
               defaultView="week"
-              // ✅ Couleur par statut EN (DB) — 3 couleurs distinctes
+              // Couleur par statut EN auto
               eventPropGetter={(event) => {
                 const bg = getStatusColor(event?.extendedProps?.status);
                 return {
@@ -368,9 +380,9 @@ export default function Evenement() {
                           </span>
                         )}
                       </span>
-                      {/* statut affiché en FR via i18n (clé = EN) */}
+                      {/* statut affiché via i18n (clé = EN auto) */}
                       <span style={{ fontSize: '0.78em', opacity: 0.9 }}>
-                        {t(ext.status)}{/* ex: "Planned" -> "Planifié" */}
+                        {t(ext.status)}
                       </span>
                       <span style={{ fontSize: '0.85em', opacity: 0.88 }}>
                         {ext.location && <>📍 {ext.location}</>}

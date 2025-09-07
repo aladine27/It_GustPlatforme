@@ -369,12 +369,11 @@ const resources = {
     "title": "Info:",
     "body": "If you receive no answer within 15 days, please consider your application not retained. Thank you."
   },
-  status: {
-        All: "All",
-        Planned: "Planned",
-        Ongoing: "Ongoing",
-        Completed: "Completed",
-      }, 
+    "Planned": "Planned",
+  "Ongoing": "Ongoing",
+  "Completed": "Completed"
+  
+ 
 }
 
 
@@ -710,12 +709,11 @@ const resources = {
   "full-time": "Temps plein",
   "part-time": "Temps partiel",
   "internship": "Stage",  
-   status: {
-        All: "Tous",
-        Planned: "Planifié",
-        Ongoing: "En cours",
-        Completed: "Terminé",
-      },             
+  "Planned": "Planifié",
+  "Ongoing": "En cours",
+  "Completed": "Terminé"
+
+               
     }
   }
 };

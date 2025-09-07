@@ -108,7 +108,7 @@ const getExt = (name = "") => {
       return {
         id: String(o._id),
         title: o.title,
-        company: "ITgust-group",              // statique (pas en DB)
+        company: "ITgust-group",              // statique 
         sector: "Tech",                     // statique           
         remote: false,                      // statique
         location: o.location,

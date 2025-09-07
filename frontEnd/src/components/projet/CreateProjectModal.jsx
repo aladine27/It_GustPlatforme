@@ -121,23 +121,21 @@ export default function CreateProjectModal({ open, handleClose }) {
       const formData = new FormData();
       formData.append("title", data.title);
       formData.append("description", data.description);
-      formData.append("startDate", data.startDate?.toISOString());
-      formData.append("endDate", data.endDate?.toISOString());
+      formData.append("startDate", data.startDate ? data.startDate.toLocaleDateString("en-CA") : "");
+      formData.append("endDate", data.endDate ? data.endDate.toLocaleDateString("en-CA") : "");
       formData.append("duration", duration);
       formData.append("status", status);
       formData.append("user", userId);
       if (data.file) formData.append("file", data.file);
-
       const actionResult = await dispatch(createProject(formData));
       if (actionResult?.error) {
         toast.error(actionResult?.payload || "Erreur lors de la création.");
-        return; // Ne ferme PAS en cas d’erreur
+         closeAndReset();
       }
       toast.success(t("Projet créé avec succès"));
       closeAndReset(); // Ferme et reset seulement en cas de succès
     } catch (e) {
       toast.error("Erreur interne !");
-      // Ne ferme pas la modale
     }
   };
 
@@ -267,7 +265,6 @@ export default function CreateProjectModal({ open, handleClose }) {
 
   return (
     <>
-      <ToastContainer position="top-right" autoClose={3500} />
       <ModelComponent
         open={open}
         handleClose={closeAndReset}

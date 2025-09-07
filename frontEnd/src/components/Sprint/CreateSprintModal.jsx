@@ -18,7 +18,7 @@ import { createSprint, updateSprint } from "../../redux/actions/sprintActions";
 function shouldDisableDateForTeam(date, sprints, selectedTeamId, currentSprintId = null) {
   if (!selectedTeamId) return false;
   for (let sprint of sprints) {
-    if (currentSprintId && sprint._id === currentSprintId) continue;
+  if (currentSprintId && String(sprint._id) === String(currentSprintId)) continue;
     const sStart = new Date(sprint.startDate);
     const sEnd = new Date(sprint.endDate);
     const sprintTeamId = (sprint.team?._id || sprint.team || "").toString();
@@ -61,11 +61,10 @@ function makeSchema({ projectStartDate, projectEndDate, sprints, isEdit, sprintD
           const selectedTeam = this.parent.team?._id || this.parent.team;
           if (!selectedTeam) return true;
           for (let sprint of sprints) {
-            if (currentId && sprint._id === currentId) continue;
+            if (currentId && String(sprint._id) === String(currentId)) continue;
             const sStart = new Date(sprint.startDate);
             const sEnd = new Date(sprint.endDate);
             const sprintTeam = (sprint.team?._id || sprint.team || "").toString();
-            // Vérifie le chevauchement que pour la même équipe
             if (
               endDate &&
               new Date(val) <= sEnd &&
@@ -240,7 +239,7 @@ export default function CreateSprintModal({
 
   return (
     <>
-      <ToastContainer position="top-right" autoClose={3500} />
+      <ToastContainer position="bottom-right" autoClose={3500} />
       <ModelComponent
         open={open}
         handleClose={closeAndReset}

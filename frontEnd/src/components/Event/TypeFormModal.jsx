@@ -296,8 +296,6 @@ export default function TypeFormModal({
           </Box>
         </Box>
       </ModelComponent>
-
-      {/* ✅ Modal de suppression personnalisé */}
       <CustomDeleteForm
         open={deleteConfirmOpen}
         handleClose={cancelDelete}
