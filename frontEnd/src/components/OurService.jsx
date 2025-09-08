@@ -5,7 +5,6 @@ import {
   Container,
   Grid,
   Card,
-  CardContent,
   Typography,
   Button,
   Stack,
@@ -20,7 +19,7 @@ const servicesData = [
     title: "Développement web et mobile",
     description:
       "Nos développeurs s'engagent à créer des sites web élégants et performants, adaptés avec la vision unique de chaque entreprise. Nous prenons également en charge le développement des applications mobiles Android et iOS.",
-    image: "/images/dev.jpg", // remplace par ton image
+    image: "/images/dev.jpg",
     gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
   },
   {
@@ -53,8 +52,8 @@ const RightServiceRow = ({ service }) => {
         boxShadow: "0 6px 18px rgba(0,0,0,.06)",
         position: "relative",
         overflow: "hidden",
-        "&:hover": { transform: "translateY(-2px)" },
         transition: "transform .25s ease",
+        "&:hover": { transform: "translateY(-2px)" },
       }}
     >
       <Stack direction="row" spacing={2.5} alignItems="flex-start">
@@ -74,7 +73,12 @@ const RightServiceRow = ({ service }) => {
             component="img"
             src={service.image}
             alt={service.title}
-            sx={{ width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "soft-light" }}
+            sx={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              mixBlendMode: "soft-light",
+            }}
           />
         </Box>
 
@@ -88,7 +92,7 @@ const RightServiceRow = ({ service }) => {
         </Box>
       </Stack>
 
-      {/* petit tiret décoratif à droite bas (comme l’exemple) */}
+      {/* tiret décoratif */}
       <Box
         sx={{
           position: "absolute",
@@ -107,120 +111,76 @@ const RightServiceRow = ({ service }) => {
 
 const OurServicesTwoCols = () => {
   const theme = useTheme();
-  const left = servicesData[0];
-  const rightList = servicesData.slice(1);
+  const bigCard = servicesData[0];          // “Développement web et mobile”
+  const rightList = servicesData.slice(1);  // IA + Marketing
 
   return (
     <Box
       sx={{
-        py: { xs: 6, md: 10 },
-        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha(
-          theme.palette.secondary.main,
+        // 🔧 Réduction de l’espace vertical autour de la section
+        pt: { xs: 2, md: 4 },               // (au lieu de py: { xs: 6, md: 10 })
+        pb: { xs: 6, md: 8 },
+        background: `linear-gradient(135deg, ${alpha(
+          theme.palette.primary.main,
           0.02
-        )} 100%)`,
+        )} 0%, ${alpha(theme.palette.secondary.main, 0.02)} 100%)`,
       }}
     >
       <Container maxWidth="lg">
-        {/* En-tête */}
-        <Box sx={{ mb: 5 }}>
-          <Typography
-            variant="overline"
-            sx={{ color: "primary.main", letterSpacing: 2, fontWeight: 700 }}
-          >
-            SERVICES
-          </Typography>
-          <Typography variant="h3" sx={{ fontWeight: 900, mb: 1 }}>
-            Nos services
-          </Typography>
-          <Typography sx={{ color: "text.secondary", maxWidth: 680 }}>
-            Notre <b style={{ color: theme.palette.primary.main }}>agence web à Tunis</b> vous
-            accompagne avec plusieurs prestations de qualité.
-          </Typography>
-        </Box>
-
         <Grid container spacing={3.5}>
-          {/* Colonne gauche : grande box */}
+          {/* En-tête à gauche */}
           <Grid item xs={12} md={5}>
-            <Card
-              sx={{
-                height: "100%",
-                p: { xs: 3, md: 4 },
-                borderRadius: 4,
-                display: "flex",
-                flexDirection: "column",
-                gap: 2.5,
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                boxShadow: "0 10px 28px rgba(0,0,0,.08)",
-                background: alpha(theme.palette.primary.light, 0.06),
-              }}
-            >
-              <Box
-                sx={{
-                  width: "100%",
-                  height: 220,
-                  borderRadius: 3,
-                  overflow: "hidden",
-                  background: left.gradient,
-                }}
+            <Box sx={{ mb: { xs: 2, md: 0 } }}>
+              <Typography
+                variant="overline"
+                sx={{ color: "primary.main", letterSpacing: 2, fontWeight: 700 }}
               >
-                <Box
-                  component="img"
-                  src={left.image}
-                  alt={left.title}
-                  sx={{ width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "soft-light" }}
-                />
-              </Box>
-
-              <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.2 }}>
-                {left.title}
+                SERVICES
               </Typography>
-
-              <Typography sx={{ color: "text.secondary", flexGrow: 1 }}>
-                {left.description}
+              <Typography variant="h3" sx={{ fontWeight: 900, mb: 1 }}>
+                Nos services
               </Typography>
-
-              <Button
-                variant="contained"
-                endIcon={<ArrowForward />}
-                sx={{
-                  alignSelf: "flex-start",
-                  px: 3,
-                  py: 1.25,
-                  borderRadius: 2,
-                  textTransform: "none",
-                  fontWeight: 700,
-                  boxShadow: "0 8px 20px rgba(0,0,0,.12)",
-                }}
-              >
-                Savoir plus
-              </Button>
-            </Card>
+              <Typography sx={{ color: "text.secondary", maxWidth: 580 }}>
+                Notre <b style={{ color: theme.palette.primary.main }}>agence web à Tunis</b> vous
+                accompagne avec plusieurs prestations de qualité.
+              </Typography>
+            </Box>
           </Grid>
 
-          {/* Colonne droite : rows empilées */}
+          {/* Colonne droite : IA + Marketing */}
           <Grid item xs={12} md={7}>
             <Stack spacing={3.5}>
               {rightList.map((s) => (
                 <RightServiceRow key={s.id} service={s} />
               ))}
-
-              {/* CTA bas (optionnel) */}
-              <Box sx={{ pt: 1 }}>
-                <Button
-                  variant="outlined"
-                  endIcon={<ArrowForward />}
-                  sx={{
-                    px: 4,
-                    py: 1.2,
-                    borderRadius: 2,
-                    textTransform: "none",
-                    fontWeight: 700,
-                  }}
-                >
-                  Découvrir tous nos services
-                </Button>
-              </Box>
             </Stack>
+          </Grid>
+
+          {/* Ligne suivante : on “pousse” de 5 colonnes pour se placer sous la colonne droite */}
+          <Grid item xs={12} md={5} sx={{ display: { xs: "none", md: "block" } }} />
+          <Grid item xs={12} md={7}>
+            {/* Utilise la même carte que “Marketing digital” → même taille */}
+            <RightServiceRow service={bigCard} />
+          </Grid>
+
+          {/* CTA aligné avec la colonne droite */}
+          <Grid item xs={12} md={5} sx={{ display: { xs: "none", md: "block" } }} />
+          <Grid item xs={12} md={7}>
+            <Box sx={{ pt: 1 }}>
+              <Button
+                variant="outlined"
+                endIcon={<ArrowForward />}
+                sx={{
+                  px: 4,
+                  py: 1.2,
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: 700,
+                }}
+              >
+                Découvrir tous nos services
+              </Button>
+            </Box>
           </Grid>
         </Grid>
       </Container>
