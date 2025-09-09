@@ -109,7 +109,7 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
     }
     setLoadingDelete(true);
     try {
-      const result = await dispatch(deleteTask(taskToDelete._id));
+      const result =  dispatch(deleteTask(taskToDelete._id));
       if (result?.error) {
         alert(result?.payload || "Erreur lors de la suppression !");
       } else {

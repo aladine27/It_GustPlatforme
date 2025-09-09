@@ -31,10 +31,10 @@ import EventDetailsModal from '../components/Event/EventDetailModal.jsx';
 import { StyledPaper } from '../style/style.jsx';
 import { toast } from 'react-toastify';
 import 'moment/locale/fr';
-
+import 'moment/locale/en-gb';
 const localizer = momentLocalizer(moment);
 
-// === Couleurs par statut (statut EN) ===
+
 const STATUS_COLORS = {
   Planned :   '#36a747ff',
   Ongoing:   '#b9a210ff',
@@ -61,7 +61,16 @@ export default function Evenement() {
   const [view, setView] = useState('week');
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
-  moment.locale(i18n.language);
+  const lang = useMemo(
+    () => (i18n.language?.toLowerCase().startsWith('fr') ? 'fr' : 'en-gb'),
+    [i18n.language]
+  );
+
+ 
+  useEffect(() => {
+    moment.locale(lang);
+    moment.updateLocale(lang, { week: { dow: 1 } });
+  }, [lang]);
   useMomentLocale(i18n);
 
   useEffect(() => {
@@ -252,16 +261,18 @@ export default function Evenement() {
     noEventsInRange: t('noEventsInRange')
   };
 
-  moment.updateLocale('fr', { week: { dow: 1 } });
-  const today = moment().format('dddd DD MMMM YYYY');
-  const handleNavigate = (date) => setCurrentDate(date);
+  const today = useMemo(
+    () => moment().format('dddd DD MMMM YYYY'),
+    [lang]
+  );
 
+  const handleNavigate = (date) => setCurrentDate(date);
   const handleEditType = async (typeId, newName) => {
-    await dispatch(updateEventType({ id: typeId, updateData: { name: newName } }));
+    dispatch(updateEventType({ id: typeId, updateData: { name: newName } }));
     dispatch(fetchEventTypes());
   };
   const handleDeleteType = async (typeId) => {
-    await dispatch(deleteEventType(typeId));
+    dispatch(deleteEventType(typeId));
     dispatch(fetchEventTypes());
   };
   const handleAddType = async (name) => {
@@ -270,6 +281,14 @@ export default function Evenement() {
       dispatch(fetchEventTypes());
     }
   };
+    const formats = useMemo(() => ({
+    dayHeaderFormat:     (date, culture, loc) => loc.format(date, 'dddd DD MMMM YYYY', culture),
+    weekdayFormat:       (date, culture, loc) => loc.format(date, 'ddd', culture),    // lun. mar. …
+    dayFormat:           (date, culture, loc) => loc.format(date, 'DD ddd', culture), // 08 lun.
+    agendaDateFormat:    (date, culture, loc) => loc.format(date, 'ddd DD MMM', culture),
+    agendaTimeRangeFormat: ({ start, end }, culture, loc) =>
+      `${loc.format(start, 'HH:mm', culture)} – ${loc.format(end, 'HH:mm', culture)}`
+  }), [lang]);
 
   return (
     <Box sx={{ width: "100%", p: 0, mt: 0 }}>
@@ -415,7 +434,6 @@ export default function Evenement() {
             />
           </div>
         </Box>
-
         <TypeFormModal
           open={typeModalOpen}
           onClose={() => setTypeModalOpen(false)}
@@ -426,7 +444,6 @@ export default function Evenement() {
           onEditType={handleEditType}
           onDeleteType={handleDeleteType}
         />
-
         <EventDetailsModal
           open={detailsModalOpen}
           handleClose={() => setDetailsModalOpen(false)}
@@ -436,12 +453,11 @@ export default function Evenement() {
           onDelete={async (id) => { await dispatch(deleteEvent(id)); dispatch(fetchAllEvents()); setDetailsModalOpen(false); setSelectedEvent(null); }}
           userRole={userRole}
         />
-
         <EventFormModal
           open={modalOpen}
           onClose={() => { setModalOpen(false); setSelectedEvent(null); }}
           onSave={handleSaveEvent}
-          onDelete={async (id) => { await dispatch(deleteEvent(id)); dispatch(fetchAllEvents()); setModalOpen(false); setSelectedEvent(null); }}
+          onDelete={async (id) => {  dispatch(deleteEvent(id)); dispatch(fetchAllEvents()); setModalOpen(false); setSelectedEvent(null); }}
           event={selectedEvent}
           eventTypes={eventTypes}
           employes={employes}

@@ -88,7 +88,7 @@ const Projet = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 4;
 
   // modals
   const [openAdd, setOpenAdd] = useState(false);

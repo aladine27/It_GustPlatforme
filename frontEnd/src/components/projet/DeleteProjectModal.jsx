@@ -25,13 +25,7 @@ const DeleteProjectModal = ({ open, handleClose, onDelete, project }) => {
     >
       <Box textAlign="center" mt={2}>
         <Grid container spacing={2} justifyContent="center">
-          <Grid item>
-            <ButtonComponent
-              text="Annuler"
-              onClick={handleClose}
-              icon={<CloseOutlined />}
-            />
-          </Grid>
+        
           <Grid item>
             <ButtonComponent
               text="Supprimer"

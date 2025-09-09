@@ -40,6 +40,7 @@ function computeSprintStatus(startDate, endDate) {
 
 // Schéma de validation Yup (chevauchement = interdit que pour la même équipe)
 function makeSchema({ projectStartDate, projectEndDate, sprints, isEdit, sprintData }) {
+  const currentSprintId = sprintData?._id || null;
   return Yup.object({
     title: Yup.string().required("Le titre est requis").min(3).max(100),
     team: Yup.object().nullable().required("L'équipe est requise"),
@@ -54,14 +55,14 @@ function makeSchema({ projectStartDate, projectEndDate, sprints, isEdit, sprintD
       .test(
         "no-overlap-same-team",
         "Le sprint se chevauche avec un autre sprint de la même équipe",
-        function(val) {
+        function (val) {
           if (!val || !sprints) return true;
           const endDate = this.parent.endDate;
-          const currentId = this?.options?.context?.sprintData?._id;
           const selectedTeam = this.parent.team?._id || this.parent.team;
           if (!selectedTeam) return true;
           for (let sprint of sprints) {
-            if (currentId && String(sprint._id) === String(currentId)) continue;
+            // :white_check_mark: On ignore le sprint en cours lors de la modification
+            if (currentSprintId && sprint._id === currentSprintId) continue;
             const sStart = new Date(sprint.startDate);
             const sEnd = new Date(sprint.endDate);
             const sprintTeam = (sprint.team?._id || sprint.team || "").toString();
@@ -89,14 +90,14 @@ function makeSchema({ projectStartDate, projectEndDate, sprints, isEdit, sprintD
       .test(
         "no-overlap-same-team",
         "Le sprint se chevauche avec un autre sprint de la même équipe",
-        function(val) {
+        function (val) {
           if (!val || !sprints) return true;
           const startDate = this.parent.startDate;
-          const currentId = this?.options?.context?.sprintData?._id;
           const selectedTeam = this.parent.team?._id || this.parent.team;
           if (!selectedTeam) return true;
           for (let sprint of sprints) {
-            if (currentId && sprint._id === currentId) continue;
+            // :white_check_mark: On ignore le sprint en cours lors de la modification
+            if (currentSprintId && sprint._id === currentSprintId) continue;
             const sStart = new Date(sprint.startDate);
             const sEnd = new Date(sprint.endDate);
             const sprintTeam = (sprint.team?._id || sprint.team || "").toString();
@@ -145,22 +146,22 @@ export default function CreateSprintModal({
   // Schéma de validation
   const schema = makeSchema({ projectStartDate, projectEndDate, sprints, isEdit, sprintData });
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    watch,
-    formState: { errors }
-  } = useForm({
-    resolver: yupResolver(schema, { context: { sprintData } }),
-    defaultValues: {
-      title: "",
-      team: null,
-      startDate: nextSprintStartDate || new Date(),
-      endDate: null,
-    }
-  });
+const {
+  register,
+  control,
+  handleSubmit,
+  reset,
+  watch,
+  formState: {errors}
+} = useForm({
+  resolver: yupResolver(schema),
+  defaultValues: {
+    title: "",
+    team: null,
+    startDate: nextSprintStartDate || new Date(),
+    endDate: null,
+  }
+});
 
   const selectedTeamId = watch("team")?._id || watch("team");
   const currentSprintId = sprintData?._id;
