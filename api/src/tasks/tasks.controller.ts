@@ -107,7 +107,7 @@ async findAll(@Res() res, @Query('sprint') sprint: string) {
 
   @Patch(':id')
   @UseGuards(RolesGuard)
-  @Roles('Admin', 'Manager')
+  @Roles('Admin', 'Manager','Employe')
   async update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto, @Res() res) {
     try {
       const task = await this.tasksService.update(id, updateTaskDto);

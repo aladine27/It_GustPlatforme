@@ -371,7 +371,25 @@ const resources = {
   },
     "Planned": "Planned",
   "Ongoing": "Ongoing",
-  "Completed": "Completed"
+  "Completed": "Completed",
+  "Planification du sprint & gestion des tâches": "Sprint Planning & Task Management",
+  "Filtrer par priorité :": "Filter by priority:",
+  "Priorité": "Priority",
+  "Backlog": "Backlog",
+  "En cours": "In Progress",
+  "Revue": "Review",
+  "Terminé": "Done",
+  "Ajouter une tâche": "Add Task",
+  "Progression du sprint": "Sprint Progress",
+  "{{completed}}/{{total}} tâches terminées": "{{completed}}/{{total}} tasks completed",
+  "Confirmer la suppression de la tâche ?": "Confirm task deletion?",
+  "Suppression...": "Deleting...",
+  "Tâche introuvable !": "Task not found!",
+  "Erreur réseau": "Network error",
+  "Toutes": "All",
+  "Haute": "High",
+  "Moyenne": "Medium",
+  "Faible": "Low"
   
  
 }
@@ -711,7 +729,25 @@ const resources = {
   "internship": "Stage",  
   "Planned": "Planifié",
   "Ongoing": "En cours",
-  "Completed": "Terminé"
+  "Completed": "Terminé",
+   "Planification du sprint & gestion des tâches": "Planification du sprint & gestion des tâches",
+  "Filtrer par priorité :": "Filtrer par priorité :",
+  "Priorité": "Priorité",
+  "Backlog": "Backlog",
+  "En cours": "En cours",
+  "Revue": "Revue",
+  "Terminé": "Terminé",
+  "Ajouter une tâche": "Ajouter une tâche",
+  "Progression du sprint": "Progression du sprint",
+  "{{completed}}/{{total}} tâches terminées": "{{completed}}/{{total}} tâches terminées",
+  "Confirmer la suppression de la tâche ?": "Confirmer la suppression de la tâche ?",
+  "Suppression...": "Suppression...",
+  "Tâche introuvable !": "Tâche introuvable !",
+  "Erreur réseau": "Erreur réseau",
+  "Toutes": "Toutes",
+  "Haute": "Haute",
+  "Moyenne": "Moyenne",
+  "Faible": "Faible"
 
                
     }

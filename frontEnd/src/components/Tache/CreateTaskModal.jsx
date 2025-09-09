@@ -19,6 +19,7 @@ export default function CreateTaskModal({
   users = [],
   isEdit = false,
   task = null,
+  onSuccess,
 }) {
   const dispatch = useDispatch();
 
@@ -82,7 +83,7 @@ export default function CreateTaskModal({
         });
       }
     }
-  // IMPORTANT : rajoute users dans le tableau de dépendances pour être sûr
+
   }, [isEdit, task, open, reset, users, setValue]);
 
   const closeAndReset = () => {
@@ -94,54 +95,45 @@ export default function CreateTaskModal({
     });
     handleClose();
   };
-
-  // Soumission création/modification
-  const onSubmit = async (data) => {
-    try {
-      if (isEdit && task) {
-        console.log("[SUBMIT] Mode EDIT. task._id =", task._id, "task =", task, "data =", data);
-        if (!task._id) {
-          toast.error("ID de la tâche manquant !");
-          return;
-        }
-        // Attention: bien respecter le shape pour updateTask
-        const actionResult = await dispatch(updateTask({ id: task._id, updateData: data }));
-        console.log("[SUBMIT] Result updateTask =", actionResult);
-        if (actionResult?.error) {
-          toast.error(actionResult?.payload || "Erreur lors de la modification de la tâche.");
-          return;
-        }
-        toast.success("Tâche modifiée avec succès");
-        closeAndReset();
-      } else {
-        console.log("[SUBMIT] Mode CREATE", data);
-        const body = {
-          ...data,
-          project: projectId,
-          sprint: sprintId,
-          status: "backlog",
-        };
-        const actionResult = await dispatch(createTask(body));
-        console.log("[SUBMIT] Result createTask =", actionResult);
-        if (actionResult?.error) {
-          toast.error(actionResult?.payload || "Erreur lors de la création de la tâche.");
-          return;
-        }
-        toast.success("Tâche créée avec succès");
-        closeAndReset();
+const onSubmit = async (data) => {
+  try {
+    if (isEdit && task) {
+      if (!task._id) {
+        toast.error("ID de la tâche manquant !");
+        return;
       }
-    } catch (e) {
-      console.error("[SUBMIT] Exception", e);
-      toast.error("Erreur interne !");
+      await dispatch(updateTask({ id: task._id, updateData: data })).unwrap();
+      toast.success("Tâche modifiée avec succès");
+      closeAndReset();
+      onSuccess?.(); 
+    } else {
+      const body = {
+        ...data,
+        project: projectId,
+        sprint: sprintId,
+        status: "backlog",
+      };
+
+      await dispatch(createTask(body)).unwrap();
+
+      toast.success("Tâche créée avec succès");
+      closeAndReset();
+      onSuccess?.(); // re-fetch du board
     }
-  };
+  } catch (e) {
+    // e vient de .unwrap() => message d’erreur côté thunk si fourni
+    toast.error(
+      typeof e === "string" ? e : "Erreur lors de l’enregistrement de la tâche."
+    );
+  }
+};
+
 
   // Toujours afficher les users valides dans la liste déroulante
   const userOptions = Array.isArray(users) ? users.filter(u => u && u._id) : [];
 
   return (
     <>
-      <ToastContainer position="top-right" autoClose={3500} />
       <ModelComponent
         open={open}
         handleClose={closeAndReset}

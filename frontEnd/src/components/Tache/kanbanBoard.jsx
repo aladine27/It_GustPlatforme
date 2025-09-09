@@ -10,6 +10,8 @@ const KanbanBoard = ({
   isAdminOrManager,
   onEditTask,
   onDeleteTask,
+  /* 👉 nouveau */
+  canDrag = false,
 }) => {
   return (
     <Box
@@ -32,6 +34,7 @@ const KanbanBoard = ({
           isAdminOrManager={isAdminOrManager}
           onEditTask={onEditTask}
           onDeleteTask={onDeleteTask}
+          canDrag={canDrag}
         />
       ))}
     </Box>

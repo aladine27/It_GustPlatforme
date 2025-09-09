@@ -1,4 +1,3 @@
-// KanbanColumn.jsx
 import { Box, Typography, Chip, Button, Paper } from "@mui/material";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import KanbanTaskCard from "./KanbanTaskCard";
@@ -8,6 +7,7 @@ import TaskDetailsModal from "./TaskDetailModal";
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { useSelector } from "react-redux";
 
 const KanbanColumn = ({
   column,
@@ -15,34 +15,36 @@ const KanbanColumn = ({
   isDragging,
   colWidth,
   isAdminOrManager,
-  onEditTask,      // DOIT recevoir une task en param
-  onDeleteTask,    // DOIT recevoir une task en param
+  onEditTask,
+  onDeleteTask,
+  /* 👉 nouveau */
+  canDrag = false,
 }) => {
+  const role =
+    useSelector((state) => state.user?.CurrentUser?.role || state.user?.CurrentUser?.user?.role) || "";
+
   const [openTaskDetails, setOpenTaskDetails] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
 
-  // Ouvre la modale de détails
   const handleOpenTaskDetails = (task) => {
     setSelectedTask(task);
     setOpenTaskDetails(true);
   };
 
-  // Export EXcel
   function exportTasksToExcel(tasks) {
-  const tableRows = tasks.map((task) => ({
-    "Titre": task.title || "",
-    "Description": task.description || "",
-    "Priorité": task.priority || "",
-    "Affectée à": (task.user && (task.user.fullName || task.user.name)) || "",
-  }));
-  const worksheet = XLSX.utils.json_to_sheet(tableRows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Tâches terminées");
-  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-  saveAs(data, "done_tasks.xlsx");
-}
-
+    const tableRows = tasks.map((task) => ({
+      "Titre": task.title || "",
+      "Description": task.description || "",
+      "Priorité": task.priority || "",
+      "Affectée à": (task.user && (task.user.fullName || task.user.name)) || "",
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(tableRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tâches terminées");
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, "done_tasks.xlsx");
+  }
 
   return (
     <Paper
@@ -50,7 +52,7 @@ const KanbanColumn = ({
       variant="elevation"
       sx={{
         minWidth: colWidth,
-         background:"#e3f2fd",
+        background:"#e3f2fd",
         borderRadius: 2,
         p: 3,
         border: "1.5px solid #e6eafd",
@@ -59,29 +61,26 @@ const KanbanColumn = ({
         flexDirection: "column",
       }}
     >
-      <Box sx={{
-        display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3
-      }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Typography variant="h6" fontWeight={700} sx={{ color: column.color, fontSize: "1.14rem" }}>
           {column.title}
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Chip label={tasks.length} size="small" sx={{
-            bgcolor: "rgba(0,0,0,0.1)", color: "#666", fontWeight: 600, minWidth: 24, height: 24,
-          }} />
-          {column.id === "done" && tasks.length > 0 && (
-
-  <Button
-    variant="outlined"
-    size="small"
-    startIcon={<DownloadIcon />}
-    sx={{ ml: 1, px: 1, minWidth: 0, textTransform: "none" }}
-    onClick={() => exportTasksToExcel(tasks)}
-  >
-    Exporter
-  </Button>
-
-
+          <Chip
+            label={tasks.length}
+            size="small"
+            sx={{ bgcolor: "rgba(0,0,0,0.1)", color: "#666", fontWeight: 600, minWidth: 24, height: 24 }}
+          />
+          {column.id === "done" && tasks.length > 0 && role === "Employe" && (
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<DownloadIcon />}
+              sx={{ ml: 1, px: 1, minWidth: 0, textTransform: "none" }}
+              onClick={() => exportTasksToExcel(tasks)}
+            >
+              Exporter
+            </Button>
           )}
         </Box>
       </Box>
@@ -105,6 +104,8 @@ const KanbanColumn = ({
                 key={String(task._id)}
                 draggableId={String(task._id)}
                 index={index}
+                /* 👉 empêche le drag visuellement et fonctionnellement pour Manager */
+                isDragDisabled={!canDrag}
               >
                 {(provided, snapshot) => (
                   <div
@@ -117,14 +118,13 @@ const KanbanColumn = ({
                       boxSizing: "border-box",
                     }}
                   >
-               
                     <KanbanTaskCard
                       task={task}
                       isDragging={snapshot.isDragging}
                       onDetails={handleOpenTaskDetails}
                       isAdminOrManager={isAdminOrManager}
-                      onEdit={() => onEditTask(task)}           
-                      onDelete={() => onDeleteTask(task)}      
+                      onEdit={() => onEditTask(task)}
+                      onDelete={() => onDeleteTask(task)}
                     />
                   </div>
                 )}
@@ -134,6 +134,7 @@ const KanbanColumn = ({
           </Box>
         )}
       </Droppable>
+
       <TaskDetailsModal
         open={openTaskDetails}
         handleClose={() => setOpenTaskDetails(false)}
@@ -142,5 +143,4 @@ const KanbanColumn = ({
     </Paper>
   );
 };
-
 export default KanbanColumn;
