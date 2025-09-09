@@ -48,9 +48,9 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
   const { sprints } = useSelector((state) => state.sprint);
   const { teams } = useSelector((state) => state.team);
 
-  // 👉 rôle courant pour piloter le drag
-  const currentRole =
-    useSelector((state) => state.user?.CurrentUser?.role || state.user?.CurrentUser?.user?.role) || "";
+const [assigneeFilter, setAssigneeFilter] = useState("");
+
+  const currentRole =useSelector((state) => state.user?.CurrentUser?.role || state.user?.CurrentUser?.user?.role) || "";
   const canDrag = currentRole === "Employe"; // Employé peut drag, Manager non
 
   const sprint = (sprints || []).find(s => s._id === sprintId);
@@ -132,11 +132,7 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
     if (sprintId) dispatch(fetchTasksBySprint(sprintId));
   }, [dispatch, sprintId]);
 
-// Fichier : Tache.js
 
-// ... (tout le reste du code du composant)
-
-  // Drag n drop
   const handleDragEnd = async (result) => {
     const { source, destination, draggableId } = result;
 
@@ -199,23 +195,23 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
         }));
       }
     }
-    // Si la tâche est seulement réordonnée dans la même colonne, on ne fait rien côté serveur pour l'instant.
-    // L'état local est déjà à jour. Si vous voulez sauvegarder l'ordre, il faudrait une autre action ici.
   };
+ const filteredTasksByColumn = {};
+Object.keys(tasksByColumn || {}).forEach((col) => {
+  filteredTasksByColumn[col] = (tasksByColumn[col] || []).filter((task) => {
+    const priorityOk = priorityFilter
+      ? (task.priority || "").toLowerCase() === priorityFilter
+      : true;
 
-// ... (le reste du code du composant)
+    const taskUserId =
+      typeof task.user === "string" ? task.user : task.user?._id;
 
+    const assigneeOk = assigneeFilter ? taskUserId === assigneeFilter : true;
 
-
-  // Filtre sur toutes les colonnes
-  const filteredTasksByColumn = {};
-  Object.keys(tasksByColumn || {}).forEach(col => {
-    filteredTasksByColumn[col] = priorityFilter
-      ? (tasksByColumn[col] || []).filter(
-          task => (task.priority || "").toLowerCase() === priorityFilter
-        )
-      : (tasksByColumn[col] || []);
+    return priorityOk && assigneeOk;
   });
+});
+
 
   return (
     <Box sx={{ p: { xs: 1, md: 3 }, bgcolor: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)", minHeight: "100vh", boxSizing: "border-box" }}>
@@ -241,6 +237,36 @@ const Tache = ({ sprintId, isAdminOrManager, projectId }) => {
                 <MenuItem value="low">{t("Faible")}</MenuItem>
               </TextField>
             </Box>
+        {/* Filtres (à gauche) */}
+<Box
+  sx={{
+    display: "flex",
+    alignItems: "center",
+    gap: 2,                 // espace entre les deux
+    flexWrap: { xs: "wrap", sm: "nowrap" }, // wrap sur petit écran
+  }}
+>
+
+
+  {/* Membre */}
+  <TextField
+    select
+    size="small"
+    label={t("Membre")}
+    value={assigneeFilter}
+    onChange={(e) => setAssigneeFilter(e.target.value)}
+    sx={{ width: 220, background: "#fff" }}
+  >
+    <MenuItem value="">{t("Tous")}</MenuItem>
+    {(teamMembers || []).map((u) => (
+      <MenuItem key={u._id} value={u._id}>
+        {u.fullName || u.name || "Utilisateur"}
+      </MenuItem>
+    ))}
+  </TextField>
+</Box>
+
+
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <AvatarGroup max={5} sx={{ "& .MuiAvatar-root": { width: 38, height: 38, fontWeight: 700, fontSize: 17 } }}>
