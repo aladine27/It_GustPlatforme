@@ -106,11 +106,11 @@ const SprintSection = ({
 
     <Divider sx={{ my: 2 }} />
 
-    {blockCreateSprint && (
-      <Typography color="error" sx={{ mb: 2, textAlign: "center" }}>
-        {t("Impossible d'Ajouter un nouveau Sprint !")}
-      </Typography>
-    )}
+   {blockCreateSprint && (
+ <Typography color="error" sx={{ mb: 2, textAlign: "center" }}>
+   {t("Impossible d'ajouter un sprint : période du projet atteinte.")}
+ </Typography>
+)}
     {loadingSprint && <Typography color="info.main">{t("Chargement...")}</Typography>}
     {paginatedSprints.length === 0 && !loadingSprint && (
       <Typography color="text.secondary" sx={{ textAlign: "center", my: 4 }}>

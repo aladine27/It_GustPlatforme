@@ -19,19 +19,25 @@ function getNextSprintStartDate(sprints = [], projectStartDate) {
   return date;
 }
 
-function isTeamAvailableForSprint(sprints, teams, startDate, endDate) {
+function isTeamAvailableForSprint(sprints, teams, projectEndDate) {
   for (let team of teams) {
     const teamId = team._id;
-    const hasOverlap = sprints.some(s => {
-      const sprintTeamId = s.team?._id || s.team;
-      if (String(sprintTeamId) !== String(teamId)) return false;
-      return (
-        new Date(startDate) <= new Date(s.endDate) &&
-        new Date(endDate) >= new Date(s.startDate)
-      );
-    });
-    if (!hasOverlap) return true;
+    // récupère les sprints existants pour cette équipe
+    const teamSprints = sprints.filter(
+      s => String(s.team?._id || s.team) === String(teamId)
+    );
+    // si aucune sprint pour cette équipe, elle est disponible
+    if (!teamSprints.length) return true;
+    // date de début possible = après le dernier sprint de cette équipe
+    const lastSprint = teamSprints.sort(
+      (a, b) => new Date(a.endDate) - new Date(b.endDate)
+    ).pop();
+    const nextStartDate = new Date(lastSprint.endDate);
+    nextStartDate.setDate(nextStartDate.getDate() + 1);
+    // si nextStartDate est avant ou égal à la fin du projet, l'équipe peut créer un sprint
+    if (nextStartDate <= projectEndDate) return true;
   }
+  // aucune équipe ne peut créer de sprint
   return false;
 }
 
@@ -131,9 +137,8 @@ const SprintList = ({
   }, [sprintsForProject]);
   const projectTotalDays =
     projectStartDate && projectEndDate
-      ? Math.floor((projectEndDate - projectStartDate) / (1000 * 60 * 60 * 24)) + 1
+? Math.floor((projectEndDate - projectStartDate) / (1000 * 60 * 60 * 24)) + 1
       : 0;
-
   const defaultSprintStart = nextSprintStartDate;
   const defaultSprintEnd = new Date(nextSprintStartDate);
   defaultSprintEnd.setDate(defaultSprintEnd.getDate() + 6);
@@ -144,8 +149,8 @@ const SprintList = ({
     defaultSprintStart,
     defaultSprintEnd
   );
-  const isDateExceeded = projectEndDate && nextSprintStartDate > projectEndDate;
-  const blockCreateSprint = !isSomeTeamAvailable || totalSprintDays >= projectTotalDays || isDateExceeded;
+ const isDateExceeded = projectEndDate && nextSprintStartDate > projectEndDate;
+ const blockCreateSprint = !isSomeTeamAvailable || isDateExceeded;
 
   // === DATA FETCH ===
   useEffect(() => {

@@ -42,78 +42,89 @@ function computeSprintStatus(startDate, endDate) {
 function makeSchema({ projectStartDate, projectEndDate, sprints, isEdit, sprintData }) {
   const currentSprintId = sprintData?._id || null;
   return Yup.object({
-    title: Yup.string().required("Le titre est requis").min(3).max(100),
-    team: Yup.object().nullable().required("L'équipe est requise"),
-    startDate: Yup.date()
-      .typeError("Date de début invalide")
-      .required("Date de début requise")
-      .test(
-        "start-in-project-range",
-        "Date de début hors projet",
-        val => !projectStartDate || !val || new Date(val) >= new Date(projectStartDate)
-      )
-      .test(
-        "no-overlap-same-team",
-        "Le sprint se chevauche avec un autre sprint de la même équipe",
-        function (val) {
-          if (!val || !sprints) return true;
-          const endDate = this.parent.endDate;
-          const selectedTeam = this.parent.team?._id || this.parent.team;
-          if (!selectedTeam) return true;
-          for (let sprint of sprints) {
-            // :white_check_mark: On ignore le sprint en cours lors de la modification
-            if (currentSprintId && sprint._id === currentSprintId) continue;
-            const sStart = new Date(sprint.startDate);
-            const sEnd = new Date(sprint.endDate);
-            const sprintTeam = (sprint.team?._id || sprint.team || "").toString();
-            if (
-              endDate &&
-              new Date(val) <= sEnd &&
-              new Date(endDate) >= sStart &&
-              sprintTeam === selectedTeam.toString()
-            ) {
-              return false;
-            }
+  title: Yup.string().required("Le titre est requis").min(3).max(100),
+  team: Yup.object().nullable().required("L'équipe est requise"),
+  startDate: Yup.date()
+    .typeError("Date de début invalide")
+    .required("Date de début requise")
+    .test(
+      "start-in-project-range",
+      "Date de début hors projet",
+      val =>
+        !projectStartDate ||
+        !val ||
+        new Date(val) >= new Date(projectStartDate)
+    )
+    .test(
+      "no-overlap-same-team",
+      "Le sprint se chevauche avec un autre sprint de la même équipe",
+      function (val) {
+        if (!val || !sprints) return true;
+        const endDate = this.parent.endDate;
+        const selectedTeam = this.parent.team?._id || this.parent.team;
+        if (!selectedTeam) return true;
+        for (let sprint of sprints) {
+          if (currentSprintId && sprint._id === currentSprintId) continue;
+          const sStart = new Date(sprint.startDate);
+          const sEnd = new Date(sprint.endDate);
+          const sprintTeam = (sprint.team?._id || sprint.team || "").toString();
+          if (
+            endDate &&
+            new Date(val) <= sEnd &&
+            new Date(endDate) >= sStart &&
+            sprintTeam === selectedTeam.toString()
+          ) {
+            return false;
           }
-          return true;
         }
-      ),
-    endDate: Yup.date()
-      .typeError("Date de fin invalide")
-      .required("Date de fin est requise")
-      .min(Yup.ref("startDate"), "Date de fin doit être après la date de début")
-      .test(
-        "end-in-project-range",
-        "Date de fin hors projet",
-        val => !projectEndDate || !val || new Date(val) <= new Date(projectEndDate)
-      )
-      .test(
-        "no-overlap-same-team",
-        "Le sprint se chevauche avec un autre sprint de la même équipe",
-        function (val) {
-          if (!val || !sprints) return true;
-          const startDate = this.parent.startDate;
-          const selectedTeam = this.parent.team?._id || this.parent.team;
-          if (!selectedTeam) return true;
-          for (let sprint of sprints) {
-            // :white_check_mark: On ignore le sprint en cours lors de la modification
-            if (currentSprintId && sprint._id === currentSprintId) continue;
-            const sStart = new Date(sprint.startDate);
-            const sEnd = new Date(sprint.endDate);
-            const sprintTeam = (sprint.team?._id || sprint.team || "").toString();
-            if (
-              startDate &&
-              new Date(startDate) <= sEnd &&
-              new Date(val) >= sStart &&
-              sprintTeam === selectedTeam.toString()
-            ) {
-              return false;
-            }
-          }
-          return true;
+        return true;
+      }
+    ),
+  endDate: Yup.date()
+    .typeError("Date de fin invalide")
+    .required("Date de fin est requise")
+    .min(Yup.ref("startDate"), "Date de fin doit être après la date de début")
+    .test(
+      "end-in-project-range",
+      "Date de fin hors projet",
+      val =>
+        !projectEndDate ||
+        !val ||
+        new Date(val) <= new Date(projectEndDate)
+    )
+    .test(
+      "no-overlap-same-team",
+      "Le sprint se chevauche avec un autre sprint de la même équipe",
+      function (val) {
+        if (!val || !sprints) return true;
+        const startDate = this.parent.startDate;
+        const selectedTeam = this.parent.team?._id || this.parent.team;
+        if (!selectedTeam) return true;
+        for (let sprint of sprints) {
+          if (currentSprintId && sprint._id === currentSprintId) continue;
+          const sStart = new Date(sprint.startDate);
+          const sEnd = new Date(sprint.endDate);
+          const sprintTeam = (sprint.team?._id || sprint.team || "").toString();
+         if (
+  startDate &&
+  new Date(startDate) <= sEnd &&
+  new Date(val) >= sStart &&
+  sprintTeam === selectedTeam.toString()
+) {
+  // :white_check_mark: Autoriser si c’est exactement la même période
+  if (
+    new Date(startDate).getTime() === sStart.getTime() &&
+    new Date(val).getTime() === sEnd.getTime()
+  ) {
+    continue;
+  }
+  return false;
+}
         }
-      ),
-  });
+        return true;
+      }
+    ),
+});
 }
 
 export default function CreateSprintModal({
