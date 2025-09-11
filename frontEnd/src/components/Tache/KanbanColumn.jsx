@@ -102,9 +102,10 @@ const KanbanColumn = ({
             {tasks.map((task, index) => (
               <Draggable
                 key={String(task._id)}
+                
                 draggableId={String(task._id)}
                 index={index}
-                /* 👉 empêche le drag visuellement et fonctionnellement pour Manager */
+
                 isDragDisabled={!canDrag}
               >
                 {(provided, snapshot) => (
@@ -128,6 +129,7 @@ const KanbanColumn = ({
                     />
                   </div>
                 )}
+                
               </Draggable>
             ))}
             {provided.placeholder}

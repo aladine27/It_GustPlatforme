@@ -14,7 +14,7 @@ import fr from "date-fns/locale/fr";
 import { ButtonComponent } from "../../components/Global/ButtonComponent";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import SearchIcon from "@mui/icons-material/Search";
-
+import { useTranslation } from "react-i18next";
 const SprintSection = ({
   isAdminOrManager,
   paginatedSprints,
@@ -31,7 +31,9 @@ const SprintSection = ({
   projectTitle,
   searchSprint,
   setSearchSprint,
-}) => (
+}) => {
+   const { t } = useTranslation();
+    return (
   <Paper
     elevation={2}
     sx={{
@@ -51,7 +53,9 @@ const SprintSection = ({
       mb: 2
     }}
   >
-    {`Liste des Sprints du projet ${projectTitle ? `"${projectTitle}"` : ""}`}
+      {projectTitle
+          ? t("Liste des Sprints du projet \"{{project}}\"", { project: projectTitle })
+          : t("Liste des Sprints")}
   </Typography>
     {/* Header : Recherche (gauche), titre (centre), bouton (droite) */}
     <Box
@@ -66,13 +70,13 @@ const SprintSection = ({
     >
       {/* Recherche à gauche */}
       <TextField
-        label="Rechercher un sprint"
+        label={t("Rechercher")}
         value={searchSprint}
         onChange={e => {
           setSearchSprint(e.target.value);
           setSprintPage && setSprintPage(1);
         }}
-        placeholder="Titre du sprint..."
+        placeholder={t("Titre du sprint...")}
         sx={{
           width: { xs: "100%", md: 250 },
           borderRadius: "50px",
@@ -93,7 +97,7 @@ const SprintSection = ({
       {/* Bouton à droite */}
       {isAdminOrManager && (
      <ButtonComponent
-  text="Créer un sprint"
+  text={t("Créer un sprint")}
   icon={<AddCircleOutlineIcon />}
   onClick={handleOpenSprintModal}
   disabled={blockCreateSprint}
@@ -104,13 +108,13 @@ const SprintSection = ({
 
     {blockCreateSprint && (
       <Typography color="error" sx={{ mb: 2, textAlign: "center" }}>
-        Impossible d'Ajouter un nouveau Sprint !
+        {t("Impossible d'Ajouter un nouveau Sprint !")}
       </Typography>
     )}
-    {loadingSprint && <Typography color="info.main">Chargement...</Typography>}
+    {loadingSprint && <Typography color="info.main">{t("Chargement...")}</Typography>}
     {paginatedSprints.length === 0 && !loadingSprint && (
       <Typography color="text.secondary" sx={{ textAlign: "center", my: 4 }}>
-        Aucun sprint créé pour ce projet.
+         {t("Aucun sprint créé pour ce projet.")}
       </Typography>
     )}
 
@@ -155,7 +159,7 @@ const SprintSection = ({
                   </Stack>
                   <Chip
                     icon={<CheckCircleIcon sx={{ color: "#32c48d" }} />}
-                    label={sprint.status}
+                    label={t(sprint.status || "Statut")}
                     size="small"
                     sx={{
                       background: "#e8f5e9",
@@ -225,6 +229,8 @@ const SprintSection = ({
       />
     )}
   </Paper>
+    
 );
+};
 
 export default SprintSection;
