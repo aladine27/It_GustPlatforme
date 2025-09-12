@@ -10,36 +10,57 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { ButtonComponent } from "../../components/Global/ButtonComponent";
 import SprintSection from "./SprintSection";
 
-function getNextSprintStartDate(sprints = [], projectStartDate) {
-  if (!sprints.length) return projectStartDate ? new Date(projectStartDate) : new Date();
-  const sorted = [...sprints].sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
+function getNextSprintStartDate(sprints = [], projectStartDate, teamId = null) {
+  const filtered = teamId
+    ? sprints.filter(s => (s.team?._id || s.team) === String(teamId))
+    : sprints;
+  if (!filtered.length) return projectStartDate ? new Date(projectStartDate) : new Date();
+  const sorted = [...filtered].sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
   const last = sorted[sorted.length - 1];
   const date = new Date(last.endDate);
   date.setDate(date.getDate() + 1);
   return date;
 }
 
-function isTeamAvailableForSprint(sprints, teams, projectEndDate) {
+function isTeamAvailableForSprint(sprints, teams, projectStartDate, projectEndDate, minDays = 7) {
+  if (!projectStartDate || !projectEndDate) return false;
+  if (!Array.isArray(teams) || teams.length === 0) return false;
+
+  const start = new Date(projectStartDate);
+  const end = new Date(projectEndDate);
+
+  const isTakenByTeam = (d, teamId) => {
+    for (let s of (sprints || [])) {
+      const sTeam = (s.team?._id || s.team || "").toString();
+      if (sTeam !== String(teamId)) continue;
+      const sStart = new Date(s.startDate);
+      const sEnd = new Date(s.endDate);
+      if (d >= sStart && d <= sEnd) return true;
+    }
+    return false;
+  };
+
   for (let team of teams) {
     const teamId = team._id;
-    // récupère les sprints existants pour cette équipe
-    const teamSprints = sprints.filter(
-      s => String(s.team?._id || s.team) === String(teamId)
-    );
-    // si aucune sprint pour cette équipe, elle est disponible
-    if (!teamSprints.length) return true;
-    // date de début possible = après le dernier sprint de cette équipe
-    const lastSprint = teamSprints.sort(
-      (a, b) => new Date(a.endDate) - new Date(b.endDate)
-    ).pop();
-    const nextStartDate = new Date(lastSprint.endDate);
-    nextStartDate.setDate(nextStartDate.getDate() + 1);
-    // si nextStartDate est avant ou égal à la fin du projet, l'équipe peut créer un sprint
-    if (nextStartDate <= projectEndDate) return true;
+    let d = new Date(start);
+    while (d <= end) {
+      let streak = 0;
+      let cur = new Date(d);
+      while (cur <= end) {
+        if (isTakenByTeam(cur, teamId)) break;   // occupé => stop
+        if (cur.getDay() !== 0) {                // ≠ dimanche => on compte
+          streak += 1;
+          if (streak >= minDays) return true;
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+      d.setDate(d.getDate() + 1);
+    }
   }
-  // aucune équipe ne peut créer de sprint
   return false;
 }
+
+
 
 const SprintList = ({
   isAdminOrManager,
@@ -143,14 +164,20 @@ const SprintList = ({
   const defaultSprintEnd = new Date(nextSprintStartDate);
   defaultSprintEnd.setDate(defaultSprintEnd.getDate() + 6);
 
-  const isSomeTeamAvailable = isTeamAvailableForSprint(
+const isSomeTeamAvailable = useMemo(() =>
+  isTeamAvailableForSprint(
     sprintsForProject,
     teamsForProject,
-    defaultSprintStart,
-    defaultSprintEnd
-  );
- const isDateExceeded = projectEndDate && nextSprintStartDate > projectEndDate;
- const blockCreateSprint = !isSomeTeamAvailable || isDateExceeded;
+    projectStartDate,
+    projectEndDate,
+    7
+  ),
+  [sprintsForProject, teamsForProject, projectStartDate, projectEndDate]
+);
+
+
+const blockCreateSprint = !isSomeTeamAvailable || !projectStartDate || !projectEndDate;
+
 
   // === DATA FETCH ===
   useEffect(() => {
@@ -219,6 +246,7 @@ const SprintList = ({
         nextSprintStartDate={nextSprintStartDate}
         sprints={sprintsForProject}
         sprintData={sprintToEdit}
+        
         isEdit
       />
       <CustomDeleteForm

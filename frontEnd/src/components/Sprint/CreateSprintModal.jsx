@@ -13,6 +13,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import differenceInCalendarDays from "date-fns/differenceInCalendarDays";
 import ModelComponent from "../Global/ModelComponent";
 import { createSprint, updateSprint } from "../../redux/actions/sprintActions";
+import { isSunday } from "date-fns";
 
 // Vérifie si une date doit être désactivée pour l'équipe sélectionnée (true = désactivée)
 function shouldDisableDateForTeam(date, sprints, selectedTeamId, currentSprintId = null) {
@@ -126,6 +127,51 @@ function makeSchema({ projectStartDate, projectEndDate, sprints, isEdit, sprintD
     ),
 });
 }
+function hasNDayWindowAvailable({
+  projectStartDate,
+  projectEndDate,
+  sprints,
+  selectedTeamId,
+  currentSprintId,
+  minDays = 7
+}) {
+  if (!projectStartDate || !projectEndDate) return false;
+  if (!selectedTeamId) return true;
+
+  const start = new Date(projectStartDate);
+  const end = new Date(projectEndDate);
+
+  const isTakenByTeam = (d) => {
+    for (let s of (sprints || [])) {
+      if (currentSprintId && String(s._id) === String(currentSprintId)) continue;
+      const sTeam = (s.team?._id || s.team || "").toString();
+      if (sTeam !== String(selectedTeamId)) continue;
+      const sStart = new Date(s.startDate);
+      const sEnd = new Date(s.endDate);
+      if (d >= sStart && d <= sEnd) return true;
+    }
+    return false;
+  };
+
+  let d = new Date(start);
+  while (d <= end) {
+    let streak = 0;
+    let cur = new Date(d);
+    while (cur <= end) {
+      if (isTakenByTeam(cur)) break;           // jour occupé => stop la séquence
+      if (cur.getDay() !== 0) {                // ≠ dimanche => on compte
+        streak += 1;
+        if (streak >= minDays) return true;    // 7 jours « ouvrés » atteints
+      }
+      // dimanche : on ne compte pas mais on continue la séquence
+      cur.setDate(cur.getDate() + 1);
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return false;
+}
+
+
 
 export default function CreateSprintModal({
   open,
@@ -176,6 +222,16 @@ const {
 
   const selectedTeamId = watch("team")?._id || watch("team");
   const currentSprintId = sprintData?._id;
+  const canBuild7DaySprint = useMemo(() => {
+  return hasNDayWindowAvailable({
+    projectStartDate,
+    projectEndDate,
+    sprints,
+    selectedTeamId,
+    currentSprintId,
+    minDays: 7,
+  });
+}, [projectStartDate, projectEndDate, sprints, selectedTeamId, currentSprintId]);
 
   useEffect(() => {
     if (open && isEdit && sprintData) {
@@ -249,6 +305,7 @@ const {
     }
   };
 
+
   return (
     <>
       <ToastContainer position="bottom-right" autoClose={3500} />
@@ -257,6 +314,7 @@ const {
         handleClose={closeAndReset}
         title={isEdit ? "Modifier un sprint" : "Créer un nouveau sprint"}
         icon={isEdit ? <EditOutlined /> : <AddCircleOutline />}
+        disabled={!canBuild7DaySprint} 
       >
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Box sx={{ my: 2 }}>
@@ -322,6 +380,7 @@ const {
                       minDate={projectStartDate}
                       maxDate={projectEndDate}
                       shouldDisableDate={date =>
+                        isSunday(date) ||
                         shouldDisableDateForTeam(
                           date,
                           sprints,
@@ -373,9 +432,11 @@ const {
                 color="primary"
                 type="submit"
                 startIcon={isEdit ? <EditOutlined /> : <SaveOutlined />}
+                disabled={!canBuild7DaySprint}   // ⬅️ ajout
               >
                 {isEdit ? "Modifier" : "Créer"}
               </Button>
+
             </Box>
           </Box>
         </form>
