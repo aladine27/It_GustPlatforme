@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm, Controller } from "react-hook-form";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { ArrowBack, ArrowForward, SaveOutlined, AddCircleOutline } from "@mui/icons-material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -127,12 +127,11 @@ export default function CreateProjectModal({ open, handleClose }) {
       formData.append("status", status);
       formData.append("user", userId);
       if (data.file) formData.append("file", data.file);
-      const actionResult = await dispatch(createProject(formData));
+      const actionResult = await dispatch(createProject(formData)).unwrap();
       if (actionResult?.error) {
         toast.error(actionResult?.payload || "Erreur lors de la création.");
-         closeAndReset();
+         setTimeout(() => toast.success(t("Nouveau projet créé avec succès ✅")), 50);
       }
-      toast.success(t("Projet créé avec succès"));
       closeAndReset(); // Ferme et reset seulement en cas de succès
     } catch (e) {
       toast.error("Erreur interne !");

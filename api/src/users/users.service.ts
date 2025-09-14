@@ -356,7 +356,10 @@ export class UsersService {
            
 
         ],
-      });
+      })
+      .sort({ createdAt: -1 })  // ✅ fix 2: tri décroissant
+      .exec(); 
+      
   
       if (!users || users.length === 0) {
         throw new NotFoundException('Aucun utilisateur correspondant trouvé');

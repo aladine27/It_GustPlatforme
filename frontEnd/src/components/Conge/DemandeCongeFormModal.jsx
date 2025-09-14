@@ -156,7 +156,7 @@ export default function DemandeCongeFormModal({
         if (Number(form.duration) > Number(leaveBalance.soldeRestant)) {
           setErrors((prev) => ({
             ...prev,
-            duration: t("Votre solde restant est insuffisant ({solde} jours) pour cette demande.", { solde: leaveBalance.soldeRestant }),
+            duration: t("Votre solde restant est insuffisant pour cette demande.", { solde: leaveBalance.soldeRestant }),
           }));
           toast.error(
             t("Votre solde restant ({solde} jours) est insuffisant pour une demande de {durée} jours !", {
@@ -191,7 +191,6 @@ export default function DemandeCongeFormModal({
           newErrors[err.path] = err.message;
         });
         setErrors(newErrors);
-        toast.error(validationErr.errors[0]);
       } else {
         toast.error(t("Erreur lors de la validation ou de la soumission !"));
       }

@@ -144,15 +144,17 @@ export default function DocumentHeader({
               Plein écran
             </Button>
             
-            <Button 
-              variant="outlined" 
-              size="small" 
-              onClick={() => navigate(-1)}
-              startIcon={<ArrowBackIcon />}
-              sx={{ textTransform: 'none' }}
-            >
-              Retour
-            </Button>
+             <Button
+            variant="outlined"
+            size="small"
+            onClick={() =>
+              navigate('/dashboard/document', { state: { view: 'traitement' } })
+            }
+            startIcon={<ArrowBackIcon />}
+            sx={{ textTransform: 'none' }}
+          >
+            Retour
+          </Button>
           </Stack>
         )}
         

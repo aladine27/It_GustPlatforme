@@ -17,12 +17,26 @@ export default function ProjectDetailModal({
 }) {
   const { t } = useTranslation();
   if (!project) return null;
-   // === AJOUTE CES LOGS POUR DEBUG ===
+
+  // === DEBUG LOGS ===
   console.log(">>> project.user brut:", project.user);
   if (typeof project.user === "object") {
     console.log(">>> project.user.fullName:", project.user.fullName);
     console.log(">>> project.user.email:", project.user.email);
   }
+
+  // URL base backend (sans .env)
+  const API_BASE =
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? `${window.location.protocol}//${window.location.hostname}:3000`
+      : window.location.origin.replace(/\/+$/, '');
+
+  const buildFileUrl = (file) => {
+    if (!file) return null;
+    const isAbs = /^https?:\/\//i.test(file);
+    const name = String(file).split('/').pop();
+    return isAbs ? file : `${API_BASE}/uploads/projects/${encodeURIComponent(name)}`;
+  };
 
   // Statut coloré (chip)
   const getStatusColor = (status) => {
@@ -133,24 +147,39 @@ export default function ProjectDetailModal({
               {project.description || <span style={{ color: "#aaa" }}>{t("Aucune description")}</span>}
             </Typography>
           </DetailRow>
+
           <DetailRow label={t("Durée")}>
             <Typography>{project.duration || <span style={{ color: "#aaa" }}>{t("N/A")}</span>}</Typography>
           </DetailRow>
+
+          {/* === FIX: lien absolu vers backend pour éviter React Router === */}
           <DetailRow label={t("Fichier")}>
-            {project.file ?
-              <Link href={`/uploads/${project.file}`} target="_blank" underline="hover">
-                {project.file}
-              </Link>
-              :
+            {project.file ? (() => {
+              const name = String(project.file).split('/').pop();
+              const href = buildFileUrl(project.file);
+              return (
+                <Link
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  underline="hover"
+                >
+                  {name}
+                </Link>
+              );
+            })() : (
               <Typography color="#aaa">{t("Aucun")}</Typography>
-            }
+            )}
           </DetailRow>
+
           <DetailRow label={t("Date début")}>
             <Typography>{project.startDate?.substring(0, 10) || "-"}</Typography>
           </DetailRow>
+
           <DetailRow label={t("Date fin")}>
             <Typography>{project.endDate?.substring(0, 10) || "-"}</Typography>
           </DetailRow>
+
           <DetailRow label={t("Statut")}>
             <Chip
               label={project.status ? t(project.status) : t("N/A")}
@@ -160,18 +189,10 @@ export default function ProjectDetailModal({
             />
           </DetailRow>
 
-        <DetailRow label={t("Crée par")}>
-  <Typography>
-    {project.user && typeof project.user === "object"
-      ? (project.user.fullName || "-")
-      : (project.user || "-")}
-  </Typography>
-</DetailRow>
+         
           
         </Stack>
       </DialogContent>
-
-     
     </Dialog>
   );
 }

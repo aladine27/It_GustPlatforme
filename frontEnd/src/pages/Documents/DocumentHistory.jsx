@@ -16,9 +16,18 @@ export default function DocumentHistoriqueAll() {
   const { documents, loading, error } = useSelector((state) => state.document);
 
   // Tri du plus récent au plus ancien
-  const docs = (documents || []).slice().sort((a, b) => {
-    return new Date(b.createdAt) - new Date(a.createdAt);
+// Tri + filtre : seulement TRAITÉ (file présent) et ordre décroissant par date de délivrance
+const docs = (documents || [])
+  .filter(d => !!d.file) // ⇦ ne garder que les demandes traitées
+  .slice()
+  .sort((a, b) => {
+    const t = (x) => {
+      const d = x?.delevryDate || x?.deliveryDate || x?.createdAt; // fallback si typo/champ absent
+      return d ? new Date(d).getTime() : 0;
+    };
+    return t(b) - t(a); // décroissant
   });
+
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);

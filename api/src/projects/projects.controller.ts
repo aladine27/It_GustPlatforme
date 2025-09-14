@@ -139,7 +139,7 @@ async findAll( @Res() res) {
       @UseInterceptors(
         FileInterceptor('file', {
             storage: diskStorage({
-            destination: './uploads/applications',
+            destination: './uploads/projects',
             filename: (_request,file, callback) => 
             callback(null, `${new Date().getTime()}-${file.originalname}`)
             })

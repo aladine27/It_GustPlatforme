@@ -1,7 +1,5 @@
-import React, { useState } from "react";
-import {
-  Box, TextField, MenuItem,
-} from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, TextField, MenuItem } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import ModelComponent from "../Global/ModelComponent";
 import { ButtonComponent } from "../Global/ButtonComponent";
@@ -12,7 +10,6 @@ import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { EventNote } from "@mui/icons-material";
 
-// 5 Types de documents les plus demandés
 const documentTypes = [
   { value: "Attestation de travail", label: "Attestation de travail" },
   { value: "Bulletin de paie", label: "Bulletin de paie" },
@@ -21,50 +18,39 @@ const documentTypes = [
   { value: "certificat d'emploi et de fonction", label: "certificat d'emploi et de fonction" },
 ];
 
-export default function DemandeDocumentFormModal({
-  open,
-  handleClose,
-  onSubmit,
-  userId,
-}) {
+export default function DemandeDocumentFormModal({ open, handleClose, onSubmit, userId }) {
   const { t } = useTranslation();
   const [form, setForm] = useState({
     title: "",
-    traitementDateLimite: "",
+    traitementDateLimite: null,            // ← null au lieu de ""
     reason: "",
   });
   const [errors, setErrors] = useState({});
   const [fileName, setFileName] = useState(null);
-  
 
-  React.useEffect(() => {
-    if (open) setForm({ title: "", traitementDateLimite: "", reason: "" });
+  useEffect(() => {
+    if (open) setForm({ title: "", traitementDateLimite: null, reason: "" }); // ← null
   }, [open]);
 
-  
   const validationSchema = Yup.object({
     title: Yup.string().required(t("Type de document requis")),
     traitementDateLimite: Yup.date()
-      .required(t("Date limite requise"))
+      .nullable()                                                    // accepte null avant required
+      .typeError(t("Date limite de traitement requise"))            // ← message custom (remplace “Invalid Date…”)
+      .required(t("Date limite de traitement requise"))             // ← même libellé si vide
       .min(dayjs().startOf("day").toDate(), t("Impossible de choisir une date passée")),
     reason: Yup.string().required(t("Le motif est requis")),
   });
+
   const resetForm = () => {
-    setForm({
-      title: "",
-      traitementDateLimite: "",
-      reason: "",
-    });
+    setForm({ title: "", traitementDateLimite: null, reason: "" }); // ← null
     setErrors({});
     setFileName(null);
   };
 
   const handleChange = (field) => (e) => {
     const value = e.target.value;
-    setForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
@@ -73,31 +59,24 @@ export default function DemandeDocumentFormModal({
     try {
       await validationSchema.validate(form, { abortEarly: false });
 
-      // Prépare le FormData
       const formData = new FormData();
       formData.append("title", form.title);
-      formData.append("traitementDateLimite", form.traitementDateLimite);
+      formData.append("traitementDateLimite", form.traitementDateLimite); // string YYYY-MM-DD si valide
       formData.append("reason", form.reason);
       formData.append("status", "En cours de traitement");
       formData.append("user", userId);
-      formData.append("file", ""); // pas de fichier ici
+      formData.append("file", "");
 
-      if (onSubmit) {
-        await onSubmit(formData);
-      }
+      if (onSubmit) await onSubmit(formData);
 
-      setForm({ title: "", traitementDateLimite: "", reason: "" });
       resetForm();
       handleClose();
       toast.success(t("Demande de document envoyée avec succès !"));
     } catch (validationErr) {
       if (validationErr.inner) {
         const newErrors = {};
-        validationErr.inner.forEach((err) => {
-          newErrors[err.path] = err.message;
-        });
+        validationErr.inner.forEach((err) => { newErrors[err.path] = err.message; });
         setErrors(newErrors);
-        toast.error(validationErr.errors[0]);
       } else {
         toast.error(t("Erreur lors de la validation ou de la soumission !"));
       }
@@ -117,12 +96,7 @@ export default function DemandeDocumentFormModal({
       icon={<EventNote />}
       maxWidth="sm"
     >
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
-        autoComplete="off"
-      >
+      <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }} autoComplete="off">
         <TextField
           select
           label={t("Type de document") + " *"}
@@ -132,13 +106,9 @@ export default function DemandeDocumentFormModal({
           error={!!errors.title}
           helperText={errors.title}
         >
-          <MenuItem value="" disabled>
-            {t("Sélectionner un type")}
-          </MenuItem>
+          <MenuItem value="" disabled>{t("Sélectionner un type")}</MenuItem>
           {documentTypes.map((doc) => (
-            <MenuItem key={doc.value} value={doc.value}>
-              {doc.label}
-            </MenuItem>
+            <MenuItem key={doc.value} value={doc.value}>{doc.label}</MenuItem>
           ))}
         </TextField>
 
@@ -148,7 +118,7 @@ export default function DemandeDocumentFormModal({
             value={form.traitementDateLimite ? dayjs(form.traitementDateLimite) : null}
             minDate={dayjs().startOf("day")}
             onChange={(value) => {
-              const date = value ? value.format("YYYY-MM-DD") : "";
+              const date = value ? value.format("YYYY-MM-DD") : null; // ← null si vide
               handleChange("traitementDateLimite")({ target: { value: date } });
             }}
             slotProps={{
