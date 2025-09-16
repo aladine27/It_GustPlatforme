@@ -129,7 +129,7 @@ export default function TypeCongeFormModal({
               Créer un type de congé
             </Typography>
             <form onSubmit={handleSubmit(onSubmit)}>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+              <Stack  spacing={1}>
                 <Controller
                   name="name"
                   control={control}
@@ -144,9 +144,11 @@ export default function TypeCongeFormModal({
                     <TextField {...field} label="Limite (jours)" size="small" fullWidth error={!!errors.limitDuration} helperText={errors.limitDuration?.message} type="number" />
                   )}
                 />
-                <Button type="submit" variant="contained" startIcon={<AddCircleOutlineIcon />} disabled={isSubmitting}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button type="submit"  variant="contained" startIcon={<AddCircleOutlineIcon />} disabled={isSubmitting}>
                   Créer
                 </Button>
+                </Box>
               </Stack>
             </form>
           </Paper>

@@ -292,7 +292,7 @@ export default function EventFormModal({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer position="bottom-right" autoClose={3000} />
       <ModelComponent open={open} handleClose={onClose}
         title={event?._id ? t("Modifier un événement") : t("Ajouter un événement")}
         icon={<SaveOutlined />}

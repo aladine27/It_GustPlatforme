@@ -64,6 +64,7 @@ function computeOfferStatus(o) {
 }
 
 export default function JobOfferList({ onOpenApplications }) {
+
   const { t } = useTranslation();
   const { CurrentUser } = useSelector((state) => state.user);
   const userId = CurrentUser?.user?._id || CurrentUser?._id;
@@ -102,11 +103,10 @@ export default function JobOfferList({ onOpenApplications }) {
 
   // Filtres dynamiques avec statut calculé
   const offers = useMemo(() => {
-    // enrichir avec computedStatus à chaque rendu (tick déclenche le recalcul)
-    let arr = offersBackend.map((o) => ({
-      ...o,
-      status: computeOfferStatus(o),
-    }));
+   let arr = offersBackend.map((o) => ({
+  ...o,
+  computedStatus: computeOfferStatus(o),
+}));
 
     if (statusFilter !== "all")
       arr = arr.filter((o) => o.computedStatus === statusFilter);

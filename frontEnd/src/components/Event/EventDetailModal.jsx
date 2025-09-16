@@ -29,7 +29,7 @@ export default function EventDetailsModal({
   userRole
 }) {
   const { t, i18n } = useTranslation();
-  const canSeeGuests = ['Admin', 'RH'].includes(userRole);
+  const canSeeGuests = ['Admin', 'Rh'].includes(userRole);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   if (!event) return null;
@@ -195,7 +195,7 @@ export default function EventDetailsModal({
           </Stack>
         </DialogContent>
 
-        {["Admin", "RH"].includes(userRole) && (
+        {["Admin", "Rh"].includes(userRole) && (
           <>
             <Divider sx={{ mt: 1 }} />
             <DialogActions sx={{ p: 2, gap: 1 }}>

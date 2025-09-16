@@ -248,7 +248,26 @@ const handleCloseNotification = () => {
     },
   }}
 >
-  <Box sx={{ maxHeight: 320, overflowY: 'auto'}}>
+  <Box
+  sx={{
+    maxHeight: 320,
+    overflowY: 'auto',
+    pr: 0.5,
+    scrollbarWidth: 'thin', // Firefox
+    scrollbarColor: (theme) => `${theme.palette.primary.main} transparent`,
+    '&::-webkit-scrollbar': { width: 8 }, // Chrome/Edge
+    '&::-webkit-scrollbar-track': { background: 'transparent' },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: (theme) => theme.palette.primary.main,
+      borderRadius: 8,
+    },
+    '&:hover::-webkit-scrollbar-thumb': {
+      backgroundColor: (theme) => theme.palette.primary.dark,
+    },
+    '&::-webkit-scrollbar-corner': { background: 'transparent' },
+  }}
+>
+
     {(notifications?.length || 0) > 0 ? (
       notifications
         .slice()
@@ -360,6 +379,7 @@ const handleCloseNotification = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
+                      
                     }}
                   >
                     {userFullName}

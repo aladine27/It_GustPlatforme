@@ -51,12 +51,12 @@ export default function JobOfferCard({
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  // === utilise le statut calculé envoyé par la liste ===
-  const effectiveStatus = (offer.computedStatus || offer.status || "open");
+
+  const effectiveStatus = offer.computedStatus || "open";
   const status = getStatusColor(effectiveStatus);
   const type = getTypeColor(offer.type);
 
-  // Salaire (DT)
+
   const salary =
     typeof offer.salaryRange === "number" && !isNaN(offer.salaryRange)
       ? offer.salaryRange
@@ -183,7 +183,7 @@ const goToApplicants = () => {
               {/* Description */}
               <Box sx={lineSx}>
                 <ChecklistRtlOutlinedIcon sx={{ color: "#1a237e", fontSize: 20, mt: 0.5 }} />
-                <Box sx={{ flex: 1 }}>
+                <Box sx={{ flex: 1 ,height:"72px"}}>
                   <Typography fontWeight={600} fontSize={15} color="#1a237e" sx={{ mb: 0.5 }}>
                     {t("Description du poste")}:
                   </Typography>
@@ -289,10 +289,10 @@ const goToApplicants = () => {
         />
       </Box>
 
- <Box sx={{ px: 3, pb: 2, pt: 1 }}>
+ <Box sx={{ px: 3, pb: 2, pt: 1, display: "flex", alignItems: "center", gap: 1 }}>
   <ButtonComponent
     onClick={goToApplicants}
-    text={`${t("Voir candidats")} (${applicantsCount})`}
+    text={`${t(" candidats")} (${applicantsCount})`}
     icon={<PeopleOutlineOutlinedIcon />}
     endIcon={<ArrowForwardIosRoundedIcon />}
     variant="outlined"

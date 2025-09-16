@@ -261,10 +261,26 @@ export default function Evenement() {
     noEventsInRange: t('noEventsInRange')
   };
 
-  const today = useMemo(
-    () => moment().format('dddd DD MMMM YYYY'),
-    [lang]
-  );
+// forcer locale française
+const today = useMemo(() => {
+  const jours = [
+    "dimanche", "lundi", "mardi", "mercredi",
+    "jeudi", "vendredi", "samedi"
+  ];
+  const mois = [
+    "janvier", "février", "mars", "avril", "mai", "juin",
+    "juillet", "août", "septembre", "octobre", "novembre", "décembre"
+  ];
+
+  const now = new Date();
+  const jour = jours[now.getDay()];
+  const numero = String(now.getDate()).padStart(2, "0");
+  const moisNom = mois[now.getMonth()];
+  const annee = now.getFullYear();
+
+  return `${jour} ${numero} ${moisNom} ${annee}`;
+}, []);
+
 
   const handleNavigate = (date) => setCurrentDate(date);
   const handleEditType = async (typeId, newName) => {
@@ -281,14 +297,34 @@ export default function Evenement() {
       dispatch(fetchEventTypes());
     }
   };
-    const formats = useMemo(() => ({
-    dayHeaderFormat:     (date, culture, loc) => loc.format(date, 'dddd DD MMMM YYYY', culture),
-    weekdayFormat:       (date, culture, loc) => loc.format(date, 'ddd', culture),    // lun. mar. …
-    dayFormat:           (date, culture, loc) => loc.format(date, 'DD ddd', culture), // 08 lun.
-    agendaDateFormat:    (date, culture, loc) => loc.format(date, 'ddd DD MMM', culture),
-    agendaTimeRangeFormat: ({ start, end }, culture, loc) =>
-      `${loc.format(start, 'HH:mm', culture)} – ${loc.format(end, 'HH:mm', culture)}`
-  }), [lang]);
+    const formats = useMemo(() => {
+  const joursCourt = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+  const joursLong  = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+  const moisLong   = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const hhmm = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+
+  return {
+    // Noms de colonnes (week/day)
+    weekdayFormat: (date) => joursCourt[date.getDay()],
+    // Libellé dans les cellules (mois)
+    dayFormat: (date) => `${pad2(date.getDate())} ${joursCourt[date.getDay()]}`,
+    // Header jour/semaine
+    dayHeaderFormat: (date) =>
+      `${joursLong[date.getDay()]} ${pad2(date.getDate())} ${moisLong[date.getMonth()]} ${date.getFullYear()}`,
+    // Header plage semaine (ex: lun 15 sept – dim 21 sept)
+    dayRangeHeaderFormat: ({ start, end }) => {
+      const f = (d) => `${joursLong[d.getDay()]} ${pad2(d.getDate())} ${moisLong[d.getMonth()]}`;
+      return `${f(start)} – ${f(end)}`;
+    },
+    // Header mois
+    monthHeaderFormat: (date) => `${moisLong[date.getMonth()]} ${date.getFullYear()}`,
+    // Agenda
+    agendaDateFormat: (date) => `${joursCourt[date.getDay()]} ${pad2(date.getDate())} ${moisLong[date.getMonth()]}`,
+    agendaTimeRangeFormat: ({ start, end }) => `${hhmm(start)} – ${hhmm(end)}`
+  };
+}, []);
+
 
   return (
     <Box sx={{ width: "100%", p: 0, mt: 0 }}>
@@ -344,6 +380,7 @@ export default function Evenement() {
               date={currentDate}
               onNavigate={handleNavigate}
               defaultView="week"
+              formats={formats}
               // Couleur par statut EN auto
               eventPropGetter={(event) => {
                 const bg = getStatusColor(event?.extendedProps?.status);
@@ -450,7 +487,7 @@ export default function Evenement() {
           event={selectedEvent}
           eventTypes={eventTypes}
           onEdit={handleEditEvent}
-          onDelete={async (id) => { await dispatch(deleteEvent(id)); dispatch(fetchAllEvents()); setDetailsModalOpen(false); setSelectedEvent(null); }}
+          onDelete={async (id) => {  dispatch(deleteEvent(id)); dispatch(fetchAllEvents()); setDetailsModalOpen(false); setSelectedEvent(null); }}
           userRole={userRole}
         />
         <EventFormModal

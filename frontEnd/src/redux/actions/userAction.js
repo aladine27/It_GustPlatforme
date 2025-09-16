@@ -13,7 +13,6 @@ export const LoginAction = createAsyncThunk(
             withCredentials: true,
           }
         );
-        console.log("Data to dispatch", response.data);
         return response.data;
       } catch (error) {
         console.log("[FRONT] LoginAction → ERROR :", error?.response?.data || error.message);
@@ -68,7 +67,7 @@ export const LoginAction = createAsyncThunk(
           `http://localhost:3000/auth/google/callback${queryParams}`,
           { withCredentials: true }
         );
-        return response.data; // { message, data, token }
+        return response.data; 
       } catch (error) {
         return rejectWithValue(
           error.response?.data?.message || error.message
@@ -97,12 +96,13 @@ export const LoginAction = createAsyncThunk(
     "user/fetchProfile",
     async (_, { rejectWithValue }) => {
         try {
+           const token = localStorage.getItem("token");
             const response = await axios.get(
                 "http://localhost:3000/Auth/profile",
-                {
-                    withCredentials: true,
-                }
-            );
+                 {
+                    headers: { Authorization: `Bearer ${token}` },
+                 });
+            
          
             return response.data;
         } catch (error) {
@@ -116,8 +116,8 @@ export const updateUserAction = createAsyncThunk(
   "user/updateProfile",
   async ({ id, userData }, { rejectWithValue }) => {
     try {
+      const token = localStorage.getItem("token");
       const formData = new FormData();
-      // Liste blanche des champs modifiables
       const allowedFields = ['fullName', 'email', 'phone', 'address', 'domain'];
       allowedFields.forEach(key => {
         if (userData[key] !== null && userData[key] !== undefined) {
@@ -135,6 +135,7 @@ export const updateUserAction = createAsyncThunk(
             {
               headers: {
                 'Content-Type': 'multipart/form-data',
+                 Authorization: `Bearer ${token}` 
               },
             }
           );
