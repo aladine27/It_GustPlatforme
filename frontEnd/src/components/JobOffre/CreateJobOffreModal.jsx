@@ -1,7 +1,6 @@
+// src/components/JobOffre/CreateJobOfferModal.jsx
 import React, { useEffect, useMemo } from "react";
-import {
-  Box, Grid, TextField, MenuItem, Stack, Button
-} from "@mui/material";
+import { Box, Grid, TextField, MenuItem, Stack, Button } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { fr } from "date-fns/locale";
@@ -14,22 +13,18 @@ import { ButtonComponent } from "../Global/ButtonComponent";
 import ModelComponent from "../Global/ModelComponent";
 import StepperComponent from "../Global/StepperComponent";
 
-const stepsKeys = [
-  "Informations principales",
-  "Détails de l'offre",
-  "Catégorie"
-];
+const stepsKeys = ["Informations principales", "Détails de l'offre", "Catégorie"];
 
 const locations = [
   { value: "Tunis", label: "Tunis" },
   { value: "Sfax", label: "Sfax" },
-  { value: "Sousse", label: "Sousse" }
+  { value: "Sousse", label: "Sousse" },
 ];
 
 const typeList = [
   { value: "full-time", label: "Full-time" },
   { value: "part-time", label: "Part-time" },
-  { value: "internship", label: "Internship" }
+  { value: "internship", label: "Internship" },
 ];
 
 const jobOfferSchemas = [
@@ -37,17 +32,10 @@ const jobOfferSchemas = [
     title: Yup.string().required("Titre requis"),
     description: Yup.string().required("Description requise"),
     requirements: Yup.string().required("Compétences requises"),
-    
   }),
   Yup.object().shape({
-    closingDate: Yup.date()
-      .typeError("Date de clôture requise")
-      .required("Date de clôture requise")
-      .min(new Date(), "Date dans le futur"),
-    salaryRange: Yup.number()
-      .typeError("Le salaire est requis")
-      .required("Le salaire est requis")
-      .positive("Le salaire doit être positif"),
+    closingDate: Yup.date().typeError("Date de clôture requise").required("Date de clôture requise").min(new Date(), "Date dans le futur"),
+    salaryRange: Yup.number().typeError("Le salaire est requis").required("Le salaire est requis").positive("Le salaire doit être positif"),
     location: Yup.string().required("Lieu requis"),
     process: Yup.string().required("Processus de recrutement requis"),
     type: Yup.string().required("Type requis"),
@@ -63,15 +51,12 @@ export default function CreateJobOfferModal({
   handleClose,
   jobCategories,
   userId,
-  editOffer, 
-  onSubmit
+  editOffer,
+  onSubmit,
 }) {
   const [activeStep, setActiveStep] = React.useState(0);
 
-  const resolver = useMemo(
-    () => yupResolver(jobOfferSchemas[activeStep]),
-    [activeStep]
-  );
+  const resolver = useMemo(() => yupResolver(jobOfferSchemas[activeStep]), [activeStep]);
 
   const {
     register,
@@ -85,6 +70,7 @@ export default function CreateJobOfferModal({
   } = useForm({
     resolver,
     mode: "onTouched",
+    shouldUnregister: false, // ✅ garde les valeurs entre les steps
     defaultValues: {
       title: "",
       description: "",
@@ -92,33 +78,37 @@ export default function CreateJobOfferModal({
       bonuses: "",
       closingDate: null,
       salaryRange: "",
-      location: "",
+      location: locations[0]?.value || "",
       process: "",
       type: "full-time",
       jobCategory: jobCategories?.[0]?._id || "",
-    }
+    },
   });
 
-  // Remplir le formulaire en édition
+  // Remplissage en édition
   useEffect(() => {
-    if (open && editOffer) {
+    if (!open) return;
+    if (editOffer) {
       reset({
         title: editOffer.title || "",
         description: editOffer.description || "",
         requirements: editOffer.requirements || "",
-        bonuses: editOffer.bonuses || "", 
+        bonuses: editOffer.bonuses || "",
         closingDate: editOffer.closingDate ? new Date(editOffer.closingDate) : null,
-        salaryRange: editOffer.salaryRange || "",
-        location: editOffer.location || "",
+        salaryRange: editOffer.salaryRange ?? "",
+        location: editOffer.location || locations[0]?.value || "",
         process: editOffer.process || "",
         type: editOffer.type || "full-time",
         jobCategory:
           editOffer.jobCategory?._id ||
           editOffer.jobCategory ||
-          (jobCategories?.[0]?._id || ""),
+          jobCategories?.[0]?._id ||
+          "",
       });
-    }
-    if (open && !editOffer) {
+      // 👇 force la synchro des selects contrôlés
+      setValue("location", editOffer.location || locations[0]?.value || "", { shouldValidate: false });
+      setValue("type", editOffer.type || "full-time", { shouldValidate: false });
+    } else {
       reset({
         title: "",
         description: "",
@@ -126,34 +116,34 @@ export default function CreateJobOfferModal({
         bonuses: "",
         closingDate: null,
         salaryRange: "",
-        location: "",
+        location: locations[0]?.value || "",
         process: "",
         type: "full-time",
         jobCategory: jobCategories?.[0]?._id || "",
       });
     }
-  }, [open, editOffer, reset, jobCategories]);
+  }, [open, editOffer, reset, setValue, jobCategories]);
 
-  // Correction du select value pour éviter warning
+  // Corriger la catégorie si elle arrive après
   useEffect(() => {
     if (!watch("jobCategory") && jobCategories?.length > 0) {
       setValue("jobCategory", jobCategories[0]._id);
     }
   }, [jobCategories, watch, setValue]);
 
-  // Étape suivante/précédente
+  // Navigation steps
   const handleNext = async () => {
     const isValid = await trigger();
     if (isValid) setActiveStep((s) => Math.min(s + 1, stepsKeys.length - 1));
   };
   const handleBack = () => setActiveStep((s) => Math.max(s - 1, 0));
 
-  // Soumission finale
+  // Soumission finale (status calculé côté front)
   const onFinalSubmit = async (data) => {
-  const now = new Date();
-  const closing = new Date(data.closingDate);
-  const status = closing >= now ? "open" : "close";
- 
+    const eod = new Date(data.closingDate);
+    eod.setHours(23, 59, 59, 999);
+    const status = new Date() > eod ? "closed" : "open";
+
     try {
       const payload = {
         ...data,
@@ -161,7 +151,7 @@ export default function CreateJobOfferModal({
         salaryRange: Number(data.salaryRange),
         postedDate: editOffer?.postedDate || new Date().toISOString(),
         user: userId,
-        statuts:status,
+        status, // ✅ champ correct envoyé au backend
       };
       await (onSubmit ? onSubmit(payload) : Promise.resolve());
       handleClose();
@@ -177,39 +167,17 @@ export default function CreateJobOfferModal({
         return (
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <TextField
-                label="Titre"
-                fullWidth
-                {...register("title")}
-                error={!!errors.title}
-                helperText={errors.title?.message}
-              />
+              <TextField label="Titre" fullWidth {...register("title")} error={!!errors.title} helperText={errors.title?.message} />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                label="Description"
-                fullWidth
-                multiline
-                minRows={2}
-                {...register("description")}
-                error={!!errors.description}
-                helperText={errors.description?.message}
-              />
+              <TextField label="Description" fullWidth multiline minRows={2} {...register("description")} error={!!errors.description} helperText={errors.description?.message} />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                label="Compétences requises"
-                fullWidth
-                multiline
-                minRows={2}
-                {...register("requirements")}
-                error={!!errors.requirements}
-                helperText={errors.requirements?.message}
-              />
+              <TextField label="Compétences requises" fullWidth multiline minRows={2} {...register("requirements")} error={!!errors.requirements} helperText={errors.requirements?.message} />
             </Grid>
-        
           </Grid>
         );
+
       case 1:
         return (
           <Grid container spacing={2}>
@@ -229,13 +197,14 @@ export default function CreateJobOfferModal({
                           fullWidth: true,
                           error: !!errors.closingDate,
                           helperText: errors.closingDate?.message,
-                        }
+                        },
                       }}
                     />
                   </LocalizationProvider>
                 )}
               />
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Salaire"
@@ -247,20 +216,32 @@ export default function CreateJobOfferModal({
                 inputProps={{ min: 0 }}
               />
             </Grid>
+
+            {/* ✅ Lieu contrôlé */}
             <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                label="Lieu"
-                fullWidth
-                {...register("location")}
-                error={!!errors.location}
-                helperText={errors.location?.message}
-              >
-                {locations.map(loc => (
-                  <MenuItem key={loc.value} value={loc.value}>{loc.label}</MenuItem>
-                ))}
-              </TextField>
+              <Controller
+                name="location"
+                control={control}
+                defaultValue={locations[0]?.value || ""}
+                render={({ field }) => (
+                  <TextField
+                    select
+                    label="Lieu"
+                    fullWidth
+                    {...field}
+                    error={!!errors.location}
+                    helperText={errors.location?.message}
+                  >
+                    {locations.map((loc) => (
+                      <MenuItem key={loc.value} value={loc.value}>
+                        {loc.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              />
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Processus de recrutement"
@@ -270,22 +251,34 @@ export default function CreateJobOfferModal({
                 helperText={errors.process?.message}
               />
             </Grid>
+
+            {/* ✅ Type contrôlé */}
             <Grid item xs={12}>
-              <TextField
-                select
-                label="Type"
-                fullWidth
-                {...register("type")}
-                error={!!errors.type}
-                helperText={errors.type?.message}
-              >
-                {typeList.map(item => (
-                  <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>
-                ))}
-              </TextField>
+              <Controller
+                name="type"
+                control={control}
+                defaultValue="full-time"
+                render={({ field }) => (
+                  <TextField
+                    select
+                    label="Type"
+                    fullWidth
+                    {...field}
+                    error={!!errors.type}
+                    helperText={errors.type?.message}
+                  >
+                    {typeList.map((item) => (
+                      <MenuItem key={item.value} value={item.value}>
+                        {item.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              />
             </Grid>
           </Grid>
         );
+
       case 2:
         return (
           <Grid container spacing={2}>
@@ -298,17 +291,20 @@ export default function CreateJobOfferModal({
                 error={!!errors.jobCategory}
                 helperText={errors.jobCategory?.message}
                 value={watch("jobCategory") || ""}
-                onChange={e => setValue("jobCategory", e.target.value)}
+                onChange={(e) => setValue("jobCategory", e.target.value)}
               >
-                {jobCategories?.length
-                  ? jobCategories.map(cat => (
-                      <MenuItem key={cat._id} value={cat._id}>{cat.name}</MenuItem>
-                    ))
-                  : <MenuItem value="">Aucune catégorie</MenuItem>
-                }
+                {jobCategories?.length ? (
+                  jobCategories.map((cat) => (
+                    <MenuItem key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem value="">Aucune catégorie</MenuItem>
+                )}
               </TextField>
             </Grid>
-                <Grid item xs={12}>
+            <Grid item xs={12}>
               <TextField
                 label="Bonus (séparés par ,)  ex: Télétravail, Tickets resto, Mutuelle"
                 fullWidth
@@ -321,6 +317,7 @@ export default function CreateJobOfferModal({
             </Grid>
           </Grid>
         );
+
       default:
         return null;
     }
@@ -328,43 +325,25 @@ export default function CreateJobOfferModal({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
-      <ToastContainer position="top-right" autoClose={3000} />
-      <ModelComponent open={open} handleClose={handleClose}
-        title={editOffer ? "Modifier une offre d'emploi" : "Créer une offre d'emploi"}
-        icon={<WorkOutline />}
-      >
+      <ToastContainer position="bottom-right" autoClose={3000} />
+      <ModelComponent open={open} handleClose={handleClose} title={editOffer ? "Modifier une offre d'emploi" : "Créer une offre d'emploi"} icon={<WorkOutline />}>
         <Box sx={{ my: 2 }}>
           <StepperComponent steps={stepsKeys} activeStep={activeStep} />
         </Box>
+
         <form onSubmit={handleSubmit(onFinalSubmit)} noValidate>
           <Grid container spacing={2} direction="column">
             <Grid item>{getStepContent(activeStep)}</Grid>
           </Grid>
+
           <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 4 }}>
             {activeStep > 0 && (
-              <ButtonComponent
-                onClick={e => { e.preventDefault(); handleBack(); }}
-                text="Retour"
-                icon={<ArrowBack />}
-                
-                type="button"
-              />
+              <ButtonComponent onClick={(e) => { e.preventDefault(); handleBack(); }} text="Retour" icon={<ArrowBack />} type="button" />
             )}
             {activeStep < stepsKeys.length - 1 ? (
-              <ButtonComponent
-                onClick={e => { e.preventDefault(); handleNext(); }}
-                text="Suivant"
-                icon={<ArrowForward />}
-                
-                type="button"
-              />
+              <ButtonComponent onClick={(e) => { e.preventDefault(); handleNext(); }} text="Suivant" icon={<ArrowForward />} type="button" />
             ) : (
-              <Button
-                variant="contained"
-             
-                type="submit"
-                startIcon={<SaveOutlined />}
-              >
+              <Button variant="contained" type="submit" startIcon={<SaveOutlined />}>
                 {editOffer ? "Mettre à jour" : "Créer"}
               </Button>
             )}

@@ -50,6 +50,21 @@ const DotLoader = () => (
     <span />
   </Box>
 );
+const SCROLLBAR_SX = {
+  pr: 0.5,                         
+  scrollbarWidth: "thin",          
+  scrollbarColor: (theme) => `${theme.palette.primary.main} transparent`,
+  "&::-webkit-scrollbar": { width: 8 },              
+  "&::-webkit-scrollbar-track": { background: "transparent" },
+  "&::-webkit-scrollbar-thumb": {
+    backgroundColor: (theme) => theme.palette.primary.main,
+    borderRadius: 8,
+  },
+  "&:hover::-webkit-scrollbar-thumb": {
+    backgroundColor: (theme) => theme.palette.primary.dark,
+  },
+  "&::-webkit-scrollbar-corner": { background: "transparent" },
+};
 
 
 const FILE_BASE = "http://localhost:3000/uploads/applications";
@@ -486,7 +501,7 @@ export default function ApplicationList({ selectedOffer }) {
           handleZoomReset();
         }}
         title={t("Aperçu du CV")}
-        icon={<PictureAsPdfIcon />}
+        icon={null}
       >
         {previewFile ? (
           <Box>
@@ -511,7 +526,7 @@ export default function ApplicationList({ selectedOffer }) {
               </Tooltip>
             </Stack>
 
-            <Box sx={{ height: "72vh", overflow: "auto", borderRadius: 1, bgcolor: "#fafbfc", p: 1 }}>
+            <Box sx={{ height: "72vh", overflow: "auto", borderRadius: 1, bgcolor: "#fafbfc", p: 1, ...SCROLLBAR_SX, }}>
               <Box sx={{ transform: `scale(${zoom})`, transformOrigin: "top left", width: `${100 / zoom}%` }}>
                 <iframe
                   title="cv-preview"

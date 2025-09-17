@@ -1,6 +1,6 @@
 // src/components/JobOffre/JobOfferCard.jsx
-import React, { useMemo } from "react";
-import { Box, Typography, Chip, Divider, IconButton, Link, Paper, Button } from "@mui/material";
+import React, { useEffect, useMemo, useRef } from "react";
+import { Box, Typography, Chip, Divider, IconButton, Link, Paper } from "@mui/material";
 import PeopleOutlineOutlinedIcon from "@mui/icons-material/PeopleOutlineOutlined";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +17,9 @@ import { styled } from "@mui/material/styles";
 import MuiTooltip, { tooltipClasses } from "@mui/material/Tooltip";
 import { useTranslation } from "react-i18next";
 import { ButtonComponent } from "../Global/ButtonComponent";
+
+import { useDispatch } from "react-redux";
+import { updateJobOffre } from "../../redux/actions/jobOffreAction";
 
 const WhiteTooltip = styled(({ className, ...props }) => (
   <MuiTooltip {...props} arrow classes={{ popper: className }} placement="top" />
@@ -38,6 +41,21 @@ const WhiteTooltip = styled(({ className, ...props }) => (
   },
 }));
 
+/** Helpers
+ * - computeStatus : compare l’instant exact de closingDate (évite les décalages).
+ * - nextFlipDelay : temps restant avant bascule, pour programmer un setTimeout.
+ */
+const computeStatus = (closingDate) => {
+  if (!closingDate) return "open";
+  const closeTs = new Date(closingDate).getTime();
+  return Date.now() > closeTs ? "closed" : "open";
+};
+const nextFlipDelay = (closingDate) => {
+  if (!closingDate) return null;
+  const diff = new Date(closingDate).getTime() - Date.now();
+  return diff > 0 ? diff : null;
+};
+
 export default function JobOfferCard({
   offer,
   getStatusColor,
@@ -50,53 +68,80 @@ export default function JobOfferCard({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
+  // statut calculé en temps réel pour l’affichage
+  const computed = computeStatus(offer?.closingDate);
+  const statusColors = getStatusColor(computed);
+  const type = getTypeColor(offer?.type);
 
-  const effectiveStatus = offer.computedStatus || "open";
-  const status = getStatusColor(effectiveStatus);
-  const type = getTypeColor(offer.type);
+  // synchronisation DB si le statut stocké ≠ calculé
+  const lastSyncedRef = useRef("");
+  useEffect(() => {
+    if (!offer?._id) return;
+    if (offer.status !== computed) {
+      const key = `${offer._id}:${computed}`;
+      if (lastSyncedRef.current !== key) {
+        lastSyncedRef.current = key;
+        dispatch(updateJobOffre({ id: offer._id, updateData: { status: computed } }));
+      }
+    } else {
+      lastSyncedRef.current = `${offer._id}:${computed}`;
+    }
+  }, [dispatch, offer?._id, offer?.status, offer?.closingDate, computed]);
 
+  // programme la bascule exacte à closingDate
+  useEffect(() => {
+    const d = nextFlipDelay(offer?.closingDate);
+    if (d == null) return;
+    const timer = setTimeout(() => {
+      const next = computeStatus(offer?.closingDate);
+      if (offer?.status !== next) {
+        dispatch(updateJobOffre({ id: offer._id, updateData: { status: next } }));
+      }
+    }, d + 250); // petite marge de sécurité
+    return () => clearTimeout(timer);
+  }, [dispatch, offer?._id, offer?.closingDate, offer?.status]);
 
+  // rendu (inchangé)
   const salary =
-    typeof offer.salaryRange === "number" && !isNaN(offer.salaryRange)
+    typeof offer?.salaryRange === "number" && !isNaN(offer.salaryRange)
       ? offer.salaryRange
       : null;
   const formatDT = (n) =>
     n == null ? "-" : `${new Intl.NumberFormat("fr-TN").format(n)} DT`;
 
-  // Requirements chips + "+N"
   const MAX_REQS = 4;
   const reqList = useMemo(() => {
-    const raw = Array.isArray(offer.requirements)
+    const raw = Array.isArray(offer?.requirements)
       ? offer.requirements
-      : String(offer.requirements || "")
+      : String(offer?.requirements || "")
           .split(/[,\n]/)
           .map((s) => s.trim())
           .filter(Boolean);
     return [...new Set(raw)];
-  }, [offer.requirements]);
+  }, [offer?.requirements]);
   const visibleReqs = reqList.slice(0, MAX_REQS);
   const restReqs = reqList.slice(MAX_REQS);
   const restCount = Math.max(reqList.length - MAX_REQS, 0);
 
-  // Bonuses chips + "+1"
   const MAX_BONUS = 2;
   const bonusList = useMemo(() => {
-    const raw = String(offer.bonuses || "")
+    const raw = String(offer?.bonuses || "")
       .split(/[,\n]/)
       .map((s) => s.trim())
       .filter(Boolean);
     return [...new Set(raw)];
-  }, [offer.bonuses]);
+  }, [offer?.bonuses]);
   const visibleBonus = bonusList.slice(0, MAX_BONUS);
   const hiddenBonus = bonusList.slice(MAX_BONUS);
   const hasMoreBonus = hiddenBonus.length > 0;
-  const applicantsCount = Array.isArray(offer.applications) ? offer.applications.length : 0;
+  const applicantsCount = Array.isArray(offer?.applications) ? offer.applications.length : 0;
 
-const goToApplicants = () => {
-  if (onOpenApplications) onOpenApplications(offer);
-  else navigate(`/dashboard/recrutement/applications/${offer._id}`, { state: { offer } });
-};
+  const goToApplicants = () => {
+    if (onOpenApplications) onOpenApplications(offer);
+    else navigate(`/dashboard/recrutement/applications/${offer._id}`, { state: { offer } });
+  };
 
   return (
     <Paper
@@ -120,26 +165,26 @@ const goToApplicants = () => {
       {/* Header */}
       <Box sx={{ bgcolor: "#f5faff", px: 3, pt: 2.5, pb: 2, borderTopLeftRadius: "20px", borderTopRightRadius: "20px" }}>
         <Typography variant="h5" fontWeight={700} sx={{ color: "#1a237e", mb: 0.5 }}>
-          {offer.title}
+          {offer?.title}
         </Typography>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mt: 1 }}>
           <Typography
             sx={{ color: "#1976d2", fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 0.5 }}
             component={Link}
-            href={`https://www.google.com/maps/search/${encodeURIComponent(offer.location)}`}
+            href={`https://www.google.com/maps/search/${encodeURIComponent(offer?.location || "")}`}
             target="_blank"
             rel="noopener"
             underline="hover"
             title={t("Open in Maps")}
           >
             <LocationOnOutlinedIcon sx={{ fontSize: 18, color: "#1976d2" }} />
-            {offer.location}
+            {offer?.location}
           </Typography>
 
           <Chip
             icon={<WorkOutlineIcon sx={{ fontSize: 16, color: type.color }} />}
-            label={t(offer.type || "")}
+            label={t(offer?.type || "")}
             sx={{
               bgcolor: type.bg,
               color: type.color,
@@ -153,37 +198,36 @@ const goToApplicants = () => {
           />
         </Box>
 
-        {/* Pastille statut (utilise effectiveStatus) */}
+        {/* Statut (calculé) */}
         <Chip
-          label={t(effectiveStatus)}
+          label={t(computed)}
           sx={{
             position: "absolute",
             top: 12,
             right: 12,
-            bgcolor: status.bg,
-            color: status.color,
+            bgcolor: statusColors.bg,
+            color: statusColors.color,
             fontWeight: 600,
             fontSize: 12,
             borderRadius: "10px",
             px: 1.2,
             height: 24,
-            "&:hover": { bgcolor: status.bg, filter: "brightness(90%)" },
+            "&:hover": { bgcolor: statusColors.bg, filter: "brightness(90%)" },
           }}
         />
       </Box>
 
- 
       <Box sx={{ px: 3, pt: 2.5, flex: 1 }}>
         {(() => {
           const lineSx = { display: "flex", alignItems: "flex-start", gap: 1, mb: 2 };
-        const panelSx = { bgcolor: "#f8fafc", borderRadius: "12px", p: 1.2 };
+          const panelSx = { bgcolor: "#f8fafc", borderRadius: "12px", p: 1.2 };
 
           return (
             <>
               {/* Description */}
               <Box sx={lineSx}>
                 <ChecklistRtlOutlinedIcon sx={{ color: "#1a237e", fontSize: 20, mt: 0.5 }} />
-                <Box sx={{ flex: 1 ,height:"72px"}}>
+                <Box sx={{ flex: 1, height: "72px" }}>
                   <Typography fontWeight={600} fontSize={15} color="#1a237e" sx={{ mb: 0.5 }}>
                     {t("Description du poste")}:
                   </Typography>
@@ -200,7 +244,7 @@ const goToApplicants = () => {
                       WebkitLineClamp: 3,
                     }}
                   >
-                    {offer.description?.length > 80 ? offer.description.slice(0, 80) + "..." : offer.description}
+                    {offer?.description?.length > 80 ? offer.description.slice(0, 80) + "..." : offer?.description}
                   </Typography>
                 </Box>
               </Box>
@@ -284,22 +328,32 @@ const goToApplicants = () => {
         />
         <Chip
           icon={<CalendarMonthOutlinedIcon sx={{ fontSize: 16, color: "#d97706" }} />}
-          label={t("Closes {{date}}", { date: formatDate(offer.closingDate) })}
+          label={t("Closes {{date}}", { date: formatDate(offer?.closingDate) })}
           sx={{ bgcolor: "#fff3e0", color: "#d97706", fontWeight: 600, fontSize: 13, borderRadius: "12px", px: 1, height: 26 }}
         />
       </Box>
 
- <Box sx={{ px: 3, pb: 2, pt: 1, display: "flex", alignItems: "center", gap: 1 }}>
-  <ButtonComponent
-    onClick={goToApplicants}
-    text={`${t(" candidats")} (${applicantsCount})`}
-    icon={<PeopleOutlineOutlinedIcon />}
-    endIcon={<ArrowForwardIosRoundedIcon />}
-    variant="outlined"
-    count={applicantsCount}
-  />
-</Box>
-
+      <Box
+        sx={{
+          px: 3,
+          pb: 2,
+          pt: 1,
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          justifyContent: "flex-end",
+          borderRadius: 1,
+        }}
+      >
+        <ButtonComponent
+          onClick={goToApplicants}
+          text={`${t("candidats")} (${applicantsCount})`}
+          icon={<PeopleOutlineOutlinedIcon />}
+          endIcon={<ArrowForwardIosRoundedIcon />}
+          variant="outlined"
+          count={applicantsCount}
+        />
+      </Box>
 
       {/* Actions + Posted */}
       <Box
@@ -315,7 +369,7 @@ const goToApplicants = () => {
         }}
       >
         <Typography sx={{ color: "#6b7280", fontSize: 14, fontWeight: 500 }}>
-          {t("Posted {{date}}", { date: formatDate(offer.postedDate) })}
+          {t("Posted {{date}}", { date: formatDate(offer?.postedDate) })}
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
           <WhiteTooltip title={t("Voir les détails")}>
