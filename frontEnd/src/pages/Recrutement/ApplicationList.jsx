@@ -1,5 +1,5 @@
 // src/pages/Recrutement/ApplicationList.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box, Paper, Typography, Divider, Stack, TextField, InputAdornment, Slider,
   Tooltip, IconButton,LinearProgress
@@ -50,6 +50,11 @@ const DotLoader = () => (
     <span />
   </Box>
 );
+
+
+
+
+
 const SCROLLBAR_SX = {
   pr: 0.5,                         
   scrollbarWidth: "thin",          
@@ -125,7 +130,7 @@ export default function ApplicationList({ selectedOffer }) {
   const [iaResults, setIaResults] = useState([]);
   const [search, setSearch] = useState("");
   const [scoreRange, setScoreRange] = useState([0, 100]);
-
+  const analyzedKeysRef = useRef(new Set());
   const prettyName = (f = "") => {
     const m = f.match(/^[A-Za-z0-9]{10,}[-_](.+)$/);
     return m ? m[1] : f;
@@ -152,7 +157,10 @@ export default function ApplicationList({ selectedOffer }) {
       try {
         const res = await axios.get(`${API_ANALYSIS_BASE}/${jobOffreId}`, { headers: { ...getAuth() } });
         const payload = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
-
+        // ADD: mémoriser les clés déjà analysées (basées sur le nom original présent dans la DB)
+const analyzedKeys = new Set((payload || []).map((r) => normalizeName(r.filename)));
+analyzedKeysRef.current = analyzedKeys;
+        
         // ⚠️ pas de filtre direct; on remappe d’abord (filename DB = original)
         const mapped = (payload || []).flatMap((r) => {
           const key = normalizeName(r.filename);
@@ -220,57 +228,150 @@ export default function ApplicationList({ selectedOffer }) {
   ];
 
   // ===== IA : POST backend (persist + remap) =====
-  const handleFilterIA = async () => {
-    const requirements =
-      currentOffer?.requirements ||
-      appsOfOffer?.[0]?.jobOffre?.requirements ||
-      "";
+// REPLACE: n'envoie à l'IA que les CV non encore analysés pour cette offre
+const handleFilterIA = async () => {
+  const requirements =
+    currentOffer?.requirements ||
+    appsOfOffer?.[0]?.jobOffre?.requirements ||
+    "";
 
-    if (!requirements) {
-      alert(t("Aucun requirements trouvé pour cette offre."));
-      return;
-    }
+  if (!requirements) {
+    alert(t("Aucun requirements trouvé pour cette offre."));
+    return;
+  }
 
-    const applicationFiles = appsOfOffer.map((a) => a?.cvFile).filter(Boolean);
-    const allowed_filenames = Array.from(new Set(applicationFiles));
+  // Tous les fichiers CV "stored" existants pour l'offre
+  const applicationFiles = appsOfOffer.map((a) => a?.cvFile).filter(Boolean);
+  const allStored = Array.from(new Set(applicationFiles));
 
+  // On ne veut analyser que les "nouveaux" :
+  // - On normalise chaque stored filename pour obtenir la "key"
+  // - Si la key n'est pas dans analyzedKeysRef.current => c'est nouveau
+  const newAllowed = allStored.filter((stored) => {
+    const key = normalizeName(stored);
+    return !analyzedKeysRef.current.has(key);
+  });
+
+  // S'il n'y a rien de nouveau, on évite l'appel serveur inutile
+  if (!newAllowed.length) {
     setFiltered(true);
-    setIaLoading(true);
-    setIaError(null);
+    setIaResults((prev) => prev); // rien à changer, on garde l'existant
+    // Optionnel : petit feedback
+    // toast.info(t("Aucun nouveau CV à analyser."));
+    return;
+  }
 
-    try {
-      const res = await axios.post(
-        `${API_ANALYSIS_BASE}/${jobOffreId}/run`,
-        { requirements, allowed_filenames },
-        { headers: { ...getAuth() } }
-      );
+  setFiltered(true);
+  setIaLoading(true);
+  setIaError(null);
 
-      const payload = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+  try {
+    // N'envoie QUE les nouveaux fichiers
+    const res = await axios.post(
+      `${API_ANALYSIS_BASE}/${jobOffreId}/run`,
+      { requirements, allowed_filenames: newAllowed },
+      { headers: { ...getAuth() } }
+    );
 
-      // ⚠️ ne PAS filtrer avant remap; on remappe d’abord (original -> stored)
-      const linked = (payload || []).flatMap((r) => {
-        const key = normalizeName(r.filename); // r.filename = original
-        const matches = allowedIndex.get(key);
-        if (!matches) return [];
-        return matches.map((storedFilename) => ({
-          filename: storedFilename,
-          displayFilename: prettyName(storedFilename),
-          email: r.email || "-",
-          score: Number.isFinite(r.score) ? Math.round(r.score) : 0,
-          skills_matched: Array.isArray(r.skills_matched) ? r.skills_matched : [],
-        }));
-      });
+    const payload = Array.isArray(res.data?.data)
+      ? res.data.data
+      : (Array.isArray(res.data) ? res.data : []);
 
-      const dedup = Array.from(new Map(linked.map(x => [x.filename, x])).values());
-      setIaResults(dedup);
-      setPage2(1);
-    } catch (e) {
-      setIaError(e?.response?.data?.message || e.message);
-      setIaResults([]);
-    } finally {
-      setIaLoading(false);
+    // Remap des résultats IA (original -> stored) comme avant
+    const linked = (payload || []).flatMap((r) => {
+      const key = normalizeName(r.filename); // r.filename = original (backend)
+      const matches = allowedIndex.get(key); // stockés pour CETTE offre
+      if (!matches) return [];
+      return matches.map((storedFilename) => ({
+        filename: storedFilename,                         // stored
+        displayFilename: prettyName(storedFilename),
+        email: r.email || "-",
+        score: Number.isFinite(r.score) ? Math.round(r.score) : 0,
+        skills_matched: Array.isArray(r.skills_matched) ? r.skills_matched : [],
+      }));
+    });
+
+    // Mettre à jour la mémoire locale des "déjà analysés"
+    // (toutes les keys qu'on vient de traiter deviennent "connues")
+    for (const stored of newAllowed) {
+      analyzedKeysRef.current.add(normalizeName(stored));
     }
-  };
+
+    // Merge avec les anciens résultats (clé = stored filename) pour éviter les doublons
+    setIaResults((prev) => {
+      const merged = new Map((prev || []).map((x) => [x.filename, x]));
+      for (const x of linked) merged.set(x.filename, x);
+      return Array.from(merged.values());
+    });
+
+    setPage2(1);
+  } catch (e) {
+    setIaError(e?.response?.data?.message || e.message);
+  } finally {
+    setIaLoading(false);
+  }
+};
+
+// ADD (optionnel) : forcer la ré-analyse de tous les CV
+const handleFilterIAForceAll = async () => {
+  const requirements =
+    currentOffer?.requirements ||
+    appsOfOffer?.[0]?.jobOffre?.requirements ||
+    "";
+
+  if (!requirements) {
+    alert(t("Aucun requirements trouvé pour cette offre."));
+    return;
+  }
+
+  const applicationFiles = appsOfOffer.map((a) => a?.cvFile).filter(Boolean);
+  const allowed_filenames = Array.from(new Set(applicationFiles));
+
+  setFiltered(true);
+  setIaLoading(true);
+  setIaError(null);
+
+  try {
+    const res = await axios.post(
+      `${API_ANALYSIS_BASE}/${jobOffreId}/run`,
+      { requirements, allowed_filenames },
+      { headers: { ...getAuth() } }
+    );
+
+    const payload = Array.isArray(res.data?.data)
+      ? res.data.data
+      : (Array.isArray(res.data) ? res.data : []);
+
+    const linked = (payload || []).flatMap((r) => {
+      const key = normalizeName(r.filename);
+      const matches = allowedIndex.get(key);
+      if (!matches) return [];
+      return matches.map((storedFilename) => ({
+        filename: storedFilename,
+        displayFilename: prettyName(storedFilename),
+        email: r.email || "-",
+        score: Number.isFinite(r.score) ? Math.round(r.score) : 0,
+        skills_matched: Array.isArray(r.skills_matched) ? r.skills_matched : [],
+      }));
+    });
+
+    // Rebuild complet + reset analyzedKeys
+    analyzedKeysRef.current = new Set(
+      allowed_filenames.map((f) => normalizeName(f))
+    );
+
+    const dedup = Array.from(new Map(linked.map(x => [x.filename, x])).values());
+    setIaResults(dedup);
+    setPage2(1);
+  } catch (e) {
+    setIaError(e?.response?.data?.message || e.message);
+    setIaResults([]);
+  } finally {
+    setIaLoading(false);
+  }
+};
+
+
 
   // ===== Bloc 2 : Résultats IA =====
   const iaColumns = [
