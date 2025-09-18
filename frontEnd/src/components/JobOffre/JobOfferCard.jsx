@@ -1,6 +1,6 @@
 // src/components/JobOffre/JobOfferCard.jsx
 import React, { useEffect, useMemo, useRef } from "react";
-import { Box, Typography, Chip, Divider, IconButton, Link, Paper } from "@mui/material";
+import { Box, Typography, Chip, Divider, IconButton, Link, Paper, Button } from "@mui/material";
 import PeopleOutlineOutlinedIcon from "@mui/icons-material/PeopleOutlineOutlined";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import { useNavigate } from "react-router-dom";
@@ -17,10 +17,8 @@ import { styled } from "@mui/material/styles";
 import MuiTooltip, { tooltipClasses } from "@mui/material/Tooltip";
 import { useTranslation } from "react-i18next";
 import { ButtonComponent } from "../Global/ButtonComponent";
-
 import { useDispatch } from "react-redux";
 import { updateJobOffre } from "../../redux/actions/jobOffreAction";
-
 const WhiteTooltip = styled(({ className, ...props }) => (
   <MuiTooltip {...props} arrow classes={{ popper: className }} placement="top" />
 ))(({ theme }) => ({
@@ -34,13 +32,13 @@ const WhiteTooltip = styled(({ className, ...props }) => (
     borderRadius: 13,
     border: "1px solid #e3e7fa",
     letterSpacing: 0.15,
+    
   },
   [`& .${tooltipClasses.arrow}`]: {
     color: "#fff",
     filter: "drop-shadow(0px 2px 6px rgba(24,58,119,0.09))",
   },
 }));
-
 /** Helpers
  * - computeStatus : compare l’instant exact de closingDate (évite les décalages).
  * - nextFlipDelay : temps restant avant bascule, pour programmer un setTimeout.
@@ -55,7 +53,6 @@ const nextFlipDelay = (closingDate) => {
   const diff = new Date(closingDate).getTime() - Date.now();
   return diff > 0 ? diff : null;
 };
-
 export default function JobOfferCard({
   offer,
   getStatusColor,
@@ -69,12 +66,10 @@ export default function JobOfferCard({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   // statut calculé en temps réel pour l’affichage
   const computed = computeStatus(offer?.closingDate);
   const statusColors = getStatusColor(computed);
   const type = getTypeColor(offer?.type);
-
   // synchronisation DB si le statut stocké ≠ calculé
   const lastSyncedRef = useRef("");
   useEffect(() => {
@@ -89,7 +84,6 @@ export default function JobOfferCard({
       lastSyncedRef.current = `${offer._id}:${computed}`;
     }
   }, [dispatch, offer?._id, offer?.status, offer?.closingDate, computed]);
-
   // programme la bascule exacte à closingDate
   useEffect(() => {
     const d = nextFlipDelay(offer?.closingDate);
@@ -102,7 +96,6 @@ export default function JobOfferCard({
     }, d + 250); // petite marge de sécurité
     return () => clearTimeout(timer);
   }, [dispatch, offer?._id, offer?.closingDate, offer?.status]);
-
   // rendu (inchangé)
   const salary =
     typeof offer?.salaryRange === "number" && !isNaN(offer.salaryRange)
@@ -110,7 +103,6 @@ export default function JobOfferCard({
       : null;
   const formatDT = (n) =>
     n == null ? "-" : `${new Intl.NumberFormat("fr-TN").format(n)} DT`;
-
   const MAX_REQS = 4;
   const reqList = useMemo(() => {
     const raw = Array.isArray(offer?.requirements)
@@ -124,7 +116,6 @@ export default function JobOfferCard({
   const visibleReqs = reqList.slice(0, MAX_REQS);
   const restReqs = reqList.slice(MAX_REQS);
   const restCount = Math.max(reqList.length - MAX_REQS, 0);
-
   const MAX_BONUS = 2;
   const bonusList = useMemo(() => {
     const raw = String(offer?.bonuses || "")
@@ -137,19 +128,17 @@ export default function JobOfferCard({
   const hiddenBonus = bonusList.slice(MAX_BONUS);
   const hasMoreBonus = hiddenBonus.length > 0;
   const applicantsCount = Array.isArray(offer?.applications) ? offer.applications.length : 0;
-
   const goToApplicants = () => {
     if (onOpenApplications) onOpenApplications(offer);
     else navigate(`/dashboard/recrutement/applications/${offer._id}`, { state: { offer } });
   };
-
   return (
     <Paper
       elevation={2}
       sx={{
         borderRadius: "20px",
         background: "linear-gradient(145deg, #ffffff, #e3f2fd)",
-        Height: "300",
+    height:"100%",
         maxWidth: 400,
         mx: "auto",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
@@ -167,7 +156,6 @@ export default function JobOfferCard({
         <Typography variant="h5" fontWeight={700} sx={{ color: "#1a237e", mb: 0.5 }}>
           {offer?.title}
         </Typography>
-
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mt: 1 }}>
           <Typography
             sx={{ color: "#1976d2", fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 0.5 }}
@@ -181,7 +169,6 @@ export default function JobOfferCard({
             <LocationOnOutlinedIcon sx={{ fontSize: 18, color: "#1976d2" }} />
             {offer?.location}
           </Typography>
-
           <Chip
             icon={<WorkOutlineIcon sx={{ fontSize: 16, color: type.color }} />}
             label={t(offer?.type || "")}
@@ -197,7 +184,6 @@ export default function JobOfferCard({
             }}
           />
         </Box>
-
         {/* Statut (calculé) */}
         <Chip
           label={t(computed)}
@@ -216,16 +202,21 @@ export default function JobOfferCard({
           }}
         />
       </Box>
-
-      <Box sx={{ px: 3, pt: 2.5, flex: 1 }}>
+        <Box
+    sx={{
+      px: 3,
+      pt: 2.5,
+      flexGrow: 1, // 👈 occupe tout l’espace dispo
+      overflow: "auto", // 👈 permet le scroll si contenu trop grand
+    }}
+  >
         {(() => {
-          const lineSx = { display: "flex", alignItems: "flex-start", gap: 1, mb: 2 };
+          const lineSx = { display: "flex", alignItems: "flex-start", gap: 1, mb: 2};
           const panelSx = { bgcolor: "#f8fafc", borderRadius: "12px", p: 1.2 };
-
           return (
             <>
               {/* Description */}
-              <Box sx={lineSx}>
+              <Box sx={{...lineSx}}>
                 <ChecklistRtlOutlinedIcon sx={{ color: "#1a237e", fontSize: 20, mt: 0.5 }} />
                 <Box sx={{ flex: 1, height: "72px" }}>
                   <Typography fontWeight={600} fontSize={15} color="#1a237e" sx={{ mb: 0.5 }}>
@@ -248,9 +239,8 @@ export default function JobOfferCard({
                   </Typography>
                 </Box>
               </Box>
-
               {/* Exigences */}
-              <Box sx={lineSx}>
+              <Box sx={lineSx} >
                 <ChecklistRtlOutlinedIcon sx={{ color: "#1a237e", fontSize: 20, mt: 0.5 }} />
                 <Box sx={{ flex: 1 }}>
                   <Typography fontWeight={600} fontSize={15} color="#1a237e" sx={{ mb: 0.5 }}>
@@ -279,7 +269,6 @@ export default function JobOfferCard({
                   </Box>
                 </Box>
               </Box>
-
               {/* Bonus */}
               {bonusList.length > 0 && (
                 <Box sx={lineSx}>
@@ -316,11 +305,9 @@ export default function JobOfferCard({
           );
         })()}
       </Box>
-
       <Divider sx={{ my: 2, borderColor: "#e5e7eb" }} />
-
       {/* Footer Chips + Applicants */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, pl: 3, pb: 1 }}>
+        <Box sx={{ p: 2, borderTop: "1px solid #ddd", textAlign: "right" }}>
         <Chip
           icon={<MonetizationOnOutlinedIcon sx={{ fontSize: 16, color: "#2e7d32" }} />}
           label={formatDT(salary)}
@@ -332,7 +319,6 @@ export default function JobOfferCard({
           sx={{ bgcolor: "#fff3e0", color: "#d97706", fontWeight: 600, fontSize: 13, borderRadius: "12px", px: 1, height: 26 }}
         />
       </Box>
-
       <Box
         sx={{
           px: 3,
@@ -345,16 +331,15 @@ export default function JobOfferCard({
           borderRadius: 1,
         }}
       >
-        <ButtonComponent
-          onClick={goToApplicants}
-          text={`${t("candidats")} (${applicantsCount})`}
-          icon={<PeopleOutlineOutlinedIcon />}
-          endIcon={<ArrowForwardIosRoundedIcon />}
-          variant="outlined"
-          count={applicantsCount}
-        />
+       <Button
+      onClick={goToApplicants}
+      variant="outlined"
+      startIcon={<PeopleOutlineOutlinedIcon />}
+      endIcon={<ArrowForwardIosRoundedIcon />}
+    >
+      {`${t("candidatures")} (${applicantsCount})`}
+    </Button>
       </Box>
-
       {/* Actions + Posted */}
       <Box
         sx={{
