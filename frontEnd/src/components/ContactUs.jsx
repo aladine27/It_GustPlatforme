@@ -110,7 +110,7 @@ const ContactUs = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                     <BusinessIcon sx={{ color: '#2e7d32', mr: 1 }} />
                     <Typography variant="subtitle1" sx={{ color: '#2e7d32', fontWeight: 500 }}>
-                      ESPRIT
+                      ITGUST
                     </Typography>
                   </Box>
                   <Typography variant="body2" sx={{ color: '#212121' }}>

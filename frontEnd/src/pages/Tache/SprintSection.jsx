@@ -106,7 +106,7 @@ const SprintSection = ({
 
     <Divider sx={{ my: 2 }} />
 
-   {blockCreateSprint && (
+   {blockCreateSprint && isAdminOrManager && (
  <Typography color="error" sx={{ mb: 2, textAlign: "center" }}>
    {t("Impossible d'ajouter un sprint : période du projet atteinte.")}
  </Typography>

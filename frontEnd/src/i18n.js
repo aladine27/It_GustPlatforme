@@ -389,7 +389,20 @@ const resources = {
   "Toutes": "All",
   "Haute": "High",
   "Moyenne": "Medium",
-  "Faible": "Low"
+  "Faible": "Low",
+  'Employés': 'Employees',
+  'Projets actifs': 'Active Projects',
+  'Offres ouvertes': 'Open Offers',
+  'Évolution mensuelle des projets': 'Monthly Project Evolution',
+  'Activité événementielle': 'Event Activity',
+  'Offres les plus populaires': 'Most Popular Offers',
+  'Score IA moyen': 'Average AI Score',
+  'Projets': 'Projects',
+  'Candidatures': 'Applications',
+  'Score IA (moy.)': 'AI Score (avg.)',
+  'Événements à venir': 'Upcoming Events',
+  'Aucun événement planifié.': 'No events scheduled.',
+  'Événement': 'Event',
   
  
 }

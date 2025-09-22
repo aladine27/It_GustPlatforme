@@ -6,7 +6,7 @@ import {
 
 const TableComponent = ({ rows, columns, actions }) => {
   return (
-    <TableContainer component={Paper} sx={{ borderRadius: 2, border: '1px solid #e0e0e0' }}>
+    <TableContainer component={Paper} sx={{ borderRadius: 2, border: '1px solid #e0e0e0',overflowX:'hidden' }}>
     {/* Début de la table */}
       <Table aria-label="employee table">
       {/* Début de la table */}

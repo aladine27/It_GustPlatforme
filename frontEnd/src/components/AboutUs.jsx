@@ -3,20 +3,27 @@ import "slick-carousel/slick/slick.css"
 import "slick-carousel/slick/slick-theme.css"
 import { Typography, Container, Card, Avatar, Box, Stack, useTheme, alpha } from "@mui/material"
 
-// Données de feedback (à remplacer par vos propres données ou une API)
+// 1. Importations des images depuis le dossier assets
+import manFace1 from "../assets/manFace1.jpg";
+import manFace2 from "../assets/manFace2.jpg";
+import manFace3 from "../assets/manFace3.jpg";
+import womenFace from "../assets/WomenFace.jpg";
+import devImage from "../assets/dev.jpg";
+
+// 2. Données de feedback mises à jour avec les images importées
 const feedbackData = [
   {
-    image: "/placeholder.svg?height=80&width=80",
+    image: manFace1,
     name: "Mef Badreddine",
     email: "mef@gmail.com",
     role: "Back-end Developer",
     feedback:
-      "Travailler chez TekTAl a transformé ma carrière. L'environnement collaboratif et les défis techniques stimulants me permettent de grandir chaque jour. L'équipe est exceptionnelle !",
+      "Travailler chez ITGUST a transformé ma carrière. L'environnement collaboratif et les défis techniques stimulants me permettent de grandir chaque jour. L'équipe est exceptionnelle !",
     rating: 5,
     experience: "2 ans",
   },
   {
-    image: "/placeholder.svg?height=80&width=80",
+    image: devImage,
     name: "Bahaa Eddine",
     email: "bahaa2000lol@gmail.com",
     role: "Front-end Developer",
@@ -26,19 +33,19 @@ const feedbackData = [
     experience: "1.5 ans",
   },
   {
-    image: "/placeholder.svg?height=80&width=80",
+    image: manFace2,
     name: "Ala Eddine Ibrahim",
     email: "alaEddine-ibrahim@gmail.com",
     role: "Full-stack Developer",
     feedback:
-      "TekTAl offre un équilibre parfait entre défis techniques et développement personnel. La culture d'entreprise favorise vraiment l'apprentissage continu et l'excellence.",
+      "ITGUST offre un équilibre parfait entre défis techniques et développement personnel. La culture d'entreprise favorise vraiment l'apprentissage continu et l'excellence.",
     rating: 5,
     experience: "3 ans",
   },
   {
-    image: "/placeholder.svg?height=80&width=80",
+    image: womenFace,
     name: "Sarah Benali",
-    email: "sarah.benali@tektal.com",
+    email: "sarah.benali@itgust.com",
     role: "DevOps Engineer",
     feedback:
       "Ce qui me plaît le plus, c'est la diversité des projets et la confiance que l'équipe me fait. Chaque jour apporte de nouveaux défis passionnants à résoudre.",
@@ -46,18 +53,18 @@ const feedbackData = [
     experience: "2.5 ans",
   },
   {
-    image: "/placeholder.svg?height=80&width=80",
+    image: manFace3,
     name: "Ahmed Mansouri",
-    email: "ahmed.mansouri@tektal.com",
+    email: "ahmed.mansouri@itgust.com",
     role: "Data Scientist",
     feedback:
-      "L'approche data-driven de TekTAl et l'accès aux technologies de pointe font de cette entreprise un endroit idéal pour un data scientist ambitieux.",
+      "L'approche data-driven de ITGUST et l'accès aux technologies de pointe font de cette entreprise un endroit idéal pour un data scientist ambitieux.",
     rating: 5,
     experience: "1 an",
   },
 ]
 
-// Composant FeedbackCard 
+// Composant FeedbackCard (inchangé)
 const FeedbackCard = ({ image, name, email, role, feedback, rating, experience }) => 
   {
   const theme = useTheme()
@@ -95,7 +102,6 @@ const FeedbackCard = ({ image, name, email, role, feedback, rating, experience }
         },
       }}
     >
-      {/* Guillemets décoratifs */}
       <Box
         sx={{
           position: "absolute",
@@ -111,7 +117,6 @@ const FeedbackCard = ({ image, name, email, role, feedback, rating, experience }
       </Box>
 
       <Stack spacing={3} sx={{ height: "100%" }}>
-        {/* Feedback principal */}
         <Box sx={{ flex: 1 }}>
           <Typography
             variant="body1"
@@ -126,7 +131,6 @@ const FeedbackCard = ({ image, name, email, role, feedback, rating, experience }
             "{feedback}"
           </Typography>
 
-          {/* Rating avec étoiles */}
           <Stack direction="row" spacing={0.5} sx={{ mb: 2 }}>
             {[...Array(rating)].map((_, index) => (
               <Box
@@ -142,7 +146,6 @@ const FeedbackCard = ({ image, name, email, role, feedback, rating, experience }
           </Stack>
         </Box>
 
-        {/* Informations du développeur */}
         <Stack direction="row" spacing={2} alignItems="center">
           <Avatar
             src={image}
@@ -193,7 +196,7 @@ const FeedbackCard = ({ image, name, email, role, feedback, rating, experience }
   )
 }
 
-// Composant AboutUs amélioré
+// Composant AboutUs (inchangé)
 const AboutUs = () => {
   const theme = useTheme()
 
@@ -242,7 +245,6 @@ const AboutUs = () => {
       }}
     >
       <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
-        {/* En-tête de section */}
         <Box sx={{ textAlign: "center", mb: 6 }}>
           <Typography
             variant="h3"
@@ -281,14 +283,12 @@ const AboutUs = () => {
               fontSize: { xs: "1rem", md: "1.125rem" },
             }}
           >
-            
-            ITGust est une agence web à Tunis qui utilise les dernières technologies digitales pour collecter des informations sur le comportement des internautes. 
+            ITGUST est une agence web à Tunis qui utilise les dernières technologies digitales pour collecter des informations sur le comportement des internautes. 
             Elle intervient sur les différents leviers du marketing digital et de l’intelligence web.
             Nos experts en Intelligence Artificielle se distinguent par leur savoir-faire et expertise.
           </Typography>
         </Box>
 
-        {/* Carousel */}
         <Box
           sx={{
             "& .slick-dots": {

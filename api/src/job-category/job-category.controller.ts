@@ -7,6 +7,7 @@ import { AccessTokenGuard } from 'src/guards/accessToken.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Response } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Public } from 'src/decorators/public.decorator';
 
 
 @ApiBearerAuth("access-token")
@@ -34,8 +35,8 @@ export class JobCategoryController {
       }
     }
    @Get() 
-     @UseGuards( RolesGuard)
-  @Roles('Admin','Rh')
+    @UseGuards( RolesGuard)
+    @Public()
   async findAll( @Res() res) {
       try {
         const categories = await this.jobCategoryService.findAll();

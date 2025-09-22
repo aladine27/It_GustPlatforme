@@ -1,4 +1,4 @@
-// OurServicesTwoCols.jsx
+// src/components/OurServicesTwoCols.jsx
 import React from "react";
 import {
   Box,
@@ -13,13 +13,18 @@ import {
 } from "@mui/material";
 import { ArrowForward } from "@mui/icons-material";
 
+// 👇 images locales (src/assets et src/components sont au même niveau)
+import devImg from "../assets/dev.jpg";
+import aiImg from "../assets/Image_IA.jpeg";
+import marketingImg from "../assets/BI.jpg";
+
 const servicesData = [
   {
     id: 1,
     title: "Développement web et mobile",
     description:
       "Nos développeurs s'engagent à créer des sites web élégants et performants, adaptés avec la vision unique de chaque entreprise. Nous prenons également en charge le développement des applications mobiles Android et iOS.",
-    image: "/images/dev.jpg",
+    image: devImg,
     gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
   },
   {
@@ -27,7 +32,7 @@ const servicesData = [
     title: "Intelligence Artificielle",
     description:
       "Notre agence IA à Tunis est à la pointe des dernières technologies d’analyse d’informations. Pour piloter votre stratégie digitale, nous utilisons des outils d’alertes, tracking, profiling, Big Data et analyse de données.",
-    image: "/images/ai.jpg",
+    image: aiImg,
     gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
   },
   {
@@ -35,7 +40,7 @@ const servicesData = [
     title: "Marketing digital",
     description:
       "Pour optimiser votre site internet, faites appel à notre agence de marketing digital à Tunis : SEO, SEA, rédaction web, community management et web design.",
-    image: "/images/marketing.jpg",
+    image: marketingImg,
     gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
   },
 ];
@@ -77,7 +82,8 @@ const RightServiceRow = ({ service }) => {
               width: "100%",
               height: "100%",
               objectFit: "cover",
-              mixBlendMode: "soft-light",
+              // pour afficher l’image sans voile
+              mixBlendMode: "normal",
             }}
           />
         </Box>
@@ -111,14 +117,13 @@ const RightServiceRow = ({ service }) => {
 
 const OurServicesTwoCols = () => {
   const theme = useTheme();
-  const bigCard = servicesData[0];          // “Développement web et mobile”
-  const rightList = servicesData.slice(1);  // IA + Marketing
+  const bigCard = servicesData[0];
+  const rightList = servicesData.slice(1);
 
   return (
     <Box
       sx={{
-        // 🔧 Réduction de l’espace vertical autour de la section
-        pt: { xs: 2, md: 4 },               // (au lieu de py: { xs: 6, md: 10 })
+        pt: { xs: 2, md: 4 },
         pb: { xs: 6, md: 8 },
         background: `linear-gradient(135deg, ${alpha(
           theme.palette.primary.main,
@@ -156,14 +161,13 @@ const OurServicesTwoCols = () => {
             </Stack>
           </Grid>
 
-          {/* Ligne suivante : on “pousse” de 5 colonnes pour se placer sous la colonne droite */}
+          {/* Ligne suivante */}
           <Grid item xs={12} md={5} sx={{ display: { xs: "none", md: "block" } }} />
           <Grid item xs={12} md={7}>
-            {/* Utilise la même carte que “Marketing digital” → même taille */}
             <RightServiceRow service={bigCard} />
           </Grid>
 
-          {/* CTA aligné avec la colonne droite */}
+          {/* CTA */}
           <Grid item xs={12} md={5} sx={{ display: { xs: "none", md: "block" } }} />
           <Grid item xs={12} md={7}>
             <Box sx={{ pt: 1 }}>

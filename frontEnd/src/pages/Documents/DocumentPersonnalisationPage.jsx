@@ -135,7 +135,7 @@ export default function DocumentPersonnalisationPage() {
     const img = document.createElement("img");
     img.src = signatureData;
     img.alt = "Signature";
-    img.style.maxWidth = "200px"; // optionnel, à adapter selon rendu PDF
+    img.style.maxWidth = "200px"; 
     img.style.height = "auto";
     p.appendChild(img);
     tempDiv.appendChild(p);
@@ -145,6 +145,7 @@ export default function DocumentPersonnalisationPage() {
   }
   const finalHtml = tempDiv.innerHTML;
   console.log("[DEBUG] HTML final avant génération PDF:", finalHtml);
+  toast.info("Début génération PDF...");
   await dispatch(generatePdfFromHtml({ id: docId, html: finalHtml })).unwrap();
   toast.success("PDF généré et document validé");
   navigate("/dashboard/document");

@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box, Paper, Typography, Divider, Stack, TextField, InputAdornment, Slider,
-  Tooltip, IconButton,LinearProgress
+  Tooltip, IconButton, LinearProgress
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -16,7 +16,7 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
+import { toast, ToastContainer } from "react-toastify";
 import TableComponent from "../../components/Global/TableComponent";
 import PaginationComponent from "../../components/Global/PaginationComponent";
 import { ButtonComponent } from "../../components/Global/ButtonComponent";
@@ -51,15 +51,11 @@ const DotLoader = () => (
   </Box>
 );
 
-
-
-
-
 const SCROLLBAR_SX = {
-  pr: 0.5,                         
-  scrollbarWidth: "thin",          
+  pr: 0.5,
+  scrollbarWidth: "thin",
   scrollbarColor: (theme) => `${theme.palette.primary.main} transparent`,
-  "&::-webkit-scrollbar": { width: 8 },              
+  "&::-webkit-scrollbar": { width: 8 },
   "&::-webkit-scrollbar-track": { background: "transparent" },
   "&::-webkit-scrollbar-thumb": {
     backgroundColor: (theme) => theme.palette.primary.main,
@@ -71,7 +67,6 @@ const SCROLLBAR_SX = {
   "&::-webkit-scrollbar-corner": { background: "transparent" },
 };
 
-
 const FILE_BASE = "http://localhost:3000/uploads/applications";
 const API_ANALYSIS_BASE = "http://localhost:3000/application-analysis";
 
@@ -79,6 +74,23 @@ const getAuth = () => {
   const token = localStorage.getItem("access-token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
+
+/** ===== DEBUG HELPERS ===== */
+function debugToastEnv(tag = "toast-env") {
+  try {
+    const containers = document.querySelectorAll(".Toastify__toast-container");
+    console.group(`[DEBUG:${tag}]`);
+    console.log("• #ToastContainers =", containers.length, containers);
+    containers.forEach((c, i) => {
+      const st = window.getComputedStyle(c);
+      console.log(`  - [${i}] z-index=${st.zIndex} position=${st.position}`);
+    });
+    console.log("• Route courante :", window.location.pathname);
+    console.groupEnd();
+  } catch (e) {
+    console.warn(`[DEBUG:${tag}] erreur d'inspection`, e);
+  }
+}
 
 export default function ApplicationList({ selectedOffer }) {
   const { t } = useTranslation();
@@ -114,11 +126,13 @@ export default function ApplicationList({ selectedOffer }) {
   };
   const allowedIndex = useMemo(() => {
     const files = appsOfOffer.map(a => a?.cvFile).filter(Boolean);
-    return files.reduce((map, f) => {
+    const map = files.reduce((map, f) => {
       const k = normalizeName(f);
       map.set(k, [...(map.get(k) || []), f]);
       return map;
     }, new Map());
+    console.debug("[DEBUG:init] allowedIndex keys =", Array.from(map.keys()));
+    return map;
   }, [appsOfOffer]);
 
   // UI state
@@ -145,8 +159,14 @@ export default function ApplicationList({ selectedOffer }) {
   const handleZoomOut = () => setZoom(z => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)));
   const handleZoomReset = () => setZoom(1);
 
+  // debug container toast au mount
+  useEffect(() => {
+    debugToastEnv("mount");
+  }, []);
+
   // charger candidatures
   useEffect(() => {
+    console.debug("[DEBUG:effect] fetchApplicationsByJobOffre jobOffreId =", jobOffreId);
     if (jobOffreId) dispatch(fetchApplicationsByJobOffre(jobOffreId));
   }, [jobOffreId, dispatch]);
 
@@ -155,17 +175,17 @@ export default function ApplicationList({ selectedOffer }) {
     if (!jobOffreId) return;
     (async () => {
       try {
+        console.debug("[DEBUG:effect] GET cache analyses pour jobOffreId =", jobOffreId);
         const res = await axios.get(`${API_ANALYSIS_BASE}/${jobOffreId}`, { headers: { ...getAuth() } });
         const payload = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
-        // ADD: mémoriser les clés déjà analysées (basées sur le nom original présent dans la DB)
-const analyzedKeys = new Set((payload || []).map((r) => normalizeName(r.filename)));
-analyzedKeysRef.current = analyzedKeys;
-        
-        // ⚠️ pas de filtre direct; on remappe d’abord (filename DB = original)
+        const analyzedKeys = new Set((payload || []).map((r) => normalizeName(r.filename)));
+        analyzedKeysRef.current = analyzedKeys;
+        console.debug("[DEBUG:cache] analyzedKeys(size) =", analyzedKeys.size, analyzedKeys);
+
         const mapped = (payload || []).flatMap((r) => {
           const key = normalizeName(r.filename);
           const matches = allowedIndex.get(key);
-          if (!matches) return []; // pas lié à cette offre
+          if (!matches) return [];
           return matches.map((storedFilename) => ({
             filename: storedFilename,
             displayFilename: prettyName(storedFilename),
@@ -175,8 +195,8 @@ analyzedKeysRef.current = analyzedKeys;
           }));
         });
 
-        // dédoublonner par filename
         const rows = Array.from(new Map(mapped.map(x => [x.filename, x])).values());
+        console.debug("[DEBUG:cache] rows remappés =", rows.length);
 
         if (rows.length) {
           setFiltered(true);
@@ -185,8 +205,8 @@ analyzedKeysRef.current = analyzedKeys;
           setFiltered(false);
           setIaResults([]);
         }
-      } catch {
-        /* ignore */
+      } catch (err) {
+        console.warn("[DEBUG:cache] erreur GET analyses", err);
       }
     })();
   }, [jobOffreId, allowedIndex]);
@@ -228,150 +248,171 @@ analyzedKeysRef.current = analyzedKeys;
   ];
 
   // ===== IA : POST backend (persist + remap) =====
-// REPLACE: n'envoie à l'IA que les CV non encore analysés pour cette offre
-const handleFilterIA = async () => {
-  const requirements =
-    currentOffer?.requirements ||
-    appsOfOffer?.[0]?.jobOffre?.requirements ||
-    "";
+  const handleFilterIA = async () => {
+    console.group("[DEBUG:IA] handleFilterIA");
+    console.time("[DEBUG:IA] durée");
 
-  if (!requirements) {
-    alert(t("Aucun requirements trouvé pour cette offre."));
-    return;
-  }
+    const requirements =
+      currentOffer?.requirements ||
+      appsOfOffer?.[0]?.jobOffre?.requirements ||
+      "";
 
-  // Tous les fichiers CV "stored" existants pour l'offre
-  const applicationFiles = appsOfOffer.map((a) => a?.cvFile).filter(Boolean);
-  const allStored = Array.from(new Set(applicationFiles));
+    console.log("jobOffreId =", jobOffreId);
+    console.log("requirements.length =", (requirements || "").length);
 
-  // On ne veut analyser que les "nouveaux" :
-  // - On normalise chaque stored filename pour obtenir la "key"
-  // - Si la key n'est pas dans analyzedKeysRef.current => c'est nouveau
-  const newAllowed = allStored.filter((stored) => {
-    const key = normalizeName(stored);
-    return !analyzedKeysRef.current.has(key);
-  });
-
-  // S'il n'y a rien de nouveau, on évite l'appel serveur inutile
-  if (!newAllowed.length) {
-    setFiltered(true);
-    setIaResults((prev) => prev); // rien à changer, on garde l'existant
-    // Optionnel : petit feedback
-    // toast.info(t("Aucun nouveau CV à analyser."));
-    return;
-  }
-
-  setFiltered(true);
-  setIaLoading(true);
-  setIaError(null);
-
-  try {
-    // N'envoie QUE les nouveaux fichiers
-    const res = await axios.post(
-      `${API_ANALYSIS_BASE}/${jobOffreId}/run`,
-      { requirements, allowed_filenames: newAllowed },
-      { headers: { ...getAuth() } }
-    );
-
-    const payload = Array.isArray(res.data?.data)
-      ? res.data.data
-      : (Array.isArray(res.data) ? res.data : []);
-
-    // Remap des résultats IA (original -> stored) comme avant
-    const linked = (payload || []).flatMap((r) => {
-      const key = normalizeName(r.filename); // r.filename = original (backend)
-      const matches = allowedIndex.get(key); // stockés pour CETTE offre
-      if (!matches) return [];
-      return matches.map((storedFilename) => ({
-        filename: storedFilename,                         // stored
-        displayFilename: prettyName(storedFilename),
-        email: r.email || "-",
-        score: Number.isFinite(r.score) ? Math.round(r.score) : 0,
-        skills_matched: Array.isArray(r.skills_matched) ? r.skills_matched : [],
-      }));
-    });
-
-    // Mettre à jour la mémoire locale des "déjà analysés"
-    // (toutes les keys qu'on vient de traiter deviennent "connues")
-    for (const stored of newAllowed) {
-      analyzedKeysRef.current.add(normalizeName(stored));
+    if (!requirements) {
+      console.warn("Aucun requirements -> alert + return");
+      alert(t("Aucun requirements trouvé pour cette offre."));
+      console.timeEnd("[DEBUG:IA] durée");
+      console.groupEnd();
+      return;
     }
 
-    // Merge avec les anciens résultats (clé = stored filename) pour éviter les doublons
-    setIaResults((prev) => {
-      const merged = new Map((prev || []).map((x) => [x.filename, x]));
-      for (const x of linked) merged.set(x.filename, x);
-      return Array.from(merged.values());
+    const applicationFiles = appsOfOffer.map((a) => a?.cvFile).filter(Boolean);
+    const allStored = Array.from(new Set(applicationFiles));
+
+    console.log("appsOfOffer.length =", appsOfOffer.length);
+    console.log("applicationFiles =", applicationFiles);
+    console.log("allStored (unique) =", allStored);
+
+    const newAllowed = allStored.filter((stored) => {
+      const key = normalizeName(stored);
+      return !analyzedKeysRef.current.has(key);
     });
 
-    setPage2(1);
-  } catch (e) {
-    setIaError(e?.response?.data?.message || e.message);
-  } finally {
-    setIaLoading(false);
-  }
-};
+    console.log("analyzedKeysRef.size =", analyzedKeysRef.current.size, analyzedKeysRef.current);
+    console.log("newAllowed =", newAllowed);
 
-// ADD (optionnel) : forcer la ré-analyse de tous les CV
-const handleFilterIAForceAll = async () => {
-  const requirements =
-    currentOffer?.requirements ||
-    appsOfOffer?.[0]?.jobOffre?.requirements ||
-    "";
+    if (!newAllowed.length) {
+      console.info("Aucun nouveau CV. Afficher toast et quitter.");
+      setFiltered(true);
+      setIaResults((prev) => prev);
 
-  if (!requirements) {
-    alert(t("Aucun requirements trouvé pour cette offre."));
-    return;
-  }
+      debugToastEnv("avant-toast");
+      console.log("[TOAST] no-new-cv → info");
+      toast.info("Il n'y a pas de nouveau CV à analyser.", { toastId: "no-new-cv" });
+      setTimeout(() => debugToastEnv("apres-toast-300ms"), 300);
 
-  const applicationFiles = appsOfOffer.map((a) => a?.cvFile).filter(Boolean);
-  const allowed_filenames = Array.from(new Set(applicationFiles));
+      console.timeEnd("[DEBUG:IA] durée");
+      console.groupEnd();
+      return;
+    }
 
-  setFiltered(true);
-  setIaLoading(true);
-  setIaError(null);
+    console.info("Lancement analyse pour", newAllowed.length, "fichier(s)");
+    setFiltered(true);
+    setIaLoading(true);
+    setIaError(null);
 
-  try {
-    const res = await axios.post(
-      `${API_ANALYSIS_BASE}/${jobOffreId}/run`,
-      { requirements, allowed_filenames },
-      { headers: { ...getAuth() } }
-    );
+    try {
+      const url = `${API_ANALYSIS_BASE}/${jobOffreId}/run`;
+      const body = { requirements, allowed_filenames: newAllowed };
+      console.log("POST →", url, body);
 
-    const payload = Array.isArray(res.data?.data)
-      ? res.data.data
-      : (Array.isArray(res.data) ? res.data : []);
+      const res = await axios.post(url, body, { headers: { ...getAuth() } });
+      console.log("Réponse brute =", res?.data);
 
-    const linked = (payload || []).flatMap((r) => {
-      const key = normalizeName(r.filename);
-      const matches = allowedIndex.get(key);
-      if (!matches) return [];
-      return matches.map((storedFilename) => ({
-        filename: storedFilename,
-        displayFilename: prettyName(storedFilename),
-        email: r.email || "-",
-        score: Number.isFinite(r.score) ? Math.round(r.score) : 0,
-        skills_matched: Array.isArray(r.skills_matched) ? r.skills_matched : [],
-      }));
-    });
+      const payload = Array.isArray(res.data?.data)
+        ? res.data.data
+        : (Array.isArray(res.data) ? res.data : []);
 
-    // Rebuild complet + reset analyzedKeys
-    analyzedKeysRef.current = new Set(
-      allowed_filenames.map((f) => normalizeName(f))
-    );
+      console.log("payload normalisé =", payload);
 
-    const dedup = Array.from(new Map(linked.map(x => [x.filename, x])).values());
-    setIaResults(dedup);
-    setPage2(1);
-  } catch (e) {
-    setIaError(e?.response?.data?.message || e.message);
-    setIaResults([]);
-  } finally {
-    setIaLoading(false);
-  }
-};
+      const linked = (payload || []).flatMap((r) => {
+        const key = normalizeName(r.filename);
+        const matches = allowedIndex.get(key);
+        if (!matches) return [];
+        return matches.map((storedFilename) => ({
+          filename: storedFilename,
+          displayFilename: prettyName(storedFilename),
+          email: r.email || "-",
+          score: Number.isFinite(r.score) ? Math.round(r.score) : 0,
+          skills_matched: Array.isArray(r.skills_matched) ? r.skills_matched : [],
+        }));
+      });
 
+      console.log("linked (remappé) =", linked);
 
+      for (const stored of newAllowed) {
+        analyzedKeysRef.current.add(normalizeName(stored));
+      }
+      console.log("analyzedKeysRef.size (après update) =", analyzedKeysRef.current.size);
+
+      setIaResults((prev) => {
+        const merged = new Map((prev || []).map((x) => [x.filename, x]));
+        for (const x of linked) merged.set(x.filename, x);
+        const out = Array.from(merged.values());
+        console.log("iaResults merged length =", out.length);
+        return out;
+      });
+
+      setPage2(1);
+    } catch (e) {
+      console.error("[DEBUG:IA] Erreur analyse", e?.response?.data || e);
+      setIaError(e?.response?.data?.message || e.message);
+    } finally {
+      setIaLoading(false);
+      console.timeEnd("[DEBUG:IA] durée");
+      console.groupEnd();
+    }
+  };
+
+  // ===== Force all (optionnel) =====
+  const handleFilterIAForceAll = async () => {
+    const requirements =
+      currentOffer?.requirements ||
+      appsOfOffer?.[0]?.jobOffre?.requirements ||
+      "";
+
+    if (!requirements) {
+      alert(t("Aucun requirements trouvé pour cette offre."));
+      return;
+    }
+
+    const applicationFiles = appsOfOffer.map((a) => a?.cvFile).filter(Boolean);
+    const allowed_filenames = Array.from(new Set(applicationFiles));
+
+    setFiltered(true);
+    setIaLoading(true);
+    setIaError(null);
+
+    try {
+      const res = await axios.post(
+        `${API_ANALYSIS_BASE}/${jobOffreId}/run`,
+        { requirements, allowed_filenames },
+        { headers: { ...getAuth() } }
+      );
+
+      const payload = Array.isArray(res.data?.data)
+        ? res.data.data
+        : (Array.isArray(res.data) ? res.data : []);
+
+      const linked = (payload || []).flatMap((r) => {
+        const key = normalizeName(r.filename);
+        const matches = allowedIndex.get(key);
+        if (!matches) return [];
+        return matches.map((storedFilename) => ({
+          filename: storedFilename,
+          displayFilename: prettyName(storedFilename),
+          email: r.email || "-",
+          score: Number.isFinite(r.score) ? Math.round(r.score) : 0,
+          skills_matched: Array.isArray(r.skills_matched) ? r.skills_matched : [],
+        }));
+      });
+
+      analyzedKeysRef.current = new Set(
+        allowed_filenames.map((f) => normalizeName(f))
+      );
+
+      const dedup = Array.from(new Map(linked.map(x => [x.filename, x])).values());
+      setIaResults(dedup);
+      setPage2(1);
+    } catch (e) {
+      setIaError(e?.response?.data?.message || e.message);
+      setIaResults([]);
+    } finally {
+      setIaLoading(false);
+    }
+  };
 
   // ===== Bloc 2 : Résultats IA =====
   const iaColumns = [
@@ -502,39 +543,38 @@ const handleFilterIAForceAll = async () => {
             <Typography color="#64748b" fontStyle="italic" mb={2}>
               {t("Lance l'analyse via le bouton {{btn}} au-dessus.", { btn: t("Filtrer via IA") })}
             </Typography>
-          )  : iaLoading ? (
-  <Box
-    sx={{
-      p: 2,
-      borderRadius: 2,
-      bgcolor: "#f3f6ff",
-      border: "1px solid #e0e7ff",
-    }}
-  >
-    <Typography fontWeight={700} color="primary" sx={{ mb: 1 }}>
-      {t("Analyse des CV avec l'IA...")} <DotLoader />
-    </Typography>
+          ) : iaLoading ? (
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                bgcolor: "#f3f6ff",
+                border: "1px solid #e0e7ff",
+              }}
+            >
+              <Typography fontWeight={700} color="primary" sx={{ mb: 1 }}>
+                {t("Analyse des CV avec l'IA...")} <DotLoader />
+              </Typography>
 
-    <LinearProgress
-      variant="indeterminate"
-      sx={{
-        height: 8,
-        borderRadius: 999,
-        overflow: "hidden",
-        "& .MuiLinearProgress-bar": {
-          borderRadius: 999,
-          backgroundImage:
-            "linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa)",
-        },
-      }}
-    />
+              <LinearProgress
+                variant="indeterminate"
+                sx={{
+                  height: 8,
+                  borderRadius: 999,
+                  overflow: "hidden",
+                  "& .MuiLinearProgress-bar": {
+                    borderRadius: 999,
+                    backgroundImage:
+                      "linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa)",
+                  },
+                }}
+              />
 
-    <Typography variant="caption" sx={{ display: "block", mt: 1, color: "#64748b" }}>
-      {t("Cela peut prendre quelques secondes.")}
-    </Typography>
-  </Box>
-) : iaError ? (
-
+              <Typography variant="caption" sx={{ display: "block", mt: 1, color: "#64748b" }}>
+                {t("Cela peut prendre quelques secondes.")}
+              </Typography>
+            </Box>
+          ) : iaError ? (
             <Typography color="error">{iaError}</Typography>
           ) : (
             <>
@@ -627,7 +667,7 @@ const handleFilterIAForceAll = async () => {
               </Tooltip>
             </Stack>
 
-            <Box sx={{ height: "72vh", overflow: "auto", borderRadius: 1, bgcolor: "#fafbfc", p: 1, ...SCROLLBAR_SX, }}>
+            <Box sx={{ height: "72vh", overflow: "auto", borderRadius: 1, bgcolor: "#fafbfc", p: 1, ...SCROLLBAR_SX }}>
               <Box sx={{ transform: `scale(${zoom})`, transformOrigin: "top left", width: `${100 / zoom}%` }}>
                 <iframe
                   title="cv-preview"
@@ -641,6 +681,9 @@ const handleFilterIAForceAll = async () => {
           <Typography color="text.secondary">{t("Aucun fichier sélectionné.")}</Typography>
         )}
       </ModelComponent>
+
+      {/* Toast local (même pattern que tes autres pages) */}
+      <ToastContainer position="bottom-right" autoClose={3500} newestOnTop />
     </Box>
   );
 }
